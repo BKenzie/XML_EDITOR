@@ -12,10 +12,11 @@
 
         </Border>
 
-        <Rectangle Name="Close_Button_InputXMLWindow" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" Height="16" Margin="0,0,0,0" VerticalAlignment="Top" Width="16" Canvas.Left="374" Canvas.Top="10"/>
+        <Rectangle Name="Close_Button_InputXMLWindow" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" Height="26" Margin="0,0,0,0" VerticalAlignment="Top" Width="26" Canvas.Left="364" Canvas.Top="10"/>
         <Rectangle Panel.ZIndex="-1" Fill="White" Height="200" Width="400" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
         <Rectangle Fill="LightGray" Height="35" Canvas.Left="188" Canvas.Top="142" Width="194" MouseLeftButtonDown="XMLButton_Click"/>
         <TextBlock Canvas.Left="199" TextWrapping="Wrap" Text="Choose XML File" Canvas.Top="150" Width="138" Height="22" FontSize="14" MouseLeftButtonDown="XMLButton_Click" FontFamily="Meiryo UI"/>
+        <Label Content="X" Foreground="DarkOrange" Canvas.Left="367" Canvas.Top="3" Width="20" FontFamily="Browallia New" FontSize="24" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp"/>
 
 
     </Canvas>

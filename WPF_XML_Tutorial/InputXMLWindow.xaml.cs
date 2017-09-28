@@ -64,7 +64,6 @@ namespace WPF_XML_Tutorial
                 mainWindow.Show ();
                 this.Close ();
 
-
             }
             
         }
