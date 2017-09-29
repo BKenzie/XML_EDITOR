@@ -11,6 +11,7 @@
     <Grid>
         <TabControl Name="MainTabControl" Margin="0,61,0,0">
 
+
         </TabControl>
         <Rectangle Name="DragRectangle" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Height="66" Margin="0,-1,-9482,0" VerticalAlignment="Top" Width="9999" Panel.ZIndex="0" />
 
@@ -20,10 +21,8 @@
 
         </Border>
         <Rectangle Name="Close_Button" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" HorizontalAlignment="Right" Height="26" Margin="0,10,10,0" VerticalAlignment="Top" Width="26"/>
-        <Rectangle x:Name="Save_Button" Height="34" Width="51" MouseLeftButtonUp="Save_Button_MouseLeftButtonUp"  Fill="LightGray" HorizontalAlignment="Left" Margin="81,15,0,0" VerticalAlignment="Top" />
-        <Rectangle x:Name="Open_New_Button" Height="34" Width="51" MouseLeftButtonUp="Open_New_Button_MouseLeftButtonUp"  Fill="LightGray" HorizontalAlignment="Left" Margin="15,15,0,0" VerticalAlignment="Top" />
-        <Label Content="Open" MouseLeftButtonUp="Open_New_Button_MouseLeftButtonUp" FontSize="14" HorizontalAlignment="Left" Margin="18,18,0,0" VerticalAlignment="Top" Width="57" Height="30"/>
-        <Label Content="Save" MouseLeftButtonUp="Save_Button_MouseLeftButtonUp" FontSize="14" HorizontalAlignment="Left" Margin="87,18,0,0" VerticalAlignment="Top" Width="44" Height="27"/>
+        <Button x:Name="Save_Button" Height="34" Width="51" Content="Save" BorderBrush="Transparent" Click="Save_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="81,15,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="Open_New_Button" Height="34" Width="51" Content="Open" BorderBrush="Transparent" Click="Open_New_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="15,15,0,0" VerticalAlignment="Top"/>
         <Label Content="X" FontFamily="Browallia New" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" HorizontalAlignment="Right" Margin="0,-4,10,0" VerticalAlignment="Top" FontSize="36" Foreground="DarkOrange"/>
     </Grid>
 </Window>

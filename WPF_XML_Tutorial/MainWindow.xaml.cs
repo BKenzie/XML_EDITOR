@@ -24,9 +24,20 @@ namespace WPF_XML_Tutorial
     public partial class MainWindow : Window
     {
         private string xmlFilePath;
+        private string rootName;
         private List<string> tabHeaders;
         private List<TabItem> tabItems = new List<TabItem> ();
+
         private XmlDocument xmlDoc;
+        private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
+        private ComboBox pathIDComboBox;
+        Grid pathIDGrid = new Grid
+        {
+            Width = GRID_WIDTH,
+        };
+        // private XmlDocument xmlDocToSave; // Thinking I'll save everything only once user presses Save_Button
+        // Then I'll have the program run through the open window and parse back to the xmlDocToSave
+
         public int numTabs;
         public int apParsed = 0;
 
@@ -41,6 +52,34 @@ namespace WPF_XML_Tutorial
             xmlFilePath = filePath;
             xmlDoc = new XmlDocument ();
             xmlDoc.Load ( xmlFilePath );
+
+            #region Open and Save buttons
+            Style customButtonStyle = new Style ();
+            customButtonStyle.TargetType = typeof ( Button );
+            MultiDataTrigger trigger = new MultiDataTrigger ();
+            Condition condition = new Condition ();
+            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            condition.Value = true;
+            Setter foregroundSetter = new Setter ();
+            foregroundSetter.Property = Button.ForegroundProperty;
+            foregroundSetter.Value = Brushes.DarkOrange;
+            Setter cursorSetter = new Setter ();
+            cursorSetter.Property = Button.CursorProperty;
+            cursorSetter.Value = Cursors.Hand;
+            Setter textSetter = new Setter ();
+            textSetter.Property = Button.FontWeightProperty;
+            textSetter.Value = FontWeights.ExtraBold;
+            Setter setter = new Setter ();
+            trigger.Conditions.Add ( condition );
+            trigger.Setters.Add ( foregroundSetter );
+            trigger.Setters.Add ( cursorSetter );
+            trigger.Setters.Add ( textSetter );
+            customButtonStyle.Triggers.Clear ();
+            customButtonStyle.Triggers.Add ( trigger );
+            Open_New_Button.Style = customButtonStyle;
+            Save_Button.Style = customButtonStyle;
+            #endregion
+
 
             using ( FileStream fileStream = new FileStream ( xmlFilePath, FileMode.Open ) )
             using ( XmlReader reader = XmlReader.Create ( fileStream ) )
@@ -101,8 +140,11 @@ namespace WPF_XML_Tutorial
             // TODO: Actually learn XML. (all the different node types at least)
             foreach ( XmlNode node in xmlDoc.ChildNodes )
             {
+                // var node would be the root node
                 if ( node.NodeType == XmlNodeType.Element )
                 {
+                    rootName = node.Name;
+                    // var xmlNodes would be a list including all ActionPaths 
                     xmlNodes = node.ChildNodes;
                     break;
                 }
@@ -110,7 +152,7 @@ namespace WPF_XML_Tutorial
         
            
             // For each main node, check if it has a tab of it's own
-            // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it <--------------------------- TODO: DOUBLE CHECK THIS
+            // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it <--------------------------- TODO: Determine proper functionality
             foreach ( XmlNode xmlNode in xmlNodes )
             {
                 if ( tabHeaders.Contains ( xmlNode.Name ) )
@@ -134,20 +176,24 @@ namespace WPF_XML_Tutorial
                     // Ignore element that is not given tab in <Tabs_XEDITOR>
                     // Do nothing
                 }
+
             }
         }
 
         // Parse info for a single tab --------------------------------------------------------------------------------------------------------------------------
         private void RecursiveParseTabInfo( TabItem tabItem, XmlNode xmlNode )
         {
-            // If xmlNode child node or element has its own tab in <Tabs_XEDITOR> link to its tab
+            // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
             ListView listView = new ListView (); // KEEP THIS HERE
             // ^ so when there are two ActionPaths, the last one processed in this method is the only one to show
             // This makes is so every time a new ActionPath is sent to this method, it can reset all the current tabs
             if ( xmlNode.Name == "ActionPath" && ( xmlNode.NodeType == XmlNodeType.Element ) )
             {
                 // Increment number of ActionPaths parsed
-                apParsed++; 
+                apParsed++;
+                // Add ActionPath node to actionPathXmlNodes, this makes it possible to switch between different ActionPaths
+                ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, GetActionPathID ( xmlNode ) );
+                actionPathXmlNodes.Add ( newAPNode );
                 if ( apParsed > 1 )
                 {
                     // If given new ActionPath to parse, then only want to display information for new ActionPAth
@@ -243,6 +289,7 @@ namespace WPF_XML_Tutorial
 
                 listView.Items.Add ( elementTitleTextBlock );
             }
+
             foreach ( XmlNode xmlChildNode in xmlChildNodes )
             {
                 // Parse child tab elements/info if they are in <Tabs_XEDITOR>
@@ -340,52 +387,195 @@ namespace WPF_XML_Tutorial
             tabItem.Content = listView;
         }
 
-        
+
+        // Helper function; requires xmlNode param is only ever passed as an ActionPath xml element
+        private int GetActionPathID( XmlNode xmlNode )
+        {
+            foreach ( XmlNode xmlAPChildNode in xmlNode.ChildNodes )
+            {
+                if ( xmlAPChildNode.Name == "PathID") // Currently requires all ActionPaths to have this child node
+                {
+                    if ( xmlAPChildNode.FirstChild != null )
+                    {
+                        return Convert.ToInt32 ( xmlAPChildNode.FirstChild.Value );
+                    }
+                    else
+                    {
+                        MessageBox.Show ( "No ActionPath PathID specified in xml document.", "PathID Error" );
+                    }
+                }
+            }
+            return -1;
+        }
+
+
         // Method for parsing xml info into listVew for a sub-element without it's own tab
         private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode )
         {
-
-            if ( xmlChildNode.HasChildNodes )
+            // Special behaviour if currently parsing ActionPath's PathID
+            if ( xmlChildNode.Name == "PathID" )
             {
-                // Things like <help>, <source>, <destination> etc..
-                if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text )
+                // Created a ComboBox for PathIDs if does not already exist
+                // else add PathID to existing ComboBox
+                if ( pathIDComboBox == null )
                 {
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
+                    // Initialize pathIDComboBox with event handling for switching paths
+                    pathIDComboBox = new ComboBox ();
+                    pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
+                    ComboBoxItem newPathID = new ComboBoxItem ();
+                    newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
+                    pathIDComboBox.Items.Add ( newPathID );
+                    Grid.SetRow ( pathIDComboBox, 0 );
+                    Grid.SetColumn ( pathIDComboBox, 1 );
 
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+                    // Add PathIDComboBox to the listView
+                    pathIDGrid.ShowGridLines = false;
+                    pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
 
-                    TextBlock nameTextBlock = new TextBlock ();
-                    nameTextBlock.Text = xmlChildNode.Name + ":";
-                    Grid.SetRow ( nameTextBlock, 0 );
-                    Grid.SetColumn ( nameTextBlock, 0 );
-                    newGrid.Children.Add ( nameTextBlock );
+                    TextBlock pathIDTextBlock = new TextBlock ();
+                    pathIDTextBlock.Text = "PathID:";
+                    Grid.SetRow ( pathIDTextBlock, 0 );
+                    Grid.SetColumn ( pathIDTextBlock, 0 );
 
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    listView.Items.Add ( newGrid );
+                    pathIDGrid.Children.Add ( pathIDTextBlock );
+                    pathIDGrid.Children.Add ( pathIDComboBox );
+                    listView.Items.Add ( pathIDGrid );
                 }
-
-                // Let's say there is a child element in ActionPath that isn't given its own tab in <Tabs_XEDITOR>
-                // This is where it is handled, because we still want to print its info
-                if ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
+                else
                 {
-                    TextBlock subNodeNameTextBlock = new TextBlock ();
-                    subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
-                    subNodeNameTextBlock.FontSize = 16;
-                    subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
-                    subNodeNameTextBlock.FontWeight = FontWeights.Bold;
+                    ComboBoxItem newPathID = new ComboBoxItem ();
+                    newPathID.Content = xmlChildNode.FirstChild.Value;
+                    if ( !ContainsPathID(pathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                    {
+                        pathIDComboBox.Items.Add ( newPathID );
+                    }
 
-                    listView.Items.Add ( subNodeNameTextBlock );
+                    if ( !listView.Items.Contains ( pathIDGrid ) )
+                    {
+                        listView.Items.Add ( pathIDGrid );
+                    }
+                }
+                
+            }
+            else
+            {
+                if ( xmlChildNode.HasChildNodes )
+                {
+                    // Things like <help>, <source>, <destination> etc..
+                    if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text )
+                    {
+                        Grid newGrid = new Grid
+                        {
+                            Width = GRID_WIDTH,
+                        };
+
+                        newGrid.ShowGridLines = false;
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                        TextBlock nameTextBlock = new TextBlock ();
+                        nameTextBlock.Text = xmlChildNode.Name + ":";
+                        Grid.SetRow ( nameTextBlock, 0 );
+                        Grid.SetColumn ( nameTextBlock, 0 );
+                        newGrid.Children.Add ( nameTextBlock );
+
+                        TextBox textBoxNodeText = new TextBox ();
+                        textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
+                        Grid.SetRow ( textBoxNodeText, 0 );
+                        Grid.SetColumn ( textBoxNodeText, 1 );
+                        newGrid.Children.Add ( textBoxNodeText );
+
+                        listView.Items.Add ( newGrid );
+                    }
+
+                    // Let's say there is a child element in ActionPath that isn't given its own tab in <Tabs_XEDITOR>
+                    // This is where it is handled, because we still want to print its info
+                    if ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
+                    {
+                        TextBlock subNodeNameTextBlock = new TextBlock ();
+                        subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
+                        subNodeNameTextBlock.FontSize = 16;
+                        subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
+                        subNodeNameTextBlock.FontWeight = FontWeights.Bold;
+
+                        listView.Items.Add ( subNodeNameTextBlock );
+
+                        // Display attributes, since in this case the node will not have it's own tab to show them in
+                        if ( xmlChildNode.Attributes != null )
+                        {
+                            if ( xmlChildNode.Attributes.Count > 0 )
+                            {
+                                foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
+                                {
+                                    Grid newGrid = new Grid
+                                    {
+                                        Width = GRID_WIDTH,
+                                    };
+
+                                    newGrid.ShowGridLines = false;
+                                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                                    TextBlock textBlockSubAttrib = new TextBlock ();
+                                    textBlockSubAttrib.Text = "[ATTRIBUTE] " + attribute.Name + ":";
+                                    Grid.SetRow ( textBlockSubAttrib, 0 );
+                                    Grid.SetColumn ( textBlockSubAttrib, 0 );
+                                    newGrid.Children.Add ( textBlockSubAttrib );
+
+                                    TextBox attributeTextBox = new TextBox ();
+                                    attributeTextBox.Text = attribute.Value;
+                                    Grid.SetRow ( attributeTextBox, 0 );
+                                    Grid.SetColumn ( attributeTextBox, 1 );
+                                    newGrid.Children.Add ( attributeTextBox );
+
+                                    listView.Items.Add ( newGrid );
+                                }
+                            }
+                        }
+
+                        foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
+                        {
+                            ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode );
+                        }
+                        listView.Items.Add ( new Separator () );
+                        listView.Items.Add ( new Separator () );
+                    }
+                }
+                else
+                {
+                    // Child node containing no children
+                    // For now, displaying "EMPTY" 
+
+                    if ( xmlChildNode.NodeType != XmlNodeType.Text ) // Errors otherwise
+                    {
+                        Grid newGrid = new Grid
+                        {
+                            Width = GRID_WIDTH,
+                        };
+
+                        newGrid.ShowGridLines = false;
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                        TextBlock nameTextBlock = new TextBlock ();
+                        nameTextBlock.Text = xmlChildNode.Name + ":";
+                        Grid.SetRow ( nameTextBlock, 0 );
+                        Grid.SetColumn ( nameTextBlock, 0 );
+                        newGrid.Children.Add ( nameTextBlock );
+
+                        TextBox textBoxNodeText = new TextBox ();
+                        textBoxNodeText.AppendText ( "EMPTY" );
+                        Grid.SetRow ( textBoxNodeText, 0 );
+                        Grid.SetColumn ( textBoxNodeText, 1 );
+                        newGrid.Children.Add ( textBoxNodeText );
+
+                        listView.Items.Add ( newGrid );
+                    }
 
                     // Display attributes, since in this case the node will not have it's own tab to show them in
                     if ( xmlChildNode.Attributes != null )
@@ -409,7 +599,7 @@ namespace WPF_XML_Tutorial
                                 Grid.SetRow ( textBlockSubAttrib, 0 );
                                 Grid.SetColumn ( textBlockSubAttrib, 0 );
                                 newGrid.Children.Add ( textBlockSubAttrib );
-                                
+
                                 TextBox attributeTextBox = new TextBox ();
                                 attributeTextBox.Text = attribute.Value;
                                 Grid.SetRow ( attributeTextBox, 0 );
@@ -420,81 +610,62 @@ namespace WPF_XML_Tutorial
                             }
                         }
                     }
-
-                    foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
-                    {
-                        ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode );
-                    }
-                    listView.Items.Add ( new Separator () );
-                    listView.Items.Add ( new Separator () );
                 }
             }
-            else
+        }
+
+        // Helper function
+        private bool ContainsPathID( ComboBox pathIDComboBox, string pathID )
+        {
+            foreach ( ComboBoxItem comboItem in pathIDComboBox.Items )
             {
-                // Child node containing no children
-                // For now, displaying "EMPTY" 
-
-                if ( xmlChildNode.NodeType != XmlNodeType.Text ) // Errors otherwise
+                if ( (string)comboItem.Content == pathID )
                 {
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
-
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock nameTextBlock = new TextBlock ();
-                    nameTextBlock.Text = xmlChildNode.Name + ":";
-                    Grid.SetRow ( nameTextBlock, 0 );
-                    Grid.SetColumn ( nameTextBlock, 0 );
-                    newGrid.Children.Add ( nameTextBlock );
-
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.AppendText ( "EMPTY" );
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    listView.Items.Add ( newGrid );
-                }
-
-                // Display attributes, since in this case the node will not have it's own tab to show them in
-                if ( xmlChildNode.Attributes != null )
-                {
-                    if ( xmlChildNode.Attributes.Count > 0 )
-                    {
-                        foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
-                        {
-                            Grid newGrid = new Grid
-                            {
-                                Width = GRID_WIDTH,
-                            };
-
-                            newGrid.ShowGridLines = false;
-                            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                            newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                            TextBlock textBlockSubAttrib = new TextBlock ();
-                            textBlockSubAttrib.Text = "[ATTRIBUTE] " + attribute.Name + ":";
-                            Grid.SetRow ( textBlockSubAttrib, 0 );
-                            Grid.SetColumn ( textBlockSubAttrib, 0 );
-                            newGrid.Children.Add ( textBlockSubAttrib );
-
-                            TextBox attributeTextBox = new TextBox ();
-                            attributeTextBox.Text = attribute.Value;
-                            Grid.SetRow ( attributeTextBox, 0 );
-                            Grid.SetColumn ( attributeTextBox, 1 );
-                            newGrid.Children.Add ( attributeTextBox );
-
-                            listView.Items.Add ( newGrid );
-                        }
-                    }
+                    return true;
                 }
             }
+            return false;
+        }
+
+        // Event handler for pathIdComboBox selection changed
+        private void PathIDChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBoxItem item = pathIDComboBox.SelectedItem as ComboBoxItem;
+            string strPathID = (string)item.Content;
+            int intPathID = Convert.ToInt32 ( strPathID );
+
+            SwitchCurrentActionPath ( intPathID );
+            
+        }
+
+        // Displays new ActionPath and sub-tabs associated with param pathID in window
+        private void SwitchCurrentActionPath( int? pathID )
+        {
+            XmlNode actionPath = null;
+            // Get proper XmlNode for actionPath, pathIDs must be the same
+            foreach ( ActionPathXmlNode actionPathXmlNode in actionPathXmlNodes)
+            {
+                if ( actionPathXmlNode.PathID == pathID )
+                {
+                    actionPath = actionPathXmlNode.XmlNode;
+                }
+            }
+            // Now get corresponding tabItem..
+            TabItem apTabItem = GetTabItemWithHeader ( "ActionPath" );
+            RecursiveParseTabInfo ( apTabItem, actionPath ); 
+        }
+
+        // Helper for retrieving a certain tabItem from list tabItems
+        private TabItem GetTabItemWithHeader( string tabItemHeader )
+        {
+            foreach ( TabItem tabItem in tabItems )
+            {
+                if ( (string)tabItem.Header == tabItemHeader )
+                {
+                    return tabItem;
+                }
+            }
+            return null;
         }
 
         // Resets to zero tabs. Only called when about to reconstruct tabs, due to new active ActionPath
@@ -536,12 +707,7 @@ namespace WPF_XML_Tutorial
             MainTabControl.SelectedIndex = MainTabControl.Items.IndexOf ( tabItem );
         }
 
-        private void Save_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
-        {
-
-        }
-
-        private void Open_New_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
+        private void Open_New_Button_Click( object sender, RoutedEventArgs e )
         {
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
@@ -571,5 +737,13 @@ namespace WPF_XML_Tutorial
 
             }
         }
+
+        private void Save_Button_Click( object sender, RoutedEventArgs e )
+        {
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            XmlDocument xmlDocTosave = new XmlDocument ();
+
+        }
+
     }
 }
