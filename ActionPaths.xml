@@ -1,0 +1,53 @@
+<?xml version='1.0'?>
+
+<ActionPaths>
+
+	<Tabs_XEDITOR>
+		<Show_Tabs> ActionPath, ValveState, PumpState, RockerState, MagnetState </Show_Tabs>
+	</Tabs_XEDITOR>
+
+	<ActionPath attrib1="Any attributes are in this section" attrib2="Here is another test attribute"
+				attrib3="Buttons below link to individual sub-node tabs">
+		<help>ActionPath defining _____ operation.</help>
+		<PathID>1</PathID>
+		<Source>Source bag</Source>
+		<Destination attrib="Sub-node elements are also displayed">Destination bag</Destination>
+		<Via_Path note="This is a node with no value or sub-nodes"></Via_Path>
+		
+		<ValveState>
+			<help>Valve state options: 0 => Closed, 1 => Open </help>
+			<Valve1>0</Valve1>
+			<Valve2>1</Valve2>
+			<Valve3>0</Valve3>
+			<Valve4>1</Valve4>
+			<BinaryState>0101</BinaryState>
+		</ValveState>
+		
+		<PumpState>
+			<help>Pump state options: 0 => CW, 1 => CCW.\nPump speed in litres per second</help>
+			<PumpSwitch1>1</PumpSwitch1>
+			<PumpSwitch2>0</PumpSwitch2>
+			<Tubing_Segments></Tubing_Segments>
+			<PumpSpeed>1800</PumpSpeed>
+			<Pump_Until_Vol units="litres">3600</Pump_Until_Vol>
+			<Pump_Until_Seconds>2</Pump_Until_Seconds>
+			<Options></Options>
+		</PumpState>
+		
+		<RockerState>
+			<help>Rocker state help information goes here</help>
+			<Rocker_Tilt_CW>1</Rocker_Tilt_CW>
+			<Rocker_Tilt_CCW>0</Rocker_Tilt_CCW>
+			<Rocking_Speed units="Rocks per millisecond">26</Rocking_Speed>
+			<Dwell_time>5</Dwell_time>
+			<Rocking_Duration>10</Rocking_Duration>
+		</RockerState>
+		
+		<MagnetState>
+			<help>Magnet state up/down => 1/0</help>
+			<RearMagnet>0</RearMagnet>
+			<FrontMagnet>1</FrontMagnet>
+		</MagnetState>
+	</ActionPath>
+	
+</ActionPaths>
