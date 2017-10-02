@@ -174,7 +174,8 @@ namespace WPF_XML_Tutorial
                 else
                 {
                     // Ignore element that is not given tab in <Tabs_XEDITOR>
-                    // Do nothing
+
+                    // TODO: parse xml comments
                 }
 
             }
@@ -412,6 +413,7 @@ namespace WPF_XML_Tutorial
         // Method for parsing xml info into listVew for a sub-element without it's own tab
         private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode )
         {
+            
             // Special behaviour if currently parsing ActionPath's PathID
             if ( xmlChildNode.Name == "PathID" )
             {
@@ -502,41 +504,7 @@ namespace WPF_XML_Tutorial
                         subNodeNameTextBlock.FontWeight = FontWeights.Bold;
 
                         listView.Items.Add ( subNodeNameTextBlock );
-
-                        // Display attributes, since in this case the node will not have it's own tab to show them in
-                        if ( xmlChildNode.Attributes != null )
-                        {
-                            if ( xmlChildNode.Attributes.Count > 0 )
-                            {
-                                foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
-                                {
-                                    Grid newGrid = new Grid
-                                    {
-                                        Width = GRID_WIDTH,
-                                    };
-
-                                    newGrid.ShowGridLines = false;
-                                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                                    TextBlock textBlockSubAttrib = new TextBlock ();
-                                    textBlockSubAttrib.Text = "[ATTRIBUTE] " + attribute.Name + ":";
-                                    Grid.SetRow ( textBlockSubAttrib, 0 );
-                                    Grid.SetColumn ( textBlockSubAttrib, 0 );
-                                    newGrid.Children.Add ( textBlockSubAttrib );
-
-                                    TextBox attributeTextBox = new TextBox ();
-                                    attributeTextBox.Text = attribute.Value;
-                                    Grid.SetRow ( attributeTextBox, 0 );
-                                    Grid.SetColumn ( attributeTextBox, 1 );
-                                    newGrid.Children.Add ( attributeTextBox );
-
-                                    listView.Items.Add ( newGrid );
-                                }
-                            }
-                        }
-
+                        
                         foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
                         {
                             ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode );
@@ -576,39 +544,40 @@ namespace WPF_XML_Tutorial
 
                         listView.Items.Add ( newGrid );
                     }
+                    
+                }
+            }
 
-                    // Display attributes, since in this case the node will not have it's own tab to show them in
-                    if ( xmlChildNode.Attributes != null )
+            // Display attributes, since in this case the node will not have it's own tab to show them in
+            if ( xmlChildNode.Attributes != null )
+            {
+                if ( xmlChildNode.Attributes.Count > 0 )
+                {
+                    foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
                     {
-                        if ( xmlChildNode.Attributes.Count > 0 )
+                        Grid newGrid = new Grid
                         {
-                            foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
-                            {
-                                Grid newGrid = new Grid
-                                {
-                                    Width = GRID_WIDTH,
-                                };
+                            Width = GRID_WIDTH,
+                        };
 
-                                newGrid.ShowGridLines = false;
-                                newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                                newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                                newGrid.RowDefinitions.Add ( new RowDefinition () );
+                        newGrid.ShowGridLines = false;
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.RowDefinitions.Add ( new RowDefinition () );
 
-                                TextBlock textBlockSubAttrib = new TextBlock ();
-                                textBlockSubAttrib.Text = "[ATTRIBUTE] " + attribute.Name + ":";
-                                Grid.SetRow ( textBlockSubAttrib, 0 );
-                                Grid.SetColumn ( textBlockSubAttrib, 0 );
-                                newGrid.Children.Add ( textBlockSubAttrib );
+                        TextBlock textBlockSubAttrib = new TextBlock ();
+                        textBlockSubAttrib.Text = "[" + xmlChildNode.Name + " attribute] " + attribute.Name + ":";
+                        Grid.SetRow ( textBlockSubAttrib, 0 );
+                        Grid.SetColumn ( textBlockSubAttrib, 0 );
+                        newGrid.Children.Add ( textBlockSubAttrib );
 
-                                TextBox attributeTextBox = new TextBox ();
-                                attributeTextBox.Text = attribute.Value;
-                                Grid.SetRow ( attributeTextBox, 0 );
-                                Grid.SetColumn ( attributeTextBox, 1 );
-                                newGrid.Children.Add ( attributeTextBox );
+                        TextBox attributeTextBox = new TextBox ();
+                        attributeTextBox.Text = attribute.Value;
+                        Grid.SetRow ( attributeTextBox, 0 );
+                        Grid.SetColumn ( attributeTextBox, 1 );
+                        newGrid.Children.Add ( attributeTextBox );
 
-                                listView.Items.Add ( newGrid );
-                            }
-                        }
+                        listView.Items.Add ( newGrid );
                     }
                 }
             }
@@ -740,8 +709,17 @@ namespace WPF_XML_Tutorial
 
         private void Save_Button_Click( object sender, RoutedEventArgs e )
         {
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Get file name/location to save from user
+            SaveFileDialog saveFileDialog = new SaveFileDialog ();
+            saveFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
+            saveFileDialog.FilterIndex = 1;
+            saveFileDialog.ShowDialog ();
+            string fileSavePath = saveFileDialog.FileName;
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             XmlDocument xmlDocTosave = new XmlDocument ();
+            XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
+
+            xmlDocSave.WriteCurrentOpenTabs ( tabItems );
 
 
         }
