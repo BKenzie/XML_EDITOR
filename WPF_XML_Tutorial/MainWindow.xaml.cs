@@ -230,6 +230,7 @@ namespace WPF_XML_Tutorial
 
                     TextBlock textBlock = new TextBlock ();
                     textBlock.Text = attribute.Name + ":";
+                    textBlock.ToolTip = xmlNode.Name + "'s attribute";
                     Grid.SetRow ( textBlock, 0 );
                     Grid.SetColumn ( textBlock, 0 );
                     newGrid.Children.Add ( textBlock );
@@ -237,6 +238,7 @@ namespace WPF_XML_Tutorial
                     TextBox textBoxAttrib = new TextBox ();
                     textBoxAttrib.AcceptsReturn = true;
                     textBoxAttrib.Text = ( attribute.Value );
+                    textBoxAttrib.ToolTip = attribute.Name + " attribute";
                     Grid.SetRow ( textBoxAttrib, 0 );
                     Grid.SetColumn ( textBoxAttrib, 1 );
                     newGrid.Children.Add ( textBoxAttrib );
@@ -438,6 +440,7 @@ namespace WPF_XML_Tutorial
 
                     TextBlock pathIDTextBlock = new TextBlock ();
                     pathIDTextBlock.Text = "PathID:";
+                    pathIDTextBlock.ToolTip = "Current PathID - Change to switch active ActionPath";
                     Grid.SetRow ( pathIDTextBlock, 0 );
                     Grid.SetColumn ( pathIDTextBlock, 0 );
 
@@ -480,12 +483,14 @@ namespace WPF_XML_Tutorial
 
                         TextBlock nameTextBlock = new TextBlock ();
                         nameTextBlock.Text = xmlChildNode.Name + ":";
+                        nameTextBlock.ToolTip = "Element";
                         Grid.SetRow ( nameTextBlock, 0 );
                         Grid.SetColumn ( nameTextBlock, 0 );
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
@@ -532,12 +537,14 @@ namespace WPF_XML_Tutorial
 
                         TextBlock nameTextBlock = new TextBlock ();
                         nameTextBlock.Text = xmlChildNode.Name + ":";
+                        nameTextBlock.ToolTip = "Empty element";
                         Grid.SetRow ( nameTextBlock, 0 );
                         Grid.SetColumn ( nameTextBlock, 0 );
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( "EMPTY" );
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
@@ -567,12 +574,14 @@ namespace WPF_XML_Tutorial
 
                         TextBlock textBlockSubAttrib = new TextBlock ();
                         textBlockSubAttrib.Text = "[" + xmlChildNode.Name + " attribute] " + attribute.Name + ":";
+                        textBlockSubAttrib.ToolTip = "Attribute";
                         Grid.SetRow ( textBlockSubAttrib, 0 );
                         Grid.SetColumn ( textBlockSubAttrib, 0 );
                         newGrid.Children.Add ( textBlockSubAttrib );
 
                         TextBox attributeTextBox = new TextBox ();
                         attributeTextBox.Text = attribute.Value;
+                        attributeTextBox.ToolTip = xmlChildNode.Name + "'s attribute";
                         Grid.SetRow ( attributeTextBox, 0 );
                         Grid.SetColumn ( attributeTextBox, 1 );
                         newGrid.Children.Add ( attributeTextBox );
@@ -720,7 +729,7 @@ namespace WPF_XML_Tutorial
             XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
 
             xmlDocSave.WriteCurrentOpenTabs ( tabItems );
-
+            xmlDocSave.Save ();
 
         }
 
