@@ -42,7 +42,42 @@ namespace WPF_XML_Tutorial
             xmlDoc.FirstChild.AppendChild ( tabs_XEDITOR );
         }
 
-        // Will be called for each PathID <------------------------------------------------------------- TODO
+        public void SaveAll( List<TabItem> tabItems, ComboBox pathIDComboBox)
+        {
+            if ( pathIDComboBox == null )
+            {
+                WriteCurrentOpenTabs ( tabItems );
+                Save ();
+            }
+            else
+            {
+                foreach ( ComboBoxItem item in pathIDComboBox.Items )
+                {
+                    pathIDComboBox.SelectedItem = item;
+                    curElement = null;
+                    mainAttributesPassed = false;
+                    xmlTabNodes.Clear ();
+                    xmlSubNodes.Clear ();
+                    WriteCurrentOpenTabs ( tabItems );
+                    NullifyEmptyNodes ( xmlDoc.LastChild );
+                    Save ();
+                }
+            }
+        }
+
+        private void NullifyEmptyNodes( XmlNode root)
+        {
+            foreach ( XmlNode xmlNode in root.ChildNodes )
+            {
+                if ( xmlNode.InnerText == "EMPTY" )
+                {
+                    xmlNode.InnerText = null;
+                }
+                NullifyEmptyNodes ( xmlNode );
+            }
+        }
+
+        // Called for each PathID
         public void WriteCurrentOpenTabs( List<TabItem> tabItems )
         {
             mainAttributesPassed = false;
@@ -65,7 +100,7 @@ namespace WPF_XML_Tutorial
             // Add to xmlDoc any main tab nodes that are not sub nodes
             foreach ( XmlNode xmlTabNode in xmlTabNodes )
             {
-                if ( !xmlSubNodes.Contains ( xmlTabNode ) )
+                if ( !xmlSubNodes.Contains ( xmlTabNode ) && xmlTabNode.HasChildNodes)
                 {
                     xmlDoc.FirstChild.AppendChild ( xmlTabNode );
                 }
@@ -131,7 +166,7 @@ namespace WPF_XML_Tutorial
                 }
             }
 
-            // Does not include buttons or Attributes/Elements headers
+            // Includes most grid elements
             if ( grid.Children.Count > 1 )
             {
                 // PathID logic
@@ -158,9 +193,7 @@ namespace WPF_XML_Tutorial
                     {
                         TextBlock textBlock = (TextBlock)grid.Children[0];
                         string attribName = GetAttributeName ( textBlock );
-                        
-                        
-                        
+
                         XmlAttribute newAttrib = xmlDoc.CreateAttribute ( attribName );
                         newAttrib.Value = gridChild.Text;
                         xmlTabNode.Attributes.Append ( newAttrib );
@@ -203,6 +236,11 @@ namespace WPF_XML_Tutorial
                         newAttrib.Value = gridChild.Text;
                         curElement.Attributes.Append ( newAttrib );
                     }
+                    if ( IsTextField ( gridChild ) )
+                    {
+                        mainAttributesPassed = true;
+                        xmlTabNode.InnerText = (string) gridChild.Text; ;
+                    }
 
                 }
                 
@@ -229,21 +267,28 @@ namespace WPF_XML_Tutorial
         private bool IsAttribute( TextBox textBox )
         {
             string toolTip = (string) textBox.ToolTip;
-            toolTip = toolTip.Substring ( toolTip.Length - 9 ).ToLower ();
-            if ( toolTip == "attribute" )
+            if ( toolTip != null )
             {
-                return true;
+                toolTip = toolTip.Substring ( toolTip.Length - 9 ).ToLower ();
+                if ( toolTip == "attribute" )
+                {
+                    return true;
+                }
             }
+            
             return false;
         }
 
         private bool IsElement( TextBox textBox )
         {
             string toolTip = (string) textBox.ToolTip;
-            toolTip = toolTip.Substring ( toolTip.Length - 7 ).ToLower ();
-            if ( toolTip == "element" )
+            if ( toolTip != null )
             {
-                return true;
+                toolTip = toolTip.Substring ( toolTip.Length - 7 ).ToLower ();
+                if ( toolTip == "element" )
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -251,11 +296,29 @@ namespace WPF_XML_Tutorial
         private bool IsSubElement( TextBox textBox )
         {
             string toolTip = (string) textBox.ToolTip;
-            toolTip = toolTip.Substring ( toolTip.Length - 5 ).ToLower ();
-            if ( toolTip == "(sub)" )
+            if ( toolTip != null )
             {
-                return true;
+                toolTip = toolTip.Substring ( toolTip.Length - 5 ).ToLower ();
+                if ( toolTip == "(sub)" )
+                {
+                    return true;
+                }
             }
+            
+            return false;
+        }
+
+        private bool IsTextField( TextBox textBox )
+        {
+            string toolTip = (string) textBox.ToolTip;
+            if ( toolTip != null )
+            {
+                if ( toolTip == "Text field" )
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 

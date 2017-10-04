@@ -271,7 +271,6 @@ namespace WPF_XML_Tutorial
             }
 
             // If xmlNode contains only text, then display
-            // Shouldn't happen for ActionPaths as far as I know
             if ( xmlNode.HasChildNodes )
             {
                 if ( xmlNode.FirstChild.NodeType == XmlNodeType.Text )
@@ -288,12 +287,14 @@ namespace WPF_XML_Tutorial
                     TextBlock textBlock = new TextBlock ();
                     textBlock.Text = xmlNode.Name + ":";
                     textBlock.Name = xmlNode.Name;
+                    textBlock.ToolTip = "Text field";
                     Grid.SetRow ( textBlock, 0 );
                     Grid.SetColumn ( textBlock, 0 );
                     newGrid.Children.Add ( textBlock );
 
                     TextBox textBoxNodeText = new TextBox ();
                     textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
+                    textBoxNodeText.ToolTip = "Text field";
                     Grid.SetRow ( textBoxNodeText, 0 );
                     Grid.SetColumn ( textBoxNodeText, 1 );
                     newGrid.Children.Add ( textBoxNodeText );
@@ -651,8 +652,7 @@ namespace WPF_XML_Tutorial
 
             foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
             {
-                ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true ); ///// ADD PARAM isSubElem = true, add to tooltip///////////////////////////////
-                ///////////////////////////////////////////////////////////////////////////////////THIS IS WHERE I LEFT OFF, Press any key to continue..
+                ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true );
 
             }
             //listView.Items.Add ( new Separator () );
@@ -799,6 +799,7 @@ namespace WPF_XML_Tutorial
         {
             if (pathIDComboBox.SelectedIndex == -1)
             {
+                // TODO
                 MessageBox.Show ( "That will fix all your problems. Don't ask why.", "Select a PathID" );
                 return;
             }
@@ -809,12 +810,10 @@ namespace WPF_XML_Tutorial
             saveFileDialog.FilterIndex = 1;
             saveFileDialog.ShowDialog ();
             string fileSavePath = saveFileDialog.FileName;
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             XmlDocument xmlDocTosave = new XmlDocument ();
             XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
 
-            xmlDocSave.WriteCurrentOpenTabs ( tabItems );
-            xmlDocSave.Save ();
+            xmlDocSave.SaveAll ( tabItems, pathIDComboBox );
 
         }
 
