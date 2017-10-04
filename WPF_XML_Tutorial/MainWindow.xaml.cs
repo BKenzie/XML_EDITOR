@@ -30,7 +30,8 @@ namespace WPF_XML_Tutorial
 
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
-        private ComboBox pathIDComboBox;
+        public static ComboBox pathIDComboBox;
+
         Grid pathIDGrid = new Grid
         {
             Width = GRID_WIDTH,
@@ -115,6 +116,24 @@ namespace WPF_XML_Tutorial
                 MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR> <Show_Tabs>", "Error" );
             }
 
+            // Right before MainWindow is shown to user
+            ComboBox pathIdComboBox = (ComboBox) pathIDGrid.Children[1];
+            if (pathIDComboBox.Items.Count > 1)
+            {
+                ResetAllTabs ();
+                DisplayPathID ();
+            }
+            
+
+        }
+
+        private void DisplayPathID()
+        {
+            TabItem firstTabItem = tabItems[0];
+            ListView listView = new ListView ();
+            listView.Items.Add ( pathIDGrid );
+            firstTabItem.Content = listView;
+
         }
 
         private void ReadTabHeaderInformation( XmlReader reader )
@@ -179,6 +198,7 @@ namespace WPF_XML_Tutorial
                 }
 
             }
+            
         }
 
         // Parse info for a single tab --------------------------------------------------------------------------------------------------------------------------
@@ -231,6 +251,7 @@ namespace WPF_XML_Tutorial
                     TextBlock textBlock = new TextBlock ();
                     textBlock.Text = attribute.Name + ":";
                     textBlock.ToolTip = xmlNode.Name + "'s attribute";
+                    textBlock.Name = attribute.Name;
                     Grid.SetRow ( textBlock, 0 );
                     Grid.SetColumn ( textBlock, 0 );
                     newGrid.Children.Add ( textBlock );
@@ -266,6 +287,7 @@ namespace WPF_XML_Tutorial
 
                     TextBlock textBlock = new TextBlock ();
                     textBlock.Text = xmlNode.Name + ":";
+                    textBlock.Name = xmlNode.Name;
                     Grid.SetRow ( textBlock, 0 );
                     Grid.SetColumn ( textBlock, 0 );
                     newGrid.Children.Add ( textBlock );
@@ -381,7 +403,7 @@ namespace WPF_XML_Tutorial
                 {
                     // This is where we need to display child node info that doesn't have its own tab
                     // ie ValveState has a <help> child node which should be visible 
-                    ParseChildElementWithoutOwnTab ( ref listView, xmlChildNode );
+                    ParseChildElementWithoutOwnTab ( ref listView, xmlChildNode, false );
                     
                 }
             }
@@ -413,9 +435,9 @@ namespace WPF_XML_Tutorial
 
 
         // Method for parsing xml info into listVew for a sub-element without it's own tab
-        private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode )
+        private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode, bool isSubElement )
         {
-            
+            #region PathID code
             // Special behaviour if currently parsing ActionPath's PathID
             if ( xmlChildNode.Name == "PathID" )
             {
@@ -429,11 +451,11 @@ namespace WPF_XML_Tutorial
                     ComboBoxItem newPathID = new ComboBoxItem ();
                     newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
                     pathIDComboBox.Items.Add ( newPathID );
+                    
                     Grid.SetRow ( pathIDComboBox, 0 );
                     Grid.SetColumn ( pathIDComboBox, 1 );
 
                     // Add PathIDComboBox to the listView
-                    pathIDGrid.ShowGridLines = false;
                     pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
                     pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
                     pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
@@ -446,7 +468,9 @@ namespace WPF_XML_Tutorial
 
                     pathIDGrid.Children.Add ( pathIDTextBlock );
                     pathIDGrid.Children.Add ( pathIDComboBox );
+                    RemoveGridFromListViewParent ( pathIDGrid );
                     listView.Items.Add ( pathIDGrid );
+                    
                 }
                 else
                 {
@@ -459,10 +483,14 @@ namespace WPF_XML_Tutorial
 
                     if ( !listView.Items.Contains ( pathIDGrid ) )
                     {
+                        RemoveGridFromListViewParent ( pathIDGrid );
                         listView.Items.Add ( pathIDGrid );
+                        //pathIDComboBox.SelectedIndex = pathIDComboBox.Items.Count - 1; // TODO: Figure out why this does not work
+
                     }
                 }
-                
+                #endregion
+
             }
             else
             {
@@ -483,17 +511,29 @@ namespace WPF_XML_Tutorial
 
                         TextBlock nameTextBlock = new TextBlock ();
                         nameTextBlock.Text = xmlChildNode.Name + ":";
-                        nameTextBlock.ToolTip = "Element";
+                        
+                        
+                        nameTextBlock.Name = xmlChildNode.Name;
                         Grid.SetRow ( nameTextBlock, 0 );
                         Grid.SetColumn ( nameTextBlock, 0 );
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
+
+                        if ( isSubElement )
+                        {
+                            nameTextBlock.ToolTip = "Element (sub)";
+                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
+                        }
+                        else
+                        {
+                            nameTextBlock.ToolTip = "Element";
+                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
+                        }
 
                         listView.Items.Add ( newGrid );
                     }
@@ -502,20 +542,26 @@ namespace WPF_XML_Tutorial
                     // This is where it is handled, because we still want to print its info
                     if ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
                     {
+                        Grid newGrid = new Grid
+                        {
+                            Width = GRID_WIDTH,
+                        };
+
+                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        newGrid.RowDefinitions.Add ( new RowDefinition () );
+
                         TextBlock subNodeNameTextBlock = new TextBlock ();
                         subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
                         subNodeNameTextBlock.FontSize = 16;
                         subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
                         subNodeNameTextBlock.FontWeight = FontWeights.Bold;
 
-                        listView.Items.Add ( subNodeNameTextBlock );
+                        Grid.SetColumn ( subNodeNameTextBlock, 0 );
+                        Grid.SetRow ( subNodeNameTextBlock, 0 );
+                        newGrid.Children.Add ( subNodeNameTextBlock );
+
+                        listView.Items.Add ( newGrid );
                         
-                        foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
-                        {
-                            ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode );
-                        }
-                        listView.Items.Add ( new Separator () );
-                        listView.Items.Add ( new Separator () );
                     }
                 }
                 else
@@ -537,19 +583,30 @@ namespace WPF_XML_Tutorial
 
                         TextBlock nameTextBlock = new TextBlock ();
                         nameTextBlock.Text = xmlChildNode.Name + ":";
-                        nameTextBlock.ToolTip = "Empty element";
+                        nameTextBlock.Name = xmlChildNode.Name;
+                        
                         Grid.SetRow ( nameTextBlock, 0 );
                         Grid.SetColumn ( nameTextBlock, 0 );
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( "EMPTY" );
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
 
                         listView.Items.Add ( newGrid );
+
+                        if ( isSubElement )
+                        {
+                            nameTextBlock.ToolTip = "Empty element (sub)";
+                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
+                        }
+                        else
+                        {
+                            nameTextBlock.ToolTip = "Empty element";
+                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
+                        }
                     }
                     
                 }
@@ -575,6 +632,7 @@ namespace WPF_XML_Tutorial
                         TextBlock textBlockSubAttrib = new TextBlock ();
                         textBlockSubAttrib.Text = "[" + xmlChildNode.Name + " attribute] " + attribute.Name + ":";
                         textBlockSubAttrib.ToolTip = "Attribute";
+                        textBlockSubAttrib.Name = attribute.Name;
                         Grid.SetRow ( textBlockSubAttrib, 0 );
                         Grid.SetColumn ( textBlockSubAttrib, 0 );
                         newGrid.Children.Add ( textBlockSubAttrib );
@@ -590,6 +648,25 @@ namespace WPF_XML_Tutorial
                     }
                 }
             }
+
+            foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
+            {
+                ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true ); ///// ADD PARAM isSubElem = true, add to tooltip///////////////////////////////
+                ///////////////////////////////////////////////////////////////////////////////////THIS IS WHERE I LEFT OFF, Press any key to continue..
+
+            }
+            //listView.Items.Add ( new Separator () );
+            //listView.Items.Add ( new Separator () );
+        }
+
+        private void RemoveGridFromListViewParent( Grid pathIDGrid )
+        {
+            if ( pathIDGrid.Parent != null )
+            {
+                ListView parent = (ListView) pathIDGrid.Parent;
+                parent.Items.Remove ( pathIDGrid );
+            }
+            
         }
 
         // Helper function
@@ -687,6 +764,8 @@ namespace WPF_XML_Tutorial
 
         private void Open_New_Button_Click( object sender, RoutedEventArgs e )
         {
+            pathIDComboBox = null;
+
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
             openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
@@ -718,6 +797,12 @@ namespace WPF_XML_Tutorial
 
         private void Save_Button_Click( object sender, RoutedEventArgs e )
         {
+            if (pathIDComboBox.SelectedIndex == -1)
+            {
+                MessageBox.Show ( "That will fix all your problems. Don't ask why.", "Select a PathID" );
+                return;
+            }
+
             // Get file name/location to save from user
             SaveFileDialog saveFileDialog = new SaveFileDialog ();
             saveFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
