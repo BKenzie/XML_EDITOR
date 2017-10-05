@@ -8,10 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WPF_XML_Tutorial.Properties
-{
-
-
+namespace WPF_XML_Tutorial.Properties {
+    using System;
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -19,52 +19,79 @@ namespace WPF_XML_Tutorial.Properties
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute ( "System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0" )]
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute ()]
-    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute ()]
-    internal class Resources
-    {
-
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    internal class Resources {
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
-        [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute ( "Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode" )]
-        internal Resources()
-        {
+        
+        [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
-        [global::System.ComponentModel.EditorBrowsableAttribute ( global::System.ComponentModel.EditorBrowsableState.Advanced )]
-        internal static global::System.Resources.ResourceManager ResourceManager
-        {
-            get
-            {
-                if ( ( resourceMan == null ) )
-                {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager ( "WPF_XML_Tutorial.Properties.Resources", typeof ( Resources ).Assembly );
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
+        internal static global::System.Resources.ResourceManager ResourceManager {
+            get {
+                if (object.ReferenceEquals(resourceMan, null)) {
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WPF_XML_Tutorial.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
-        [global::System.ComponentModel.EditorBrowsableAttribute ( global::System.ComponentModel.EditorBrowsableState.Advanced )]
-        internal static global::System.Globalization.CultureInfo Culture
-        {
-            get
-            {
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
+        internal static global::System.Globalization.CultureInfo Culture {
+            get {
                 return resourceCulture;
             }
-            set
-            {
+            set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&apos;1.0&apos;?&gt;
+        ///
+        ///&lt;ActionPaths&gt;
+        ///
+        ///	&lt;Tabs_XEDITOR&gt;
+        ///		&lt;Show_Tabs&gt; ActionPath, ValveState, PumpState, RockerState, MagnetState &lt;/Show_Tabs&gt;
+        ///	&lt;/Tabs_XEDITOR&gt;
+        ///
+        ///	&lt;ActionPath&gt;
+        ///		&lt;help&gt;&lt;/help&gt;
+        ///		&lt;PathID&gt;1&lt;/PathID&gt;
+        ///		&lt;Source&gt;&lt;/Source&gt;
+        ///		&lt;Destination&gt;&lt;/Destination&gt;
+        ///		&lt;Via_Path&gt;&lt;/Via_Path&gt;
+        ///		
+        ///		&lt;ValveState&gt;
+        ///			&lt;help&gt;&lt;/help&gt;
+        ///			&lt;Valve1&gt;&lt;/Valve1&gt;
+        ///			&lt;Valve2&gt;&lt;/Valve2&gt;
+        ///			&lt;Valve3&gt;&lt;/Valve3&gt;
+        ///			&lt;Valve4&gt;&lt;/Valve4&gt;
+        ///			&lt;BinaryState&gt;&lt;/BinaryState&gt;
+        ///		&lt;/ValveState&gt;
+        ///		
+        ///		&lt;PumpState&gt;
+        ///			&lt;help&gt;&lt;/help&gt;
+        ///		 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ActionPathsTemplate {
+            get {
+                return ResourceManager.GetString("ActionPathsTemplate", resourceCulture);
             }
         }
     }

@@ -13,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.IO;
+using System.Reflection;
 
 namespace WPF_XML_Tutorial
 {
@@ -103,7 +105,13 @@ namespace WPF_XML_Tutorial
 
         private void NewXML_Click( object sender, RoutedEventArgs e )
         {
-
+            // TODO
+            // C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Resources\ActionPathsTemplate.xml
+            string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
+            mainWindow.Show ();
+            this.Close ();
+            
         }
 
     }

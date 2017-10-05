@@ -93,6 +93,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -104,6 +105,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\STEMCELL_Color_JPG.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ActionPathsTemplate.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
