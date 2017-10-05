@@ -1,0 +1,52 @@
+<?xml version='1.0'?>
+
+<ActionPaths>
+
+	<Tabs_XEDITOR>
+		<Show_Tabs> ActionPath, ValveState, PumpState, RockerState, MagnetState </Show_Tabs>
+	</Tabs_XEDITOR>
+
+	<ActionPath>
+		<help></help>
+		<PathID>1</PathID>
+		<Source></Source>
+		<Destination></Destination>
+		<Via_Path></Via_Path>
+		
+		<ValveState>
+			<help></help>
+			<Valve1></Valve1>
+			<Valve2></Valve2>
+			<Valve3></Valve3>
+			<Valve4></Valve4>
+			<BinaryState></BinaryState>
+		</ValveState>
+		
+		<PumpState>
+			<help></help>
+			<PumpSwitch1></PumpSwitch1>
+			<PumpSwitch2></PumpSwitch2>
+			<Tubing_Segments></Tubing_Segments>
+			<PumpSpeed></PumpSpeed>
+			<Pump_Until_Vol></Pump_Until_Vol>
+			<Pump_Until_Seconds></Pump_Until_Seconds>
+			<Options></Options>
+		</PumpState>
+		
+		<RockerState>
+			<help></help>
+			<Rocker_Tilt_CW></Rocker_Tilt_CW>
+			<Rocker_Tilt_CCW></Rocker_Tilt_CCW>
+			<Rocking_Speed></Rocking_Speed>
+			<Dwell_time></Dwell_time>
+			<Rocking_Duration></Rocking_Duration>
+		</RockerState>
+		
+		<MagnetState>
+			<help></help>
+			<Magnet1></Magnet1>
+			<Magnet2></Magnet2>
+		</MagnetState>
+	</ActionPath>
+	
+</ActionPaths>

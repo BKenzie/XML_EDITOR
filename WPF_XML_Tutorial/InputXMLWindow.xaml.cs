@@ -24,6 +24,39 @@ namespace WPF_XML_Tutorial
         public InputXMLWindow()
         {
             InitializeComponent ();
+
+            #region Button Code
+
+            NewXML_Button.Background = new SolidColorBrush ( Colors.LightGray );
+            NewXML_Button.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+            ChooseXMLButton.Background = new SolidColorBrush ( Colors.LightGray );
+            ChooseXMLButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+
+            Style customButtonStyle = new Style ();
+            customButtonStyle.TargetType = typeof ( Button );
+            MultiDataTrigger trigger = new MultiDataTrigger ();
+            Condition condition = new Condition ();
+            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            condition.Value = true;
+            Setter foregroundSetter = new Setter ();
+            foregroundSetter.Property = Button.ForegroundProperty;
+            foregroundSetter.Value = Brushes.DarkOrange;
+            Setter cursorSetter = new Setter ();
+            cursorSetter.Property = Button.CursorProperty;
+            cursorSetter.Value = Cursors.Hand;
+            Setter textSetter = new Setter ();
+            textSetter.Property = Button.FontWeightProperty;
+            textSetter.Value = FontWeights.ExtraBold;
+            trigger.Conditions.Add ( condition );
+            trigger.Setters.Add ( foregroundSetter );
+            trigger.Setters.Add ( cursorSetter );
+            trigger.Setters.Add ( textSetter );
+
+            customButtonStyle.Triggers.Clear ();
+            customButtonStyle.Triggers.Add ( trigger );
+            NewXML_Button.Style = customButtonStyle;
+            ChooseXMLButton.Style = customButtonStyle;
+            #endregion
         }
 
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
@@ -36,7 +69,7 @@ namespace WPF_XML_Tutorial
             DragMove ();
         }
 
-        private void XMLButton_Click( object sender, MouseButtonEventArgs e )
+        private void XMLButton_Click( object sender, RoutedEventArgs e )
         {
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
@@ -67,5 +100,11 @@ namespace WPF_XML_Tutorial
             }
             
         }
+
+        private void NewXML_Click( object sender, RoutedEventArgs e )
+        {
+
+        }
+
     }
 }

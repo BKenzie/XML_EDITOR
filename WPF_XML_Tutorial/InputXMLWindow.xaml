@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_XML_Tutorial"
         mc:Ignorable="d" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
-        Title="Choose XML File" WindowStyle="None" Height="200" Width="400">
+        Title="Choose XML File" WindowStyle="None" Height="189.333" Width="460">
     <Canvas>
-        <Border HorizontalAlignment="Left" Height="61" VerticalAlignment="Top" Width="372" Canvas.Left="10" Canvas.Top="10">
-            <Image Name="StemCell_Logo" Source="Images/STEMCELL_Color_JPG.jpg" Margin="37,0,36,0" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+        <Border HorizontalAlignment="Left" Height="74" VerticalAlignment="Top" Width="460" Canvas.Top="10">
+            <Image Name="StemCell_Logo" Source="Images/STEMCELL_Color_JPG.jpg" Margin="36,0,37,0" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
 
         </Border>
 
-        <Rectangle Name="Close_Button_InputXMLWindow" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" Height="26" Margin="0,0,0,0" VerticalAlignment="Top" Width="26" Canvas.Left="364" Canvas.Top="10"/>
-        <Rectangle Panel.ZIndex="-1" Fill="White" Height="200" Width="400" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
-        <Rectangle Fill="LightGray" Height="35" Canvas.Left="188" Canvas.Top="142" Width="194" MouseLeftButtonDown="XMLButton_Click"/>
-        <TextBlock Canvas.Left="199" TextWrapping="Wrap" Text="Choose XML File" Canvas.Top="150" Width="138" Height="22" FontSize="14" MouseLeftButtonDown="XMLButton_Click" FontFamily="Meiryo UI"/>
-        <Label Content="X" Foreground="DarkOrange" Canvas.Left="367" Canvas.Top="3" Width="20" FontFamily="Browallia New" FontSize="24" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp"/>
+        <Rectangle Name="Close_Button_InputXMLWindow" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" Height="26" Margin="0,0,0,0" VerticalAlignment="Top" Width="26" Canvas.Left="424" Canvas.Top="10"/>
+        <Rectangle Panel.ZIndex="-1" Fill="White" Height="189" Width="460" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+        <Label Content="X" Foreground="DarkOrange" Canvas.Left="427" Width="20" FontFamily="Browallia New" FontSize="24" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Canvas.Top="3"/>
+
+        <Button Name="NewXML_Button"  Click="NewXML_Click" Content="New XML file " Canvas.Left="10" Canvas.Top="124" Width="210" Height="55" FontSize="16"/>
+        <Button Name="ChooseXMLButton" Click="XMLButton_Click" Content="Choose XML file " Canvas.Left="240" Canvas.Top="124" Width="210" Height="55" FontSize="16"/>
 
 
     </Canvas>

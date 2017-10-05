@@ -5,24 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_XML_Tutorial"
         mc:Ignorable="d" WindowStyle="None" WindowStartupLocation="CenterScreen"
-        Height="420" Width="645">
+        Height="408" Width="750">
 
 
     <Grid>
-        <TabControl Name="MainTabControl" Margin="0,61,0,0">
+        <TabControl Name="MainTabControl" Margin="0,81,0,0">
 
 
         </TabControl>
         <Rectangle Name="DragRectangle" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Height="66" Margin="0,-1,-9482,0" VerticalAlignment="Top" Width="9999" Panel.ZIndex="0" />
 
 
-        <Border HorizontalAlignment="Center" Height="61" VerticalAlignment="Top" Width="322">
-            <Image Name="StemCell_Logo" MouseDown="DragRectangle_MouseLeftButtonDown" Source="Images/STEMCELL_Color_JPG.jpg" Margin="0,0,18,0" HorizontalAlignment="Right" Width="288"/>
+        <Border HorizontalAlignment="Center" Height="81" VerticalAlignment="Top" Width="346" Margin="158,0,133,0">
+            <Image Name="StemCell_Logo" MouseDown="DragRectangle_MouseLeftButtonDown" Source="Images/STEMCELL_Color_JPG.jpg" HorizontalAlignment="Center" Width="331" />
 
         </Border>
         <Rectangle Name="Close_Button" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" HorizontalAlignment="Right" Height="26" Margin="0,10,10,0" VerticalAlignment="Top" Width="26"/>
-        <Button x:Name="Save_Button" Height="34" Width="51" Content="Save" BorderBrush="Transparent" Click="Save_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="81,15,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="Open_New_Button" Height="34" Width="51" Content="Open" BorderBrush="Transparent" Click="Open_New_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="15,15,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="Save_Button" Height="42" Width="62" Content="Save" BorderBrush="Transparent" Click="Save_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="92,15,0,0" VerticalAlignment="Top" FontSize="16"/>
+        <Button x:Name="Open_New_Button" Height="42" Width="62" Content="Open" BorderBrush="Transparent" Click="Open_New_Button_Click" Background="LightGray" HorizontalAlignment="Left" Margin="15,15,0,0" VerticalAlignment="Top" FontSize="16"/>
         <Label Content="X" FontFamily="Browallia New" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" HorizontalAlignment="Right" Margin="0,-4,10,0" VerticalAlignment="Top" FontSize="36" Foreground="DarkOrange"/>
     </Grid>
 </Window>

@@ -27,23 +27,17 @@ namespace WPF_XML_Tutorial
         private string rootName;
         private List<string> tabHeaders;
         private List<TabItem> tabItems = new List<TabItem> ();
-
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
         public static ComboBox pathIDComboBox;
-
+        public int numTabs;
+        public int apParsed = 0;
+        public const int GRID_WIDTH = 698;
         Grid pathIDGrid = new Grid
         {
             Width = GRID_WIDTH,
         };
-        // private XmlDocument xmlDocToSave; // Thinking I'll save everything only once user presses Save_Button
-        // Then I'll have the program run through the open window and parse back to the xmlDocToSave
-
-        public int numTabs;
-        public int apParsed = 0;
-
-        public const int GRID_WIDTH = 595;
-
+       
         public MainWindow( string filePath )
         {
             InitializeComponent ();
@@ -100,7 +94,7 @@ namespace WPF_XML_Tutorial
                                 TabItem newTabItem = new TabItem ();
                                 newTabItem.Name = header;
                                 newTabItem.Header = header;
-                                newTabItem.FontSize = 15;
+                                newTabItem.FontSize = 18;
                                 MainTabControl.Items.Add ( newTabItem );
                                 tabItems.Add ( newTabItem );
                             }
@@ -124,7 +118,14 @@ namespace WPF_XML_Tutorial
                 DisplayPathID ();
             }
             
+        }
 
+        public void BindWidth( FrameworkElement bindMe, FrameworkElement toMe )
+        {
+            Binding b = new Binding ();
+            b.Mode = BindingMode.OneWay;
+            b.Source = toMe.ActualWidth;
+            bindMe.SetBinding ( FrameworkElement.WidthProperty, b );
         }
 
         private void DisplayPathID()
@@ -206,7 +207,9 @@ namespace WPF_XML_Tutorial
         {
             // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
             ListView listView = new ListView (); // KEEP THIS HERE
-            // ^ so when there are two ActionPaths, the last one processed in this method is the only one to show
+            // BindWidth ( MainTabControl, this );
+            // BindWidth ( listView, MainTabControl );
+                        
             // This makes is so every time a new ActionPath is sent to this method, it can reset all the current tabs
             if ( xmlNode.Name == "ActionPath" && ( xmlNode.NodeType == XmlNodeType.Element ) )
             {
@@ -217,8 +220,8 @@ namespace WPF_XML_Tutorial
                 actionPathXmlNodes.Add ( newAPNode );
                 if ( apParsed > 1 )
                 {
-                    // If given new ActionPath to parse, then only want to display information for new ActionPAth
-                    ResetAllTabs (); // Might want to change to only reset ActionPath sub-tabs
+                    // If given new ActionPath to parse, window should only display information for new ActionPath
+                    ResetAllTabs (); 
                 }
             }
 
@@ -239,10 +242,11 @@ namespace WPF_XML_Tutorial
                         listView.Items.Add ( attribTitleTextBlock );
                     }
 
-                    Grid newGrid = new Grid
+                    Grid newGrid = new Grid ()
                     {
                         Width = GRID_WIDTH,
                     };
+                    // BindWidth ( newGrid, listView); 
                     newGrid.ShowGridLines = false;
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
@@ -361,7 +365,7 @@ namespace WPF_XML_Tutorial
                     Setter textSetter = new Setter ();
                     textSetter.Property = Button.FontWeightProperty;
                     textSetter.Value = FontWeights.ExtraBold;
-                    Setter setter = new Setter ();
+                    
                     trigger.Conditions.Add ( condition );
                     trigger.Setters.Add ( foregroundSetter );
                     trigger.Setters.Add ( cursorSetter );
@@ -799,8 +803,8 @@ namespace WPF_XML_Tutorial
         {
             if (pathIDComboBox.SelectedIndex == -1)
             {
-                // TODO
-                MessageBox.Show ( "That will fix all your problems. Don't ask why.", "Select a PathID" );
+                // TODO -- might not need at in current implementation state, actually
+                MessageBox.Show ( "PathID unselected.", "Select a PathID" );
                 return;
             }
 
@@ -810,6 +814,11 @@ namespace WPF_XML_Tutorial
             saveFileDialog.FilterIndex = 1;
             saveFileDialog.ShowDialog ();
             string fileSavePath = saveFileDialog.FileName;
+            if ( fileSavePath == "" )
+            {
+                MessageBox.Show ( "At least it wasn't past six months..", "File save aborted" );
+                return;
+            }
             XmlDocument xmlDocTosave = new XmlDocument ();
             XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
 
