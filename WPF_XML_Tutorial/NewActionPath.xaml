@@ -1,0 +1,24 @@
+﻿<Window x:Class="WPF_XML_Tutorial.NewActionPath"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_XML_Tutorial" 
+        mc:Ignorable="d" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        Title="NewActionPath" Height="195" Width="465">
+    <Canvas FocusManager.FocusedElement="{Binding ElementName=PathIDTextBox}">
+        <Border HorizontalAlignment="Center" Height="74" VerticalAlignment="Top" Width="465" Canvas.Top="10">
+            <Image Name="StemCell_Logo" Source="Images/STEMCELL_Color_JPG.jpg" Margin="36,0,37,0" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+        </Border>
+
+        <Rectangle Panel.ZIndex="-1" Fill="White" Height="189" Width="460" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+
+        <Rectangle Name="Close_Button_InputPathIDWindow" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Fill="LightGray" Height="26" Margin="0,0,0,0" VerticalAlignment="Top" Width="26" Canvas.Left="424" Canvas.Top="10"/>
+        <Label Content="X" Foreground="DarkOrange" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Canvas.Left="427" Width="20" FontFamily="Browallia New" FontSize="24" Canvas.Top="3"/>
+        <Border BorderBrush="LightGray" BorderThickness="4" Height="195" Width="465"/>
+        <Label Content="New PathID:" Canvas.Left="10" Canvas.Top="134" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="154"/>
+        <TextBox Name="PathIDTextBox" Height="46" Canvas.Left="169" TextWrapping="Wrap" Canvas.Top="134" Width="126" FontSize="24"/>
+        <Button x:Name="EnterPathIDButton" Click="EnterPathIDButton_Click" Content="Enter" Canvas.Left="308" Canvas.Top="133" Width="142" Height="46" FontSize="22" FontFamily="Meiryo UI"/>
+
+    </Canvas>
+</Window>

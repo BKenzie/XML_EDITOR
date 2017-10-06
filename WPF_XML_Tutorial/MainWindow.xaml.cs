@@ -25,7 +25,7 @@ namespace WPF_XML_Tutorial
     {
         private string xmlFilePath;
         private string rootName;
-        private List<string> tabHeaders;
+        private List<string> tabHeaders = null;
         private List<TabItem> tabItems = new List<TabItem> ();
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
@@ -37,13 +37,11 @@ namespace WPF_XML_Tutorial
         {
             Width = GRID_WIDTH,
         };
-       
+
         public MainWindow( string filePath )
         {
             InitializeComponent ();
-
-            // Initialize the window elements depending on the XML doc 
-            // NOTE FOR SELF: when writing/editing the xmlDoc, consider using and serializing to a StringBuilder. -> comment: may be only for new xml file creation?
+            
             xmlFilePath = filePath;
             xmlDoc = new XmlDocument ();
             xmlDoc.Load ( xmlFilePath );
@@ -75,7 +73,7 @@ namespace WPF_XML_Tutorial
             Save_Button.Style = customButtonStyle;
             #endregion
 
-
+            // Initialize the window elements depending on the XML doc 
             using ( FileStream fileStream = new FileStream ( xmlFilePath, FileMode.Open ) )
             using ( XmlReader reader = XmlReader.Create ( fileStream ) )
             {
@@ -107,16 +105,21 @@ namespace WPF_XML_Tutorial
             // Send error message if <Tabs_XEDITOR> is empty or not found
             if ( tabHeaders == null )
             {
-                MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR> <Show_Tabs>", "Error" );
+                MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR>", "Error" );
+                return;
             }
 
             // Right before MainWindow is shown to user
-            ComboBox pathIdComboBox = (ComboBox) pathIDGrid.Children[1];
-            if (pathIDComboBox.Items.Count > 1)
+            if ( pathIDGrid.Children != null && pathIDGrid.Children.Count != 0 )
             {
-                ResetAllTabs ();
-                DisplayPathID ();
+                ComboBox pathIdComboBox = (ComboBox) pathIDGrid.Children[1];
+                if ( pathIDComboBox.Items.Count >= 1 )
+                {
+                    ResetAllTabs ();
+                    DisplayPathID ();
+                }
             }
+            
             
         }
 
@@ -139,7 +142,8 @@ namespace WPF_XML_Tutorial
 
         private void ReadTabHeaderInformation( XmlReader reader )
         {
-            // Get to Node <ShowTabs>
+            // Get to tab header text data
+            // NOTE: supports any format where the header text is in any sub-node of <Tabs_XEDITOR>
             while ( reader.NodeType != XmlNodeType.Text )
             {
                 reader.Read ();
@@ -151,20 +155,19 @@ namespace WPF_XML_Tutorial
 
 
         // Read information for tabItems
-        // Should contain ActionPath info such as PathID number (XmlNodeType.Attribute?), but not child elements which have their own tab pages
+        // Tabs contain ActionPath info such as PathID number, but not child elements which have their own tab pages
         private void ReadAllTabInformation()
         {
             XmlNodeList xmlNodes = xmlDoc.ChildNodes;
             // Skip over root node, get list of main nodes in xml file
             // Should be the root node if not an XML Declaration ... I think
-            // TODO: Actually learn XML. (all the different node types at least)
             foreach ( XmlNode node in xmlDoc.ChildNodes )
             {
-                // var node would be the root node
+                // variable node would be the root node
                 if ( node.NodeType == XmlNodeType.Element )
                 {
                     rootName = node.Name;
-                    // var xmlNodes would be a list including all ActionPaths 
+                    // variable xmlNodes would be a list including all ActionPaths 
                     xmlNodes = node.ChildNodes;
                     break;
                 }
@@ -172,7 +175,7 @@ namespace WPF_XML_Tutorial
         
            
             // For each main node, check if it has a tab of it's own
-            // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it <--------------------------- TODO: Determine proper functionality
+            // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it
             foreach ( XmlNode xmlNode in xmlNodes )
             {
                 if ( tabHeaders.Contains ( xmlNode.Name ) )
@@ -189,13 +192,18 @@ namespace WPF_XML_Tutorial
                     }
                     // Parse tab elements/info 
                     RecursiveParseTabInfo ( tabItem, xmlNode );
-
+                    
                 }
                 else
                 {
                     // Ignore element that is not given tab in <Tabs_XEDITOR>
 
-                    // TODO: parse xml comments
+                    // TODO: parse xml comments at top level 
+                    if ( xmlNode.NodeType == XmlNodeType.Comment )
+                    {
+                        ////////////////////////////////////////
+                    }
+
                 }
 
             }
@@ -206,18 +214,24 @@ namespace WPF_XML_Tutorial
         private void RecursiveParseTabInfo( TabItem tabItem, XmlNode xmlNode )
         {
             // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
-            ListView listView = new ListView (); // KEEP THIS HERE
+            ListView listView = new ListView ();
             // BindWidth ( MainTabControl, this );
             // BindWidth ( listView, MainTabControl );
                         
-            // This makes is so every time a new ActionPath is sent to this method, it can reset all the current tabs
+            // Every time a new ActionPath is sent to this method, it resets all of the current tabs
             if ( xmlNode.Name == "ActionPath" && ( xmlNode.NodeType == XmlNodeType.Element ) )
             {
                 // Increment number of ActionPaths parsed
                 apParsed++;
                 // Add ActionPath node to actionPathXmlNodes, this makes it possible to switch between different ActionPaths
-                ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, GetActionPathID ( xmlNode ) );
-                actionPathXmlNodes.Add ( newAPNode );
+                int actionPathId = GetActionPathID ( xmlNode );
+                ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, actionPathId );
+                if ( !actionPathXmlNodes.Contains ( newAPNode ) )
+                {
+                    actionPathXmlNodes.Add ( newAPNode ); // FIX: Will not add second added actionpath, since will have same -1 PathID ----------------------------
+                }
+               
+                
                 if ( apParsed > 1 )
                 {
                     // If given new ActionPath to parse, window should only display information for new ActionPath
@@ -415,7 +429,7 @@ namespace WPF_XML_Tutorial
 
             // ListView construction is over, now set as the tabItem content
             tabItem.Content = listView;
-        }
+            }
 
 
         // Helper function; requires xmlNode param is only ever passed as an ActionPath xml element
@@ -446,55 +460,104 @@ namespace WPF_XML_Tutorial
             // Special behaviour if currently parsing ActionPath's PathID
             if ( xmlChildNode.Name == "PathID" )
             {
-                // Created a ComboBox for PathIDs if does not already exist
-                // else add PathID to existing ComboBox
-                if ( pathIDComboBox == null )
+                if ( xmlChildNode.FirstChild == null )
                 {
-                    // Initialize pathIDComboBox with event handling for switching paths
-                    pathIDComboBox = new ComboBox ();
-                    pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
-                    ComboBoxItem newPathID = new ComboBoxItem ();
-                    newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
-                    pathIDComboBox.Items.Add ( newPathID );
+                    // Creates a ComboBox for PathIDs if does not already exist
+                    // else add PathID to existing ComboBox
+                    if ( pathIDComboBox == null )
+                    {
+                        // Initialize pathIDComboBox with event handling for switching paths
+                        pathIDComboBox = new ComboBox ();
+                        pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
+                        Grid.SetRow ( pathIDComboBox, 0 );
+                        Grid.SetColumn ( pathIDComboBox, 1 );
+                    }
+
+                    if (pathIDComboBox.Items.Count == 0 || Convert.ToString(((ComboBoxItem)pathIDComboBox.Items[pathIDComboBox.Items.Count - 1]).Content) != "New ActionPath")
+                    {
+                        ComboBoxItem addNewActionPath = new ComboBoxItem ();
+                        addNewActionPath.Content = "New ActionPath";
+                        pathIDComboBox.Items.Add ( addNewActionPath );
+                    }
                     
-                    Grid.SetRow ( pathIDComboBox, 0 );
-                    Grid.SetColumn ( pathIDComboBox, 1 );
-
-                    // Add PathIDComboBox to the listView
-                    pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
-
                     TextBlock pathIDTextBlock = new TextBlock ();
                     pathIDTextBlock.Text = "PathID:";
                     pathIDTextBlock.ToolTip = "Current PathID - Change to switch active ActionPath";
                     Grid.SetRow ( pathIDTextBlock, 0 );
                     Grid.SetColumn ( pathIDTextBlock, 0 );
 
+                    if ( pathIDGrid.ColumnDefinitions.Count == 0 )
+                    {
+                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
+                    }
+                    
+
                     pathIDGrid.Children.Add ( pathIDTextBlock );
+                    if ( pathIDComboBox.Parent != null )
+                    {
+                        Grid parent = (Grid) pathIDComboBox.Parent;
+                        parent.Children.Remove ( pathIDComboBox );
+                    }
                     pathIDGrid.Children.Add ( pathIDComboBox );
                     RemoveGridFromListViewParent ( pathIDGrid );
                     listView.Items.Add ( pathIDGrid );
-                    
                 }
                 else
                 {
-                    ComboBoxItem newPathID = new ComboBoxItem ();
-                    newPathID.Content = xmlChildNode.FirstChild.Value;
-                    if ( !ContainsPathID(pathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                    // Created a ComboBox for PathIDs if does not already exist
+                    // else add PathID to existing ComboBox
+                    if ( pathIDComboBox == null )
                     {
-                        pathIDComboBox.Items.Add ( newPathID );
-                    }
+                        // Initialize pathIDComboBox with event handling for switching paths
+                        pathIDComboBox = new ComboBox ();
+                        ComboBoxItem addNewActionPath = new ComboBoxItem ();
+                        addNewActionPath.Content = "New ActionPath";
+                        pathIDComboBox.Items.Add ( addNewActionPath );
+                        pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
+                        ComboBoxItem newPathID = new ComboBoxItem ();
+                        newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
+                        AddNewPathID ( pathIDComboBox, newPathID );
 
-                    if ( !listView.Items.Contains ( pathIDGrid ) )
-                    {
+                        Grid.SetRow ( pathIDComboBox, 0 );
+                        Grid.SetColumn ( pathIDComboBox, 1 );
+
+                        // Add PathIDComboBox to the listView
+                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                        pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                        TextBlock pathIDTextBlock = new TextBlock ();
+                        pathIDTextBlock.Text = "PathID:";
+                        pathIDTextBlock.ToolTip = "Current PathID - Change to switch active ActionPath";
+                        Grid.SetRow ( pathIDTextBlock, 0 );
+                        Grid.SetColumn ( pathIDTextBlock, 0 );
+
+                        pathIDGrid.Children.Add ( pathIDTextBlock );
+                        pathIDGrid.Children.Add ( pathIDComboBox );
                         RemoveGridFromListViewParent ( pathIDGrid );
                         listView.Items.Add ( pathIDGrid );
-                        //pathIDComboBox.SelectedIndex = pathIDComboBox.Items.Count - 1; // TODO: Figure out why this does not work
 
                     }
+                    else
+                    {
+                        ComboBoxItem newPathID = new ComboBoxItem ();
+                        newPathID.Content = xmlChildNode.FirstChild.Value;
+                        if ( !ContainsPathID ( pathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                        {
+                            AddNewPathID ( pathIDComboBox, newPathID );
+                        }
+
+                        if ( !listView.Items.Contains ( pathIDGrid ) )
+                        {
+                            RemoveGridFromListViewParent ( pathIDGrid );
+                            listView.Items.Add ( pathIDGrid );
+                        }
+                    }
+                    #endregion
                 }
-                #endregion
+
 
             }
             else
@@ -657,10 +720,36 @@ namespace WPF_XML_Tutorial
             foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
             {
                 ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true );
-
             }
             //listView.Items.Add ( new Separator () );
             //listView.Items.Add ( new Separator () );
+        }
+
+        private void AddNewPathID( ComboBox pathIDComboBox, ComboBoxItem newPathID )
+        {
+            // Need to insert the new ComboBoxItem into the proper place 
+            // (before "New ActionPath" option) 
+            if ( pathIDComboBox.Items.Count <= 1 )
+            {
+                pathIDComboBox.Items.Insert ( 0, newPathID );
+            }
+            else
+            {
+                int i = 0;
+                foreach ( ComboBoxItem item in pathIDComboBox.Items )
+                {
+                    if ( Convert.ToString ( item.Content ) != "New ActionPath" )
+                    {
+                        if ( Convert.ToInt32 ( item.Content ) > Convert.ToInt32 ( newPathID.Content ) )
+                        {
+                            pathIDComboBox.Items.Insert ( i, newPathID );
+                            return;
+                        }
+                        i++;
+                    }
+                }
+                pathIDComboBox.Items.Insert ( i, newPathID );
+            }
         }
 
         private void RemoveGridFromListViewParent( Grid pathIDGrid )
@@ -678,7 +767,7 @@ namespace WPF_XML_Tutorial
         {
             foreach ( ComboBoxItem comboItem in pathIDComboBox.Items )
             {
-                if ( (string)comboItem.Content == pathID )
+                if ( Convert.ToString ( comboItem.Content ) == pathID )
                 {
                     return true;
                 }
@@ -690,18 +779,46 @@ namespace WPF_XML_Tutorial
         private void PathIDChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBoxItem item = pathIDComboBox.SelectedItem as ComboBoxItem;
-            string strPathID = (string)item.Content;
-            int intPathID = Convert.ToInt32 ( strPathID );
+            if ( Convert.ToString(item.Content) == "New ActionPath" )
+            {
+                // Open window for new ActionPath input -> user chosen PathID, ability to cancel, requests focus?
+                // TODO
+                // Parses new ActionPathTemplate with user input PathID, then changes PathID ( SwitchCurrentActionPath() ) to new ActionPath
 
-            SwitchCurrentActionPath ( intPathID );
+                NewActionPath newActionPathWindow = new NewActionPath ( this );
+                newActionPathWindow.Show ();
+            }
+            else
+            {
+                string strPathID = Convert.ToString(item.Content);
+                int intPathID = Convert.ToInt32 ( strPathID );
+                SwitchCurrentActionPath ( intPathID );
+            }
+        }
+
+        public void NewPathIDEntered( int pathID )
+        {
+            // throw new NotImplementedException (); 
+            // TODO //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // WHEN THERE IS NO PATH ID, NEED TO JUST GENERATE WHATEVER AND KEEP PARSING THE REST OF THE NODE INFORMATION. OK. DO THAT. SHOULD FINALLY WORK THEN
+            XmlDocument helperXmlDoc = new XmlDocument ();
+            string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
+            helperXmlDoc.Load ( templateFilePath );
+            XmlNode newXmlNode = helperXmlDoc.LastChild.LastChild; // this retrieves just the template <ActionPath> node
+            ActionPathXmlNode newActionPath = new ActionPathXmlNode ( newXmlNode, pathID );
+            actionPathXmlNodes.Add ( newActionPath );
+            ComboBoxItem newPathIDItem = new ComboBoxItem ();
+            newPathIDItem.Content = pathID;
+            AddNewPathID ( pathIDComboBox, newPathIDItem );
             
+            pathIDComboBox.SelectedIndex = pathIDComboBox.Items.IndexOf ( newPathIDItem );
         }
 
         // Displays new ActionPath and sub-tabs associated with param pathID in window
         private void SwitchCurrentActionPath( int? pathID )
         {
             XmlNode actionPath = null;
-            // Get proper XmlNode for actionPath, pathIDs must be the same
+            // Get proper XmlNode for ActionPath, PathIDs must be the same
             foreach ( ActionPathXmlNode actionPathXmlNode in actionPathXmlNodes)
             {
                 if ( actionPathXmlNode.PathID == pathID )
@@ -744,7 +861,6 @@ namespace WPF_XML_Tutorial
         {
             DragMove ();
         }
-
 
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
         {
