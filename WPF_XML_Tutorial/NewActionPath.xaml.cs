@@ -26,6 +26,7 @@ namespace WPF_XML_Tutorial
             InitializeComponent ();
             mainWindowCaller = caller;
             this.Focus ();
+            this.Topmost = true;
             PathIDTextBox.Focus ();
         }
 
@@ -36,6 +37,8 @@ namespace WPF_XML_Tutorial
 
         private void Close_Button_InputPathIDWindow_Click( object sender, MouseButtonEventArgs e )
         {
+            mainWindowCaller.IsEnabled = true;
+            MainWindow.pathIDComboBox.SelectedIndex = -1;
             this.Close ();
         }
 
@@ -47,21 +50,30 @@ namespace WPF_XML_Tutorial
                 List<int> curPathIDs = GetPathIDs ();
                 if ( !curPathIDs.Contains ( userInputPathID ) )
                 {
-                    mainWindowCaller.NewPathIDEntered ( userInputPathID );
-                    this.Close ();
+                    if ( userInputPathID >= 0 )
+                    {
+                        mainWindowCaller.NewPathIDEntered ( userInputPathID );
+                        mainWindowCaller.IsEnabled = true;
+                        this.Close ();
+                    }
+                    else
+                    {
+                        MessageBox.Show ( "New PathID must not be a negative number.", "PathID value error" );
+
+                    }
+
                 }
                 else
                 {
-                    MessageBox.Show ( "Chosen PathID already has an existing AcionPath active in the editor.", "PathID already exists" );
+                    MessageBox.Show ( "Chosen PathID already has an existing ActionPath active in the editor.", "PathID already exists" );
                 }
 
 
             }
-            finally { }
-            //catch(Exception ex)
-            //{
-            //    MessageBox.Show ( "Input a valid PathID\n" + ex.Message, "Error" );
-            //}
+            catch(Exception ex)
+            {
+                MessageBox.Show ( "Input a valid PathID\n" + ex.Message, "Error" );
+            }
 
             
         }

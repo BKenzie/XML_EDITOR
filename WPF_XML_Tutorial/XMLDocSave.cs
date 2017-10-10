@@ -47,19 +47,23 @@ namespace WPF_XML_Tutorial
         {
             if ( pathIDComboBox == null )
             {
-                WriteCurrentOpenTabs ( tabItems );
+                WriteCurrentOpenTabs ( tabItems, -1 );
                 Save ();
             }
             else
             {
                 foreach ( ComboBoxItem item in pathIDComboBox.Items )
                 {
-                    pathIDComboBox.SelectedItem = item;
+                    if ( Convert.ToString ( item.Content ) != "New ActionPath" )
+                    {
+                        // Will trigger MainWindow.PathIDChange from the OnSelectedItemChanged event
+                        pathIDComboBox.SelectedItem = item;
+                    }
                     curElement = null;
                     mainAttributesPassed = false;
                     xmlTabNodes.Clear ();
                     xmlSubNodes.Clear ();
-                    WriteCurrentOpenTabs ( tabItems );
+                    WriteCurrentOpenTabs ( tabItems, -1 );
                     NullifyEmptyNodes ( xmlDoc.LastChild );
                     Save ();
                 }
@@ -79,14 +83,14 @@ namespace WPF_XML_Tutorial
         }
 
         // Called for each PathID
-        public void WriteCurrentOpenTabs( List<TabItem> tabItems )
+        public XmlNode WriteCurrentOpenTabs( List<TabItem> tabItems, int pathID )
         {
             mainAttributesPassed = false;
             foreach ( TabItem tabItem in tabItems )
             {
                 XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", (string)tabItem.Header, "" ); 
 
-                WriteTabInfoToXmlNode ( tabItem, xmlTabNode );
+                WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
                 xmlTabNodes.Add ( xmlTabNode );
             }
 
@@ -96,7 +100,7 @@ namespace WPF_XML_Tutorial
                 string nodeName = (string)tabItem.Header;
                 XmlNode xmlTabNode = GetXmlTabNode ( nodeName );
                 InsertSubNodes ( tabItem, xmlTabNode ); 
-            }
+            } 
             
             // Add to xmlDoc any main tab nodes that are not sub nodes
             foreach ( XmlNode xmlTabNode in xmlTabNodes )
@@ -106,6 +110,8 @@ namespace WPF_XML_Tutorial
                     xmlDoc.FirstChild.AppendChild ( xmlTabNode );
                 }
             }
+
+            return xmlDoc;
         }
 
         // Helper function
@@ -137,19 +143,23 @@ namespace WPF_XML_Tutorial
             }
         }
 
-        private void WriteTabInfoToXmlNode( TabItem tabItem, XmlNode xmlTabNode )
+        private void WriteTabInfoToXmlNode( TabItem tabItem, XmlNode xmlTabNode, int pathID )
         {
             curElement = (XmlElement)xmlTabNode;
             ListView listView = (ListView) tabItem.Content;
-            foreach ( Grid grid in listView.Items.OfType<Grid> () )
+            if ( listView != null )
             {
-                WriteGridInfoToXml ( grid, xmlTabNode );
+                foreach ( Grid grid in listView.Items.OfType<Grid> () )
+                {
+                    WriteGridInfoToXml ( grid, xmlTabNode, pathID );
+                }
             }
+            
 
         }
 
         // Given a single grid element in tabs list view, parse info into xml
-        private void WriteGridInfoToXml( Grid grid, XmlNode xmlTabNode )
+        private void WriteGridInfoToXml( Grid grid, XmlNode xmlTabNode, int pathID )
         {
             // Sub element
             if ( grid.Children.Count == 1 )
@@ -178,11 +188,20 @@ namespace WPF_XML_Tutorial
                     {
                         mainAttributesPassed = true;
                         XmlElement pathIDElement = xmlDoc.CreateElement ( "PathID" );
-                        ComboBoxItem selectedPathIDItem = (ComboBoxItem)MainWindow.pathIDComboBox.SelectedItem;
-                        pathIDElement.InnerText = (string)selectedPathIDItem.Content;
+                        if ( pathID != -1 )
+                        {
+                            pathIDElement.InnerText = Convert.ToString ( pathID );
+                        }
+                        else
+                        {
+                            ComboBoxItem selectedPathIDItem = (ComboBoxItem) MainWindow.pathIDComboBox.SelectedItem;
+                            if ( selectedPathIDItem != null )
+                            {
+                                pathIDElement.InnerText = Convert.ToString ( selectedPathIDItem.Content );
+                            }
+                        }
                         xmlTabNode.AppendChild ( pathIDElement );
                         curElement = pathIDElement;
-
                     }
                 }
                 

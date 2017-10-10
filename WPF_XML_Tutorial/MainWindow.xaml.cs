@@ -29,7 +29,9 @@ namespace WPF_XML_Tutorial
         private List<TabItem> tabItems = new List<TabItem> ();
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
+        Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
         public static ComboBox pathIDComboBox;
+        public int currentPathID = -1;
         public int numTabs;
         public int apParsed = 0;
         public const int GRID_WIDTH = 698;
@@ -174,7 +176,7 @@ namespace WPF_XML_Tutorial
             }
         
            
-            // For each main node, check if it has a tab of it's own
+            // For each main node (xmlNode would be one ActionPath), check if it has a tab of it's own
             // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it
             foreach ( XmlNode xmlNode in xmlNodes )
             {
@@ -192,7 +194,7 @@ namespace WPF_XML_Tutorial
                     }
                     // Parse tab elements/info 
                     RecursiveParseTabInfo ( tabItem, xmlNode );
-                    
+
                 }
                 else
                 {
@@ -203,16 +205,23 @@ namespace WPF_XML_Tutorial
                     {
                         ////////////////////////////////////////
                     }
-
                 }
-
             }
-            
         }
 
-        // Parse info for a single tab --------------------------------------------------------------------------------------------------------------------------
+        // Parse info for a single tab 
         private void RecursiveParseTabInfo( TabItem tabItem, XmlNode xmlNode )
         {
+            // Check for tabItem saved history
+            XmlNode xmlNodeHistory;
+            int pathID = GetActionPathID ( xmlNode );
+            if ( pathIDHistories.ContainsKey ( pathID ) && ( pathID != -1 ) )
+            {
+                xmlNodeHistory = pathIDHistories[pathID];
+                xmlNode = xmlNodeHistory;
+            }
+
+
             // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
             ListView listView = new ListView ();
             // BindWidth ( MainTabControl, this );
@@ -225,10 +234,12 @@ namespace WPF_XML_Tutorial
                 apParsed++;
                 // Add ActionPath node to actionPathXmlNodes, this makes it possible to switch between different ActionPaths
                 int actionPathId = GetActionPathID ( xmlNode );
+
+                //currentPathID = actionPathId; should be able to get rid of this line
                 ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, actionPathId );
                 if ( !actionPathXmlNodes.Contains ( newAPNode ) )
                 {
-                    actionPathXmlNodes.Add ( newAPNode ); // FIX: Will not add second added actionpath, since will have same -1 PathID ----------------------------
+                    actionPathXmlNodes.Add ( newAPNode );
                 }
                
                 
@@ -445,7 +456,7 @@ namespace WPF_XML_Tutorial
                     }
                     else
                     {
-                        MessageBox.Show ( "No ActionPath PathID specified in xml document.", "PathID Error" );
+                        //MessageBox.Show ( "No ActionPath PathID specified in xml document.", "PathID Error" );
                     }
                 }
             }
@@ -473,7 +484,8 @@ namespace WPF_XML_Tutorial
                         Grid.SetColumn ( pathIDComboBox, 1 );
                     }
 
-                    if (pathIDComboBox.Items.Count == 0 || Convert.ToString(((ComboBoxItem)pathIDComboBox.Items[pathIDComboBox.Items.Count - 1]).Content) != "New ActionPath")
+                    if (pathIDComboBox.Items.Count == 0 || 
+                        Convert.ToString(((ComboBoxItem)pathIDComboBox.Items[pathIDComboBox.Items.Count - 1]).Content) != "New ActionPath")
                     {
                         ComboBoxItem addNewActionPath = new ComboBoxItem ();
                         addNewActionPath.Content = "New ActionPath";
@@ -778,29 +790,43 @@ namespace WPF_XML_Tutorial
         // Event handler for pathIdComboBox selection changed
         private void PathIDChanged(object sender, SelectionChangedEventArgs e)
         {
-            ComboBoxItem item = pathIDComboBox.SelectedItem as ComboBoxItem;
-            if ( Convert.ToString(item.Content) == "New ActionPath" )
-            {
-                // Open window for new ActionPath input -> user chosen PathID, ability to cancel, requests focus?
-                // TODO
-                // Parses new ActionPathTemplate with user input PathID, then changes PathID ( SwitchCurrentActionPath() ) to new ActionPath
+            // TODO: Save changes to current open tabs before switching to the new active ActionPath (ask user?)
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                NewActionPath newActionPathWindow = new NewActionPath ( this );
-                newActionPathWindow.Show ();
-            }
-            else
+            if ( pathIDComboBox.SelectedIndex != -1 )
             {
-                string strPathID = Convert.ToString(item.Content);
-                int intPathID = Convert.ToInt32 ( strPathID );
-                SwitchCurrentActionPath ( intPathID );
+                // Want to save any changes to the currently active tabs before switching to a new active ActionPath
+                // At this point, the selected PathID has been changed but the tabItems list has not yet been updated
+                XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
+                // TODO: make the program check for a savedActiveTabsState before parsing any new ActionPaths. //
+                // TODO: if it finds a savedActiveTabsState, it should parse that instead // 
+                XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
+                // If exists, delete previous saved state and overwrite with new saved state
+                if ( pathIDHistories.ContainsKey ( currentPathID ) )
+                {
+                    pathIDHistories.Remove ( currentPathID );
+                }
+                pathIDHistories.Add ( currentPathID, savedActiveTabsState.FirstChild.LastChild );
+
+                ComboBoxItem item = pathIDComboBox.SelectedItem as ComboBoxItem;
+                if ( Convert.ToString ( item.Content ) == "New ActionPath" )
+                {
+                    NewActionPath newActionPathWindow = new NewActionPath ( this );
+                    newActionPathWindow.Show ();
+                    this.IsEnabled = false;
+                }
+                else
+                {
+                    string strPathID = Convert.ToString ( item.Content );
+                    int intPathID = Convert.ToInt32 ( strPathID );
+                    SwitchCurrentActionPath ( intPathID );
+                }
             }
+            
         }
 
         public void NewPathIDEntered( int pathID )
         {
-            // throw new NotImplementedException (); 
-            // TODO //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // WHEN THERE IS NO PATH ID, NEED TO JUST GENERATE WHATEVER AND KEEP PARSING THE REST OF THE NODE INFORMATION. OK. DO THAT. SHOULD FINALLY WORK THEN
             XmlDocument helperXmlDoc = new XmlDocument ();
             string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
             helperXmlDoc.Load ( templateFilePath );
@@ -817,6 +843,10 @@ namespace WPF_XML_Tutorial
         // Displays new ActionPath and sub-tabs associated with param pathID in window
         private void SwitchCurrentActionPath( int? pathID )
         {
+            if (pathID != null)
+            {
+                currentPathID = (int) pathID;
+            }
             XmlNode actionPath = null;
             // Get proper XmlNode for ActionPath, PathIDs must be the same
             foreach ( ActionPathXmlNode actionPathXmlNode in actionPathXmlNodes)
@@ -899,8 +929,7 @@ namespace WPF_XML_Tutorial
             }
             else
             {
-                // Wholly unnecessary
-                MessageBox.Show ( "Error: error.", "ERROR" );
+                // MessageBox.Show ( "Error: error.", "ERROR" );
             }
 
             if ( filePath != "" )
@@ -932,7 +961,7 @@ namespace WPF_XML_Tutorial
             string fileSavePath = saveFileDialog.FileName;
             if ( fileSavePath == "" )
             {
-                MessageBox.Show ( "At least it wasn't past six months..", "File save aborted" );
+                MessageBox.Show ( "File save aborted" );
                 return;
             }
             XmlDocument xmlDocTosave = new XmlDocument ();
@@ -942,5 +971,11 @@ namespace WPF_XML_Tutorial
 
         }
 
+        //public int GetCurrentPathID() // does not work when the pathIDComboBox is in transition to adding a new ActionPath
+        //{
+        //    ComboBoxItem curPathIDItem = (ComboBoxItem) pathIDComboBox.SelectedItem;
+        //    int curPathID = Convert.ToInt32 ( curPathIDItem.Content );
+        //    return curPathID;
+        //}
     }
 }
