@@ -213,7 +213,7 @@ namespace WPF_XML_Tutorial
         private void RecursiveParseTabInfo( TabItem tabItem, XmlNode xmlNode )
         {
             // Check for tabItem saved history
-            XmlNode xmlNodeHistory;
+            XmlNode xmlNodeHistory; 
             int pathID = GetActionPathID ( xmlNode );
             if ( pathIDHistories.ContainsKey ( pathID ) && ( pathID != -1 ) )
             {
@@ -831,6 +831,14 @@ namespace WPF_XML_Tutorial
             string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
             helperXmlDoc.Load ( templateFilePath );
             XmlNode newXmlNode = helperXmlDoc.LastChild.LastChild; // this retrieves just the template <ActionPath> node
+            // Need to set the PathID into the newXmlNode so that it isn't empty
+            foreach ( XmlNode xmlNode in newXmlNode.ChildNodes )
+            {
+                if ( xmlNode.Name == "PathID" && xmlNode.NodeType == XmlNodeType.Element )
+                {
+                    xmlNode.InnerText = Convert.ToString ( pathID );
+                }
+            }
             ActionPathXmlNode newActionPath = new ActionPathXmlNode ( newXmlNode, pathID );
             actionPathXmlNodes.Add ( newActionPath );
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
