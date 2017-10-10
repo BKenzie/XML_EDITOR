@@ -91,5 +91,13 @@ namespace WPF_XML_Tutorial
             }
             return pathIDs;
         }
+
+        private void PathIDTextBox_KeyUp( object sender, KeyEventArgs e )
+        {
+            if ( e.Key == Key.Return )
+            {
+                EnterPathIDButton.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@
         <Label Content="X" Foreground="DarkOrange" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Canvas.Left="427" Width="20" FontFamily="Browallia New" FontSize="24" Canvas.Top="3"/>
         <Border BorderBrush="LightGray" BorderThickness="4" Height="195" Width="465"/>
         <Label Content="New PathID:" Canvas.Left="10" Canvas.Top="134" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="154"/>
-        <TextBox Name="PathIDTextBox" Height="46" Canvas.Left="169" TextWrapping="Wrap" Canvas.Top="134" Width="126" FontSize="24"/>
+        <TextBox Name="PathIDTextBox" KeyUp="PathIDTextBox_KeyUp" Height="46" Canvas.Left="169" TextWrapping="Wrap" Canvas.Top="134" Width="126" FontSize="24"/>
         <Button x:Name="EnterPathIDButton" Click="EnterPathIDButton_Click" Content="Enter" Canvas.Left="308" Canvas.Top="133" Width="142" Height="46" FontSize="22" FontFamily="Meiryo UI"/>
 
     </Canvas>

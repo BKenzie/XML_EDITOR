@@ -75,6 +75,8 @@ namespace WPF_XML_Tutorial
             Save_Button.Style = customButtonStyle;
             #endregion
 
+            MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
+
             // Initialize the window elements depending on the XML doc 
             using ( FileStream fileStream = new FileStream ( xmlFilePath, FileMode.Open ) )
             using ( XmlReader reader = XmlReader.Create ( fileStream ) )
@@ -123,6 +125,22 @@ namespace WPF_XML_Tutorial
             }
             
             
+        }
+
+        // Event handler for PathID overlay not appearing on ActionPath tab
+        private void TabChanged( object sender, SelectionChangedEventArgs e )
+        {
+            int currentIndex = ( (TabControl) sender ).SelectedIndex;
+            if ( currentIndex == 0 )
+            {
+                TextPathIDOverlay.Visibility = Visibility.Hidden;
+                NumPathIDOverlay.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                TextPathIDOverlay.Visibility = Visibility.Visible;
+                NumPathIDOverlay.Visibility = Visibility.Visible;
+            }
         }
 
         public void BindWidth( FrameworkElement bindMe, FrameworkElement toMe )
@@ -478,10 +496,7 @@ namespace WPF_XML_Tutorial
                     if ( pathIDComboBox == null )
                     {
                         // Initialize pathIDComboBox with event handling for switching paths
-                        pathIDComboBox = new ComboBox ();
-                        pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
-                        Grid.SetRow ( pathIDComboBox, 0 );
-                        Grid.SetColumn ( pathIDComboBox, 1 );
+                        InitializePathIDComboBox ();
                     }
 
                     if (pathIDComboBox.Items.Count == 0 || 
@@ -737,6 +752,15 @@ namespace WPF_XML_Tutorial
             //listView.Items.Add ( new Separator () );
         }
 
+        private void InitializePathIDComboBox()
+        {
+
+            pathIDComboBox = new ComboBox ();
+            pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
+            Grid.SetRow ( pathIDComboBox, 0 );
+            Grid.SetColumn ( pathIDComboBox, 1 );
+        }
+
         private void AddNewPathID( ComboBox pathIDComboBox, ComboBoxItem newPathID )
         {
             // Need to insert the new ComboBoxItem into the proper place 
@@ -790,16 +814,14 @@ namespace WPF_XML_Tutorial
         // Event handler for pathIdComboBox selection changed
         private void PathIDChanged(object sender, SelectionChangedEventArgs e)
         {
-            // TODO: Save changes to current open tabs before switching to the new active ActionPath (ask user?)
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             if ( pathIDComboBox.SelectedIndex != -1 )
             {
+                // Change PathID overlay
+                NumPathIDOverlay.Text = Convert.ToString ( ( (ComboBoxItem) pathIDComboBox.SelectedItem ).Content );
                 // Want to save any changes to the currently active tabs before switching to a new active ActionPath
                 // At this point, the selected PathID has been changed but the tabItems list has not yet been updated
                 XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
-                // TODO: make the program check for a savedActiveTabsState before parsing any new ActionPaths. //
-                // TODO: if it finds a savedActiveTabsState, it should parse that instead // 
                 XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
                 // If exists, delete previous saved state and overwrite with new saved state
                 if ( pathIDHistories.ContainsKey ( currentPathID ) )
@@ -954,6 +976,12 @@ namespace WPF_XML_Tutorial
 
         private void Save_Button_Click( object sender, RoutedEventArgs e )
         {
+            if ( pathIDComboBox == null )
+            {
+                InitializePathIDComboBox ();
+                // TODO ///////// set the selected PathID here for when you cancel an Open operation. Or maybe actually do it in the handling of that thing..
+            }
+
             if (pathIDComboBox.SelectedIndex == -1)
             {
                 // TODO -- might not need at in current implementation state, actually
