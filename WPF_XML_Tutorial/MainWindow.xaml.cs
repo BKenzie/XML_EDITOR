@@ -944,8 +944,6 @@ namespace WPF_XML_Tutorial
 
         private void Open_New_Button_Click( object sender, RoutedEventArgs e )
         {
-            pathIDComboBox = null;
-
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
             openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
