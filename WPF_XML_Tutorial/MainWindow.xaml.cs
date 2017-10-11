@@ -969,7 +969,7 @@ namespace WPF_XML_Tutorial
 
                 MainWindow mainWindow = new MainWindow ( filePath );
                 mainWindow.Show ();
-                this.Close ();
+                //this.Close ();
 
             }
         }
@@ -985,8 +985,8 @@ namespace WPF_XML_Tutorial
             if (pathIDComboBox.SelectedIndex == -1)
             {
                 // TODO -- might not need at in current implementation state, actually
-                MessageBox.Show ( "PathID unselected.", "Select a PathID" );
-                return;
+                // MessageBox.Show ( "PathID unselected.", "Select a PathID" );
+                // return;
             }
 
             // Get file name/location to save from user

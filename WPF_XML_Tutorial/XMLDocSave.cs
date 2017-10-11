@@ -130,17 +130,21 @@ namespace WPF_XML_Tutorial
         // Goes through all tabLinkButtons in any tab and then appends that xmlTabNode to proper parent node
         private void InsertSubNodes( TabItem tabItem, XmlNode xmlTabNode )
         {
-            ListView listView = (ListView)tabItem.Content;
-            foreach ( Grid grid in listView.Items.OfType<Grid>() )
+            if ( tabItem.Content != null )
             {
-                foreach ( Button tabLinkButton in grid.Children.OfType<Button> () )
+                ListView listView = (ListView) tabItem.Content;
+                foreach ( Grid grid in listView.Items.OfType<Grid> () )
                 {
-                    string buttonName = (string)tabLinkButton.Content;
-                    XmlNode subNodeToAppend = GetXmlTabNode ( buttonName );
-                    xmlTabNode.AppendChild ( subNodeToAppend );
-                    xmlSubNodes.Add ( subNodeToAppend );
+                    foreach ( Button tabLinkButton in grid.Children.OfType<Button> () )
+                    {
+                        string buttonName = (string) tabLinkButton.Content;
+                        XmlNode subNodeToAppend = GetXmlTabNode ( buttonName );
+                        xmlTabNode.AppendChild ( subNodeToAppend );
+                        xmlSubNodes.Add ( subNodeToAppend );
+                    }
                 }
             }
+            
         }
 
         private void WriteTabInfoToXmlNode( TabItem tabItem, XmlNode xmlTabNode, int pathID )
