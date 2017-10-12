@@ -293,6 +293,11 @@ namespace WPF_XML_Tutorial
             string toolTip = (string) textBox.ToolTip;
             if ( toolTip != null )
             {
+                if ( toolTip.Length < 9 )
+                {
+                    return false;
+                }
+
                 toolTip = toolTip.Substring ( toolTip.Length - 9 ).ToLower ();
                 if ( toolTip == "attribute" )
                 {
@@ -308,6 +313,11 @@ namespace WPF_XML_Tutorial
             string toolTip = (string) textBox.ToolTip;
             if ( toolTip != null )
             {
+                if ( toolTip.Length < 7 )
+                {
+                    return false;
+                }
+
                 toolTip = toolTip.Substring ( toolTip.Length - 7 ).ToLower ();
                 if ( toolTip == "element" )
                 {

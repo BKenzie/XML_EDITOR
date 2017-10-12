@@ -57,6 +57,9 @@
     <Compile Include="NewActionPath.xaml.cs">
       <DependentUpon>NewActionPath.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NewElemOrAttrib.xaml.cs">
+      <DependentUpon>NewElemOrAttrib.xaml</DependentUpon>
+    </Compile>
     <Compile Include="XMLDocSave.cs" />
     <Page Include="InputXMLWindow.xaml">
       <SubType>Designer</SubType>
@@ -79,6 +82,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="NewActionPath.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NewElemOrAttrib.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

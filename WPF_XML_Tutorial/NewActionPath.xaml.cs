@@ -19,7 +19,7 @@ namespace WPF_XML_Tutorial
     /// </summary>
     public partial class NewActionPath : Window
     {
-        MainWindow mainWindowCaller;
+        private MainWindow mainWindowCaller;
 
         public NewActionPath( MainWindow caller)
         {

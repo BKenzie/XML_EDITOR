@@ -268,23 +268,58 @@ namespace WPF_XML_Tutorial
                 }
             }
 
+            // Display attribute header
+            TextBlock attribTitleTextBlock = new TextBlock ();
+            attribTitleTextBlock.Text = "Attributes:";
+            attribTitleTextBlock.FontSize = 16;
+            attribTitleTextBlock.TextDecorations = TextDecorations.Underline;
+            attribTitleTextBlock.FontWeight = FontWeights.Bold;
+            listView.Items.Add ( attribTitleTextBlock );
 
+            #region New attribute button
+
+            Button newAttributeButton = new Button ();
+            newAttributeButton.Content = "Add new"; 
+            newAttributeButton.Click += new RoutedEventHandler ( newAttributeButton_Click );
+            newAttributeButton.Background = new SolidColorBrush ( Colors.LightGray );
+            newAttributeButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+            newAttributeButton.FontSize = 10;
+            newAttributeButton.Height = 20;
+            newAttributeButton.Width = 50;
+
+            Style customButtonStyleAttrib = new Style ();
+            customButtonStyleAttrib.TargetType = typeof ( Button );
+            MultiDataTrigger triggerAttrib = new MultiDataTrigger ();
+            Condition conditionAttrib = new Condition ();
+            conditionAttrib.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            conditionAttrib.Value = true;
+            Setter foregroundSetterAttrib = new Setter ();
+            foregroundSetterAttrib.Property = Button.ForegroundProperty;
+            foregroundSetterAttrib.Value = Brushes.DarkOrange;
+            Setter cursorSetterAttrib = new Setter ();
+            cursorSetterAttrib.Property = Button.CursorProperty;
+            cursorSetterAttrib.Value = Cursors.Hand;
+            Setter textSetterAttrib = new Setter ();
+            textSetterAttrib.Property = Button.FontWeightProperty;
+            textSetterAttrib.Value = FontWeights.ExtraBold;
+
+            triggerAttrib.Conditions.Add ( conditionAttrib );
+            triggerAttrib.Setters.Add ( foregroundSetterAttrib );
+            triggerAttrib.Setters.Add ( cursorSetterAttrib );
+            triggerAttrib.Setters.Add ( textSetterAttrib );
+
+            customButtonStyleAttrib.Triggers.Clear ();
+            customButtonStyleAttrib.Triggers.Add ( triggerAttrib );
+            newAttributeButton.Style = customButtonStyleAttrib;
+            #endregion
+
+            listView.Items.Add ( newAttributeButton );
+
+            // Display all node attributes 
             if ( xmlNode.Attributes.Count > 0 )
             {
-                // Display all node attributes
                 foreach ( XmlAttribute attribute in xmlNode.Attributes )
                 {
-                    if ( xmlNode.Attributes.Item(0) == attribute )
-                    {
-                        TextBlock attribTitleTextBlock = new TextBlock ();
-                        attribTitleTextBlock.Text = "Attributes:";
-                        attribTitleTextBlock.FontSize = 16;
-                        attribTitleTextBlock.TextDecorations = TextDecorations.Underline;
-                        attribTitleTextBlock.FontWeight = FontWeights.Bold;
-
-                        listView.Items.Add ( attribTitleTextBlock );
-                    }
-
                     Grid newGrid = new Grid ()
                     {
                         Width = GRID_WIDTH,
@@ -310,12 +345,20 @@ namespace WPF_XML_Tutorial
                     Grid.SetRow ( textBoxAttrib, 0 );
                     Grid.SetColumn ( textBoxAttrib, 1 );
                     newGrid.Children.Add ( textBoxAttrib );
-                    
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete attribute";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
                     listView.Items.Add ( newGrid );
                 }
-                listView.Items.Add ( new Separator () );
-                listView.Items.Add ( new Separator () );
             }
+
+            listView.Items.Add ( new Separator () );
+            listView.Items.Add ( new Separator () );
 
             // If xmlNode contains only text, then display
             if ( xmlNode.HasChildNodes )
@@ -346,23 +389,65 @@ namespace WPF_XML_Tutorial
                     Grid.SetColumn ( textBoxNodeText, 1 );
                     newGrid.Children.Add ( textBoxNodeText );
 
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete text element";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
                     listView.Items.Add ( newGrid );
                 }
             }
 
+            // Display element header 
+            TextBlock elementTitleTextBlock = new TextBlock ();
+            elementTitleTextBlock.Text = "Elements:";
+            elementTitleTextBlock.FontWeight = FontWeights.Bold;
+            elementTitleTextBlock.FontSize = 16;
+            elementTitleTextBlock.TextDecorations = TextDecorations.Underline;
+            listView.Items.Add ( elementTitleTextBlock );
+
+            #region New element button
+
+            Button newElementButton = new Button ();
+            newElementButton.Content = "Add new";
+            newElementButton.Click += new RoutedEventHandler ( newElementButton_Click );
+            newElementButton.Background = new SolidColorBrush ( Colors.LightGray );
+            newElementButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+            newElementButton.FontSize = 10;
+            newElementButton.Height = 20;
+            newElementButton.Width = 50;
+
+            Style customButtonStyleElement = new Style ();
+            customButtonStyleElement.TargetType = typeof ( Button );
+            MultiDataTrigger triggerElem = new MultiDataTrigger ();
+            Condition conditionElem = new Condition ();
+            conditionElem.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            conditionElem.Value = true;
+            Setter foregroundSetterElem = new Setter ();
+            foregroundSetterElem.Property = Button.ForegroundProperty;
+            foregroundSetterElem.Value = Brushes.DarkOrange;
+            Setter cursorSetterElem = new Setter ();
+            cursorSetterElem.Property = Button.CursorProperty;
+            cursorSetterElem.Value = Cursors.Hand;
+            Setter textSetterElem = new Setter ();
+            textSetterElem.Property = Button.FontWeightProperty;
+            textSetterElem.Value = FontWeights.ExtraBold;
+
+            triggerElem.Conditions.Add ( conditionElem );
+            triggerElem.Setters.Add ( foregroundSetterElem );
+            triggerElem.Setters.Add ( cursorSetterElem );
+            triggerElem.Setters.Add ( textSetterElem );
+
+            customButtonStyleElement.Triggers.Clear ();
+            customButtonStyleElement.Triggers.Add ( triggerElem );
+            newElementButton.Style = customButtonStyleElement;
+            #endregion
+
+            listView.Items.Add ( newElementButton );
 
             XmlNodeList xmlChildNodes = xmlNode.ChildNodes;
-            if ( xmlChildNodes != null )
-            {
-                TextBlock elementTitleTextBlock = new TextBlock ();
-                elementTitleTextBlock.Text = "Elements:";
-                elementTitleTextBlock.FontWeight = FontWeights.Bold;
-                elementTitleTextBlock.FontSize = 16;
-                elementTitleTextBlock.TextDecorations = TextDecorations.Underline;
-
-                listView.Items.Add ( elementTitleTextBlock );
-            }
-
             foreach ( XmlNode xmlChildNode in xmlChildNodes )
             {
                 // Parse child tab elements/info if they are in <Tabs_XEDITOR>
@@ -460,7 +545,6 @@ namespace WPF_XML_Tutorial
             tabItem.Content = listView;
             }
 
-
         // Helper function; requires xmlNode param is only ever passed as an ActionPath xml element
         private int GetActionPathID( XmlNode xmlNode )
         {
@@ -480,7 +564,6 @@ namespace WPF_XML_Tutorial
             }
             return -1;
         }
-
 
         // Method for parsing xml info into listVew for a sub-element without it's own tab
         private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode, bool isSubElement )
@@ -582,9 +665,8 @@ namespace WPF_XML_Tutorial
                             listView.Items.Add ( pathIDGrid );
                         }
                     }
-                    #endregion
                 }
-
+                #endregion
 
             }
             else
@@ -630,6 +712,13 @@ namespace WPF_XML_Tutorial
                             textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         }
 
+                        ContextMenu rightClickMenu = new ContextMenu ();
+                        MenuItem deleteItem = new MenuItem ();
+                        deleteItem.Header = "Delete element";
+                        deleteItem.Click += DeleteItem_Click;
+                        rightClickMenu.Items.Add ( deleteItem );
+                        newGrid.ContextMenu = rightClickMenu;
+
                         listView.Items.Add ( newGrid );
                     }
 
@@ -656,7 +745,14 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( subNodeNameTextBlock );
 
                         listView.Items.Add ( newGrid );
-                        
+
+                        ContextMenu rightClickMenu = new ContextMenu ();
+                        MenuItem deleteItem = new MenuItem ();
+                        deleteItem.Header = "Delete element";
+                        deleteItem.Click += DeleteItem_Click;
+                        rightClickMenu.Items.Add ( deleteItem );
+                        newGrid.ContextMenu = rightClickMenu;
+
                     }
                 }
                 else
@@ -689,6 +785,13 @@ namespace WPF_XML_Tutorial
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
+
+                        ContextMenu rightClickMenu = new ContextMenu ();
+                        MenuItem deleteItem = new MenuItem ();
+                        deleteItem.Header = "Delete element";
+                        deleteItem.Click += DeleteItem_Click;
+                        rightClickMenu.Items.Add ( deleteItem );
+                        newGrid.ContextMenu = rightClickMenu;
 
                         listView.Items.Add ( newGrid );
 
@@ -738,6 +841,13 @@ namespace WPF_XML_Tutorial
                         Grid.SetRow ( attributeTextBox, 0 );
                         Grid.SetColumn ( attributeTextBox, 1 );
                         newGrid.Children.Add ( attributeTextBox );
+
+                        ContextMenu rightClickMenu = new ContextMenu ();
+                        MenuItem deleteItem = new MenuItem ();
+                        deleteItem.Header = "Delete attribute";
+                        deleteItem.Click += DeleteItem_Click;
+                        rightClickMenu.Items.Add ( deleteItem );
+                        newGrid.ContextMenu = rightClickMenu;
 
                         listView.Items.Add ( newGrid );
                     }
@@ -1019,11 +1129,121 @@ namespace WPF_XML_Tutorial
 
         }
 
-        //public int GetCurrentPathID() // does not work when the pathIDComboBox is in transition to adding a new ActionPath
-        //{
-        //    ComboBoxItem curPathIDItem = (ComboBoxItem) pathIDComboBox.SelectedItem;
-        //    int curPathID = Convert.ToInt32 ( curPathIDItem.Content );
-        //    return curPathID;
-        //}
+        private void newAttributeButton_Click( object sender, RoutedEventArgs e )
+        {
+            NewElemOrAttrib newAttributeWindow = new NewElemOrAttrib ( this, "attribute" );
+            newAttributeWindow.Show ();
+            this.IsEnabled = false;
+        }
+
+        private void newElementButton_Click( object sender, RoutedEventArgs e )
+        {
+            NewElemOrAttrib newElementWindow = new NewElemOrAttrib ( this, "element" );
+            newElementWindow.Show ();
+            this.IsEnabled = false;
+        }
+
+        public void AddNewAttribute( string name, string value )
+        {
+            TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
+            ListView currentListView = currentTabItem.Content as ListView;
+            // Need to create the grid with appropriate TextBlock and TextBox, then insert at proper spot in currentListView
+            Grid newGrid = new Grid
+            {
+                Width = GRID_WIDTH,
+            };
+
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+            TextBlock textBlock = new TextBlock ();
+            textBlock.Text = name + ":";
+            textBlock.ToolTip = "Attribute";
+            textBlock.Name = name;
+            Grid.SetRow ( textBlock, 0 );
+            Grid.SetColumn ( textBlock, 0 );
+            newGrid.Children.Add ( textBlock );
+
+            TextBox textBoxAttrib = new TextBox ();
+            textBoxAttrib.AcceptsReturn = true;
+            textBoxAttrib.Text = ( value );
+            textBoxAttrib.ToolTip = "Attribute";
+            Grid.SetRow ( textBoxAttrib, 0 );
+            Grid.SetColumn ( textBoxAttrib, 1 );
+            newGrid.Children.Add ( textBoxAttrib );
+
+            ContextMenu rightClickMenu = new ContextMenu ();
+            MenuItem deleteItem = new MenuItem ();
+            deleteItem.Header = "Delete attribute";
+            deleteItem.Click += DeleteItem_Click;
+            rightClickMenu.Items.Add ( deleteItem );
+            newGrid.ContextMenu = rightClickMenu;
+
+            currentListView.Items.Insert ( 2, newGrid );
+
+        }
+
+        private void DeleteItem_Click( object sender, RoutedEventArgs e )
+        {
+            MenuItem deleteItem = (MenuItem) sender;
+            Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
+            ListView listView = grid.Parent as ListView;
+            listView.Items.Remove ( grid );
+        }
+
+        public void AddNewElement( string name, string value )
+        {
+            TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
+            ListView currentListView = currentTabItem.Content as ListView;
+            // Need to create the grid with appropriate TextBlock and TextBox, then insert at proper spot in currentListView
+            Grid newGrid = new Grid
+            {
+                Width = GRID_WIDTH,
+            };
+
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+            TextBlock textBlock = new TextBlock ();
+            textBlock.Text = name + ":";
+            textBlock.ToolTip = "Element";
+            textBlock.Name = name;
+            Grid.SetRow ( textBlock, 0 );
+            Grid.SetColumn ( textBlock, 0 );
+            newGrid.Children.Add ( textBlock );
+
+            TextBox textBoxAttrib = new TextBox ();
+            textBoxAttrib.AcceptsReturn = true;
+            textBoxAttrib.Text = ( value );
+            textBoxAttrib.ToolTip = "Element";
+            Grid.SetRow ( textBoxAttrib, 0 );
+            Grid.SetColumn ( textBoxAttrib, 1 );
+            newGrid.Children.Add ( textBoxAttrib );
+
+            ContextMenu rightClickMenu = new ContextMenu ();
+            MenuItem deleteItem = new MenuItem ();
+            deleteItem.Header = "Delete element";
+            deleteItem.Click += DeleteItem_Click;
+            rightClickMenu.Items.Add ( deleteItem );
+            newGrid.ContextMenu = rightClickMenu;
+
+            int insertIndex = GetElementHeaderIndex ( currentListView );
+            currentListView.Items.Insert ( insertIndex + 2, newGrid );
+        }
+
+        // Helper function
+        private int GetElementHeaderIndex( ListView listView )
+        {
+            foreach ( TextBlock textBlock in listView.Items.OfType<TextBlock>() )
+            {
+                if ( textBlock.Text == "Elements:" )
+                {
+                    return listView.Items.IndexOf ( textBlock );
+                }
+            }
+            return -1;
+        }
     }
 }

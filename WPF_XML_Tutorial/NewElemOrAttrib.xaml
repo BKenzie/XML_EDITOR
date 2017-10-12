@@ -1,0 +1,26 @@
+﻿<Window x:Class="WPF_XML_Tutorial.NewElemOrAttrib"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_XML_Tutorial"
+        mc:Ignorable="d" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        Title="newElemOrAttrib" Height="195" Width="600">
+    <Canvas FocusManager.FocusedElement="{Binding ElementName=NewNameTextBox}">
+        <Border HorizontalAlignment="Center" Height="74" VerticalAlignment="Top" Width="600" Canvas.Top="10">
+            <Image Name="StemCell_Logo" Source="Images/STEMCELL_Color_JPG.jpg" Margin="36,0,37,0" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+        </Border>
+
+        <Rectangle Panel.ZIndex="-1" Fill="White" Height="189" Width="600" MouseLeftButtonDown="Drag_MouseLeftButtonDown"/>
+
+        <Border BorderBrush="LightGray" BorderThickness="4" Height="195" Width="600"/>
+        <Label Content="Name:" Canvas.Left="10" Canvas.Top="139" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="85"/>
+        <TextBox Name="NewNameTextBox" KeyUp="TextBox_KeyUp" Height="46" Canvas.Left="93" Canvas.Top="139" Width="126" FontSize="24"/>
+        <Button x:Name="EnterButton" Click="EnterButton_Click" Content="Enter" Canvas.Left="502" Canvas.Top="139" Width="88" Height="46" FontSize="22" FontFamily="Meiryo UI"/>
+        <Rectangle Name="Close_Button_InputPathIDWindow" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Fill="LightGray" Height="26" VerticalAlignment="Top" Width="26" Canvas.Left="564" Canvas.Top="10"/>
+        <Label Content="X" Foreground="DarkOrange" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Canvas.Left="567" Width="20" FontFamily="Browallia New" FontSize="24" Canvas.Top="3"/>
+        <Label Content="Value:" Canvas.Left="224" Canvas.Top="139" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="85"/>
+        <TextBox x:Name="NewValueTextBox" KeyUp="TextBox_KeyUp" Height="46" Canvas.Left="309" Canvas.Top="139" Width="182" FontSize="24"/>
+
+    </Canvas>
+</Window>
