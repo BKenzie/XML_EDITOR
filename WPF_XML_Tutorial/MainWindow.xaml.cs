@@ -431,7 +431,7 @@ namespace WPF_XML_Tutorial
                     Grid.SetRow ( gotoTab_Button, 1 );
                     Grid.SetColumn ( gotoTab_Button, 2 );
                     newGrid.Children.Add ( gotoTab_Button );
-#endregion
+                    #endregion
 
                     listView.Items.Add ( newGrid );
 
@@ -944,6 +944,25 @@ namespace WPF_XML_Tutorial
 
         private void Open_New_Button_Click( object sender, RoutedEventArgs e )
         {
+            string message = "Save changes to xml document?\nOpening a new xml file will close this one.\nUnsaved changes will be lost.";
+            string header = "Caution - save changes?";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                // Save the document first then continue with open command
+                Save_Button.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // Continue open command without saving
+            }
+            else if ( msgBoxResult == MessageBoxResult.Cancel )
+            {
+                // Cancel open command, no need to save
+                return;
+            }
+
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
             openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
@@ -955,19 +974,15 @@ namespace WPF_XML_Tutorial
             {
                 filePath = openFileDialog.FileName;
             }
-            else
-            {
-                // MessageBox.Show ( "Error: error.", "ERROR" );
-            }
 
             if ( filePath != "" )
             {
                 // TODO: Check if XML file is in the proper format 
                 // If it is, pass the XML fileName to MainWindow and initialize it
-
+                pathIDComboBox = null;
                 MainWindow mainWindow = new MainWindow ( filePath );
                 mainWindow.Show ();
-                //this.Close ();
+                this.Close ();
 
             }
         }
@@ -977,7 +992,6 @@ namespace WPF_XML_Tutorial
             if ( pathIDComboBox == null )
             {
                 InitializePathIDComboBox ();
-                // TODO ///////// set the selected PathID here for when you cancel an Open operation. Or maybe actually do it in the handling of that thing..
             }
 
             if (pathIDComboBox.SelectedIndex == -1)

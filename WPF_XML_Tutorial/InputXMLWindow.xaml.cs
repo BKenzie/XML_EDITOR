@@ -84,11 +84,6 @@ namespace WPF_XML_Tutorial
             {
                 filePath = openFileDialog.FileName;
             }
-            else
-            {
-                // Wholly unnecessary
-                MessageBox.Show ("Error: error.", "ERROR");
-            }
 
             if ( filePath != "" )
             {
@@ -105,8 +100,8 @@ namespace WPF_XML_Tutorial
 
         private void NewXML_Click( object sender, RoutedEventArgs e )
         {
-            // TODO
-            // C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Resources\ActionPathsTemplate.xml
+            // Accesses the ActionPathsTemplate.xml file
+            // There is likely a more direct way to do this
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
             MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
             mainWindow.Show ();
