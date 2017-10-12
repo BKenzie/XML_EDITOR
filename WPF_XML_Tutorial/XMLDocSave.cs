@@ -65,8 +65,10 @@ namespace WPF_XML_Tutorial
                     xmlSubNodes.Clear ();
                     WriteCurrentOpenTabs ( tabItems, -1 );
                     NullifyEmptyNodes ( xmlDoc.LastChild );
-                    Save ();
                 }
+                // Gets rid of duplicate final ActionPath. Not the cleanest fix
+                xmlDoc.LastChild.RemoveChild ( xmlDoc.LastChild.LastChild );
+                Save ();
             }
         }
 

@@ -173,7 +173,6 @@ namespace WPF_XML_Tutorial
             tabHeaders = new List<string> ( strTabHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) );
         }
 
-
         // Read information for tabItems
         // Tabs contain ActionPath info such as PathID number, but not child elements which have their own tab pages
         private void ReadAllTabInformation()
