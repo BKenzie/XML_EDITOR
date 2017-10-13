@@ -333,7 +333,15 @@ namespace WPF_XML_Tutorial
                     TextBlock textBlock = new TextBlock ();
                     textBlock.Text = attribute.Name + ":";
                     textBlock.ToolTip = xmlNode.Name + "'s attribute";
-                    textBlock.Name = attribute.Name;
+                    try
+                    {
+                        textBlock.Name = attribute.Name;
+                    }
+                    catch(Exception e)
+                    {
+                        continue;
+                    }
+                    
                     Grid.SetRow ( textBlock, 0 );
                     Grid.SetColumn ( textBlock, 0 );
                     newGrid.Children.Add ( textBlock );

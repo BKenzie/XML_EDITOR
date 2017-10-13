@@ -20,6 +20,7 @@ namespace WPF_XML_Tutorial
         private List<XmlNode> xmlSubNodes = new List<XmlNode> ();
         private bool mainAttributesPassed = false;
         private XmlElement curElement = null;
+        private XmlElement curSubElement = null;
 
 
         // Creates instance of XmlDocSave with proper Tabs_XEDITOR element 
@@ -178,6 +179,7 @@ namespace WPF_XML_Tutorial
                         string elementName = subElemTextblock.Text.Substring ( 0, ( (string) subElemTextblock.Text ).Length - 1 );
                         XmlElement newElement = xmlDoc.CreateElement ( elementName );
                         curElement = newElement;
+                        curSubElement = newElement;
                         xmlTabNode.AppendChild ( newElement );
                     }
                 }
@@ -248,7 +250,7 @@ namespace WPF_XML_Tutorial
 
                         XmlElement newSubElement = xmlDoc.CreateElement ( subElementName );
                         newSubElement.InnerText = (string) gridChild.Text;
-                        curElement.AppendChild ( newSubElement );
+                        curSubElement.AppendChild ( newSubElement );
                         curElement = newSubElement;
 
                     }
