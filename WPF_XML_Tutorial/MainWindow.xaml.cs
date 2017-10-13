@@ -27,6 +27,7 @@ namespace WPF_XML_Tutorial
         private string rootName;
         private List<string> tabHeaders = null;
         private List<TabItem> tabItems = new List<TabItem> ();
+        private TabItem commentsTab;
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
         Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
@@ -217,10 +218,10 @@ namespace WPF_XML_Tutorial
                 {
                     // Ignore element that is not given tab in <Tabs_XEDITOR>
 
-                    // TODO: parse xml comments at top level 
+                    // Top level xml comments
                     if ( xmlNode.NodeType == XmlNodeType.Comment )
                     {
-                        ////////////////////////////////////////
+                        // TODO - figure out comment display formatting
                     }
                 }
             }
@@ -384,6 +385,7 @@ namespace WPF_XML_Tutorial
                     TextBox textBoxNodeText = new TextBox ();
                     textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
                     textBoxNodeText.ToolTip = "Text field";
+                    textBoxNodeText.AcceptsReturn = true;
                     Grid.SetRow ( textBoxNodeText, 0 );
                     Grid.SetColumn ( textBoxNodeText, 1 );
                     newGrid.Children.Add ( textBoxNodeText );
@@ -696,6 +698,7 @@ namespace WPF_XML_Tutorial
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
+                        textBoxNodeText.AcceptsReturn = true;
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
@@ -781,6 +784,8 @@ namespace WPF_XML_Tutorial
 
                         TextBox textBoxNodeText = new TextBox ();
                         textBoxNodeText.AppendText ( "EMPTY" );
+                        textBoxNodeText.AcceptsReturn = true;
+                        textBoxNodeText.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
                         Grid.SetRow ( textBoxNodeText, 0 );
                         Grid.SetColumn ( textBoxNodeText, 1 );
                         newGrid.Children.Add ( textBoxNodeText );
@@ -837,6 +842,7 @@ namespace WPF_XML_Tutorial
                         TextBox attributeTextBox = new TextBox ();
                         attributeTextBox.Text = attribute.Value;
                         attributeTextBox.ToolTip = xmlChildNode.Name + "'s attribute";
+                        attributeTextBox.AcceptsReturn = true;
                         Grid.SetRow ( attributeTextBox, 0 );
                         Grid.SetColumn ( attributeTextBox, 1 );
                         newGrid.Children.Add ( attributeTextBox );
@@ -859,6 +865,12 @@ namespace WPF_XML_Tutorial
             }
             //listView.Items.Add ( new Separator () );
             //listView.Items.Add ( new Separator () );
+        }
+
+        private void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
+        {
+            TextBox emptyTextBox = sender as TextBox;
+            emptyTextBox.Clear ();
         }
 
         private void InitializePathIDComboBox()
@@ -1213,13 +1225,13 @@ namespace WPF_XML_Tutorial
             Grid.SetColumn ( textBlock, 0 );
             newGrid.Children.Add ( textBlock );
 
-            TextBox textBoxAttrib = new TextBox ();
-            textBoxAttrib.AcceptsReturn = true;
-            textBoxAttrib.Text = ( value );
-            textBoxAttrib.ToolTip = "Element";
-            Grid.SetRow ( textBoxAttrib, 0 );
-            Grid.SetColumn ( textBoxAttrib, 1 );
-            newGrid.Children.Add ( textBoxAttrib );
+            TextBox textBoxElem = new TextBox ();
+            textBoxElem.AcceptsReturn = true;
+            textBoxElem.Text = ( value );
+            textBoxElem.ToolTip = "Element";
+            Grid.SetRow ( textBoxElem, 0 );
+            Grid.SetColumn ( textBoxElem, 1 );
+            newGrid.Children.Add ( textBoxElem );
 
             ContextMenu rightClickMenu = new ContextMenu ();
             MenuItem deleteItem = new MenuItem ();
