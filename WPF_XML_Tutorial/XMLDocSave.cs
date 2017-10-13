@@ -49,6 +49,7 @@ namespace WPF_XML_Tutorial
             if ( pathIDComboBox == null )
             {
                 WriteCurrentOpenTabs ( tabItems, -1 );
+                NullifyEmptyNodes ( xmlDoc );
                 Save ();
             }
             else

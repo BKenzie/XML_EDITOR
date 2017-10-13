@@ -770,7 +770,7 @@ namespace WPF_XML_Tutorial
                     // Child node containing no children
                     // For now, displaying "EMPTY" 
 
-                    if ( xmlChildNode.NodeType != XmlNodeType.Text ) // Errors otherwise
+                    if ( xmlChildNode.NodeType != XmlNodeType.Text && xmlChildNode.NodeType != XmlNodeType.Comment ) // Errors otherwise
                     {
                         Grid newGrid = new Grid
                         {
@@ -1118,17 +1118,18 @@ namespace WPF_XML_Tutorial
 
         private void Save_Button_Click( object sender, RoutedEventArgs e )
         {
-            if ( pathIDComboBox == null )
-            {
-                InitializePathIDComboBox ();
-            }
+            //if ( pathIDComboBox == null )
+            //{
+            //    InitializePathIDComboBox ();
+            //    // TODO: does not currently save a general xml file without a PathID
+            //}
 
-            if (pathIDComboBox.SelectedIndex == -1)
-            {
-                // TODO -- might not need at in current implementation state, actually
-                // MessageBox.Show ( "PathID unselected.", "Select a PathID" );
-                // return;
-            }
+            //if (pathIDComboBox.SelectedIndex == -1)
+            //{
+            //    // TODO -- might not need at in current implementation state, actually
+            //    // MessageBox.Show ( "PathID unselected.", "Select a PathID" );
+            //    // return;
+            //}
 
             // Get file name/location to save from user
             SaveFileDialog saveFileDialog = new SaveFileDialog ();
