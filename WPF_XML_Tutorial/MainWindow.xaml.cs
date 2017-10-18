@@ -759,7 +759,7 @@ namespace WPF_XML_Tutorial
                         ContextMenu rightClickMenu = new ContextMenu ();
                         MenuItem deleteItem = new MenuItem ();
                         deleteItem.Header = "Delete element";
-                        deleteItem.Click += DeleteItem_Click;
+                        deleteItem.Click += DeleteItemWithSubElems_Click;
                         rightClickMenu.Items.Add ( deleteItem );
                         newGrid.ContextMenu = rightClickMenu;
 
@@ -873,6 +873,91 @@ namespace WPF_XML_Tutorial
             }
             //listView.Items.Add ( new Separator () );
             //listView.Items.Add ( new Separator () );
+        }
+
+        // Only called for elements with/that could have sub-items
+        private void DeleteItemWithSubElems_Click( object sender, RoutedEventArgs e )
+        {
+            MenuItem deleteItem = (MenuItem) sender;
+            Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
+            ListView listView = grid.Parent as ListView;
+            int index = listView.Items.IndexOf ( grid );
+            // Check if element has any sub items
+            if ( (listView.Items.Count != index + 1) && listView.Items[index + 1] is Grid )
+            {
+                TextBlock textBlock = ( (Grid) listView.Items[index + 1] ).Children[0] as TextBlock;
+                if ( textBlock != null )
+                {
+                    string toolTip = (string) textBlock.ToolTip;
+                    if ( toolTip != null )
+                    {
+                        toolTip = toolTip.Substring ( toolTip.Length - 5 ).ToLower ();
+                        if ( toolTip == "(sub)" || toolTip == "ibute" ) // Fix for sub item having its own attributes
+                        {
+                            MessageBox.Show ( "Cannot delete elements with existing sub-items.", "Error" );
+                        }
+                        else
+                        {
+                            // No sub items -- can delete
+                            listView.Items.Remove ( grid );
+                        }
+                    }
+                }
+                else
+                {
+                    listView.Items.Remove ( grid );
+                }
+            }
+            else
+            {
+                listView.Items.Remove ( grid );
+            }
+            
+        }
+
+        // Only called for an attribute or an element -- not for elements with sub-items
+        private void DeleteItem_Click( object sender, RoutedEventArgs e )
+        {
+            MenuItem deleteItem = (MenuItem) sender;
+            Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
+            ListView listView = grid.Parent as ListView;
+            int index = listView.Items.IndexOf ( grid );
+            TextBlock senderTextBlock = grid.Children[0] as TextBlock;
+            string senderToolTip = (string) senderTextBlock.ToolTip;
+
+            // If an attribute, just delete
+            if (senderToolTip != null && senderToolTip.Length >= 9 
+                && ( senderToolTip.Substring ( senderToolTip.Length - 9 ).ToLower () == "attribute"))
+            {
+                listView.Items.Remove ( grid );
+                return;
+            }
+            else
+            {
+                // If an element, delete all element attributes 
+                while ( true )
+                {
+                    if ( listView.Items.Count == index + 1)
+                    {
+                        break;
+                    }
+                    var next = listView.Items[index + 1];
+                    if ( next is TextBlock ) { break; }
+                    TextBlock textBlock = ( (Grid) next ).Children[0] as TextBlock;
+                    if ( textBlock == null ){ break; }
+                    string toolTip = ( string ) textBlock.ToolTip;
+                    if ( ( next is Grid && ( toolTip != null && toolTip.Length >= 9 ) )
+                        && toolTip.Substring ( toolTip.Length - 9 ).ToLower () == "attribute" )
+                    {
+                        listView.Items.Remove ( next );
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                listView.Items.Remove ( grid );
+            }
         }
 
         private void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
@@ -1118,19 +1203,6 @@ namespace WPF_XML_Tutorial
 
         private void Save_Button_Click( object sender, RoutedEventArgs e )
         {
-            //if ( pathIDComboBox == null )
-            //{
-            //    InitializePathIDComboBox ();
-            //    // TODO: does not currently save a general xml file without a PathID
-            //}
-
-            //if (pathIDComboBox.SelectedIndex == -1)
-            //{
-            //    // TODO -- might not need at in current implementation state, actually
-            //    // MessageBox.Show ( "PathID unselected.", "Select a PathID" );
-            //    // return;
-            //}
-
             // Get file name/location to save from user
             SaveFileDialog saveFileDialog = new SaveFileDialog ();
             saveFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
@@ -1202,14 +1274,6 @@ namespace WPF_XML_Tutorial
 
             currentListView.Items.Insert ( 2, newGrid );
 
-        }
-
-        private void DeleteItem_Click( object sender, RoutedEventArgs e )
-        {
-            MenuItem deleteItem = (MenuItem) sender;
-            Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
-            ListView listView = grid.Parent as ListView;
-            listView.Items.Remove ( grid );
         }
 
         public void AddNewElement( string name, string value )
