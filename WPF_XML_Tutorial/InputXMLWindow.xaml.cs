@@ -93,12 +93,11 @@ namespace WPF_XML_Tutorial
                 MainWindow mainWindow = new MainWindow (filePath);
                 mainWindow.Show ();
                 this.Close ();
-
             }
             
         }
 
-        private void NewXML_Click( object sender, RoutedEventArgs e )
+        public void NewXML_Click( object sender, RoutedEventArgs e )
         {
             // Accesses the ActionPathsTemplate.xml file
             // There is likely a more direct way to do this
@@ -106,7 +105,6 @@ namespace WPF_XML_Tutorial
             MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
             mainWindow.Show ();
             this.Close ();
-            
         }
 
     }

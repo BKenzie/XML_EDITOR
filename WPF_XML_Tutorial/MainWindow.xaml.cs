@@ -27,8 +27,9 @@ namespace WPF_XML_Tutorial
         private string rootName;
         private List<string> tabHeaders = null;
         private List<TabItem> tabItems = new List<TabItem> ();
+        // private List<TabItem> activeTabItems = new List<TabItem> ();
         private List<TextBox> textBoxes = new List<TextBox> ();
-        private TabItem commentsTab;
+        // private TabItem commentsTab;
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
         Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
@@ -51,34 +52,34 @@ namespace WPF_XML_Tutorial
             xmlDoc = new XmlDocument ();
             xmlDoc.Load ( xmlFilePath );
 
-            #region Open and Save buttons
-            Style customButtonStyle = new Style ();
-            customButtonStyle.TargetType = typeof ( Button );
-            MultiDataTrigger trigger = new MultiDataTrigger ();
-            Condition condition = new Condition ();
-            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
-            condition.Value = true;
-            Setter foregroundSetter = new Setter ();
-            foregroundSetter.Property = Button.ForegroundProperty;
-            foregroundSetter.Value = Brushes.DarkOrange;
-            Setter cursorSetter = new Setter ();
-            cursorSetter.Property = Button.CursorProperty;
-            cursorSetter.Value = Cursors.Hand;
-            Setter textSetter = new Setter ();
-            textSetter.Property = Button.FontWeightProperty;
-            textSetter.Value = FontWeights.ExtraBold;
-            Setter setter = new Setter ();
-            trigger.Conditions.Add ( condition );
-            trigger.Setters.Add ( foregroundSetter );
-            trigger.Setters.Add ( cursorSetter );
-            trigger.Setters.Add ( textSetter );
-            customButtonStyle.Triggers.Clear ();
-            customButtonStyle.Triggers.Add ( trigger );
-            Open_New_Button.Focusable = false;
-            Save_Button.Focusable = false;
-            Open_New_Button.Style = customButtonStyle;
-            Save_Button.Style = customButtonStyle;
-            #endregion
+            //#region Open and Save buttons
+            //Style customButtonStyle = new Style ();
+            //customButtonStyle.TargetType = typeof ( Button );
+            //MultiDataTrigger trigger = new MultiDataTrigger ();
+            //Condition condition = new Condition ();
+            //condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            //condition.Value = true;
+            //Setter foregroundSetter = new Setter ();
+            //foregroundSetter.Property = Button.ForegroundProperty;
+            //foregroundSetter.Value = Brushes.DarkOrange;
+            //Setter cursorSetter = new Setter ();
+            //cursorSetter.Property = Button.CursorProperty;
+            //cursorSetter.Value = Cursors.Hand;
+            //Setter textSetter = new Setter ();
+            //textSetter.Property = Button.FontWeightProperty;
+            //textSetter.Value = FontWeights.ExtraBold;
+            //Setter setter = new Setter ();
+            //trigger.Conditions.Add ( condition );
+            //trigger.Setters.Add ( foregroundSetter );
+            //trigger.Setters.Add ( cursorSetter );
+            //trigger.Setters.Add ( textSetter );
+            //customButtonStyle.Triggers.Clear ();
+            //customButtonStyle.Triggers.Add ( trigger );
+            //Open_New_Button.Focusable = false;
+            //Save_Button.Focusable = false;
+            //Open_New_Button.Style = customButtonStyle;
+            //Save_Button.Style = customButtonStyle;
+            //#endregion
 
             MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
 
@@ -106,6 +107,7 @@ namespace WPF_XML_Tutorial
                                 MainTabControl.Items.Add ( newTabItem );
                                 tabItems.Add ( newTabItem );
                             }
+
                             ReadAllTabInformation ();
                             break;
                         }
@@ -132,6 +134,24 @@ namespace WPF_XML_Tutorial
                 {
                     ResetAllTabs ();
                     DisplayPathID ();
+                }
+            }
+
+            RemoveEmptyTabs ();
+        }
+
+        private void RemoveEmptyTabs()
+        {
+            foreach ( TabItem tab in MainTabControl.Items )
+            {
+                ListView listView = tab.Content as ListView;
+                if ( listView.Items.Count == 0 )
+                {
+                    tab.Visibility = Visibility.Collapsed; // Visibility.Hidden;
+                }
+                else
+                {
+                    tab.Visibility = Visibility.Visible;
                 }
             }
         }
@@ -1158,7 +1178,8 @@ namespace WPF_XML_Tutorial
             }
             // Now get corresponding tabItem..
             TabItem apTabItem = GetTabItemWithHeader ( "ActionPath" );
-            RecursiveParseTabInfo ( apTabItem, actionPath ); 
+            RecursiveParseTabInfo ( apTabItem, actionPath );
+            RemoveEmptyTabs ();
         }
 
         // Helper for retrieving a certain tabItem from list tabItems
@@ -1388,6 +1409,111 @@ namespace WPF_XML_Tutorial
                 }
             }
             return -1;
+        }
+
+        private void NewXML_Click( object sender, RoutedEventArgs e )
+        {
+            string message = "Save changes to xml document?\nCreating a new xml file will close this one.\nUnsaved changes will be lost.";
+            string header = "Caution - save changes?";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                // Save the document first then continue with open command
+                Save_Button.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // Continue with new xml file command without saving
+            }
+            else if ( msgBoxResult == MessageBoxResult.Cancel )
+            {
+                // Cancel command, no need to save
+                return;
+            }
+
+            // Accesses the ActionPathsTemplate.xml file
+            string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
+            pathIDComboBox = null;
+            ResetAllTabs ();
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
+            mainWindow.Show ();
+            this.Close ();
+        }
+
+        private void Delete_AP_Button_Click( object sender, RoutedEventArgs e )
+        {
+            if ( currentPathID == -1 )
+            {
+                MessageBox.Show ( "No PathID selected.\nPlease select the PathID of the ActionPath you want to remove and try again.", "Error" );
+                return;
+            }
+
+            string message = String.Format("Are you sure you want to remove ActionPath with PathID: {0}?", currentPathID);
+            string header = "Delete active ActionPath";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                DeleteActiveActionPath ();
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // User cancelled, do nothing
+            }
+        }
+
+        private void DeleteActiveActionPath()
+        {
+            ComboBoxItem removeItem = null;
+            foreach ( ComboBoxItem item in pathIDComboBox.Items )
+            {
+                if (Convert.ToString(item.Content) != "New ActionPath")
+                {
+                    if ( Convert.ToInt32 ( item.Content ) == currentPathID )
+                    {
+                        removeItem = item;
+                    }
+                }
+            }
+            pathIDComboBox.Items.Remove ( removeItem );
+            pathIDComboBox.SelectedIndex = -1;
+            ResetAllTabs ();
+            DisplayPathID ();
+            MainTabControl.SelectedIndex = 0;
+
+        }
+
+        private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
+        {
+            string message = String.Format("Are you sure you want to remove tab with header \"{0}\"?", ((TabItem)MainTabControl.SelectedItem).Header);
+            string header = "Delete active Tab";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                DeleteActiveTab ();
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // User cancelled, do nothing
+            }
+
+        }
+
+        private void DeleteActiveTab()
+        {
+            throw new NotImplementedException ();
+        }
+
+        private void Undo_Click( object sender, RoutedEventArgs e )
+        {
+            throw new NotImplementedException ();
+        }
+
+        private void Modify_Template_Click( object sender, RoutedEventArgs e )
+        {
+            throw new NotImplementedException ();
         }
     }
 }
