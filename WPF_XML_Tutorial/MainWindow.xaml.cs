@@ -27,6 +27,7 @@ namespace WPF_XML_Tutorial
         private string rootName;
         private List<string> tabHeaders = null;
         private List<TabItem> tabItems = new List<TabItem> ();
+        private List<TextBox> textBoxes = new List<TextBox> ();
         private TabItem commentsTab;
         private XmlDocument xmlDoc;
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
@@ -44,6 +45,7 @@ namespace WPF_XML_Tutorial
         public MainWindow( string filePath )
         {
             InitializeComponent ();
+            KeyboardNavigation.SetTabNavigation ( MainTabControl, KeyboardNavigationMode.None );
             
             xmlFilePath = filePath;
             xmlDoc = new XmlDocument ();
@@ -72,6 +74,8 @@ namespace WPF_XML_Tutorial
             trigger.Setters.Add ( textSetter );
             customButtonStyle.Triggers.Clear ();
             customButtonStyle.Triggers.Add ( trigger );
+            Open_New_Button.Focusable = false;
+            Save_Button.Focusable = false;
             Open_New_Button.Style = customButtonStyle;
             Save_Button.Style = customButtonStyle;
             #endregion
@@ -98,6 +102,7 @@ namespace WPF_XML_Tutorial
                                 newTabItem.Name = header;
                                 newTabItem.Header = header;
                                 newTabItem.FontSize = 18;
+                                newTabItem.IsTabStop = false;
                                 MainTabControl.Items.Add ( newTabItem );
                                 tabItems.Add ( newTabItem );
                             }
@@ -241,7 +246,6 @@ namespace WPF_XML_Tutorial
                 xmlNode = xmlNodeHistory;
             }
 
-
             // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
             ListView listView = new ListView ();
             // BindWidth ( MainTabControl, this );
@@ -281,7 +285,8 @@ namespace WPF_XML_Tutorial
             #region New attribute button
 
             Button newAttributeButton = new Button ();
-            newAttributeButton.Content = "Add new"; 
+            newAttributeButton.Content = "Add new";
+            newAttributeButton.IsTabStop = false;
             newAttributeButton.Click += new RoutedEventHandler ( newAttributeButton_Click );
             newAttributeButton.Background = new SolidColorBrush ( Colors.LightGray );
             newAttributeButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
@@ -349,6 +354,8 @@ namespace WPF_XML_Tutorial
                     newGrid.Children.Add ( textBlock );
 
                     TextBox textBoxAttrib = new TextBox ();
+                    textBoxes.Add ( textBoxAttrib );
+                    textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
                     textBoxAttrib.AcceptsReturn = true;
                     textBoxAttrib.Text = ( attribute.Value );
                     textBoxAttrib.ToolTip = attribute.Name + " attribute";
@@ -392,6 +399,8 @@ namespace WPF_XML_Tutorial
                     newGrid.Children.Add ( textBlock );
 
                     TextBox textBoxNodeText = new TextBox ();
+                    textBoxes.Add ( textBoxNodeText );
+                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                     textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
                     textBoxNodeText.ToolTip = "Text field";
                     textBoxNodeText.AcceptsReturn = true;
@@ -421,6 +430,7 @@ namespace WPF_XML_Tutorial
             #region New element button
 
             Button newElementButton = new Button ();
+            newElementButton.IsTabStop = false;
             newElementButton.Content = "Add new";
             newElementButton.Click += new RoutedEventHandler ( newElementButton_Click );
             newElementButton.Background = new SolidColorBrush ( Colors.LightGray );
@@ -554,6 +564,27 @@ namespace WPF_XML_Tutorial
             // ListView construction is over, now set as the tabItem content
             tabItem.Content = listView;
             }
+
+        // Switches keyboard focus to the next textbox. Called for all appropriate textboxes
+        private void OnTabPressed( object sender, KeyEventArgs e )
+        {
+            if ( e.Key == Key.Tab )
+            {
+                TextBox curTextbox = sender as TextBox;
+                int index = textBoxes.IndexOf ( curTextbox );
+                // Go back to first textbox if currently at the last one
+                if ( index + 1 == textBoxes.Count )
+                {
+                    Keyboard.Focus ( textBoxes[0] );
+                    FocusManager.SetFocusedElement ( textBoxes[0].Parent, textBoxes[0] );
+                }
+                else
+                {
+                    Keyboard.Focus ( textBoxes[index + 1] );
+                    FocusManager.SetFocusedElement ( textBoxes[index + 1].Parent, textBoxes[index + 1] );
+                }
+            }
+        }
 
         // Helper function; requires xmlNode param is only ever passed as an ActionPath xml element
         private int GetActionPathID( XmlNode xmlNode )
@@ -706,6 +737,8 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
+                        textBoxes.Add ( textBoxNodeText );
+                        textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                         textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
                         textBoxNodeText.AcceptsReturn = true;
                         Grid.SetRow ( textBoxNodeText, 0 );
@@ -792,6 +825,8 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
+                        textBoxes.Add ( textBoxNodeText );
+                        textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                         textBoxNodeText.AppendText ( "EMPTY" );
                         textBoxNodeText.AcceptsReturn = true;
                         textBoxNodeText.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
@@ -849,6 +884,8 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( textBlockSubAttrib );
 
                         TextBox attributeTextBox = new TextBox ();
+                        textBoxes.Add ( attributeTextBox );
+                        attributeTextBox.KeyDown += new KeyEventHandler ( OnTabPressed );
                         attributeTextBox.Text = attribute.Value;
                         attributeTextBox.ToolTip = xmlChildNode.Name + "'s attribute";
                         attributeTextBox.AcceptsReturn = true;
@@ -958,7 +995,7 @@ namespace WPF_XML_Tutorial
                         break;
                     }
                     var next = listView.Items[index + 1];
-                    if ( next is TextBlock ) { break; }
+                    if ( next is TextBlock || next is Separator ) { break; }
                     TextBlock textBlock = ( (Grid) next ).Children[0] as TextBlock;
                     if ( textBlock == null ){ break; }
                     string toolTip = ( string ) textBlock.ToolTip;
@@ -979,7 +1016,10 @@ namespace WPF_XML_Tutorial
         private void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
         {
             TextBox emptyTextBox = sender as TextBox;
-            emptyTextBox.Clear ();
+            if ( emptyTextBox.Text == "EMPTY" )
+            {
+                emptyTextBox.Clear ();
+            }
         }
 
         private void InitializePathIDComboBox()
@@ -1274,6 +1314,8 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( textBlock );
 
             TextBox textBoxAttrib = new TextBox ();
+            textBoxes.Add ( textBoxAttrib );
+            textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
             textBoxAttrib.AcceptsReturn = true;
             textBoxAttrib.Text = ( value );
             textBoxAttrib.ToolTip = "Attribute";
@@ -1315,6 +1357,8 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( textBlock );
 
             TextBox textBoxElem = new TextBox ();
+            textBoxes.Add ( textBoxElem );
+            textBoxElem.KeyDown += new KeyEventHandler ( OnTabPressed );
             textBoxElem.AcceptsReturn = true;
             textBoxElem.Text = ( value );
             textBoxElem.ToolTip = "Element";
