@@ -113,8 +113,13 @@ namespace WPF_XML_Tutorial
                 MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR>", "Error" );
                 return;
             }
+            
+            FinalLogic (); 
+        }
 
-            // Right before MainWindow is shown to user
+        // Helper for directly before MainWindow is shown to user
+        private void FinalLogic()
+        {
             if ( pathIDGrid.Children != null && pathIDGrid.Children.Count != 0 )
             {
                 ComboBox pathIdComboBox = (ComboBox) pathIDGrid.Children[1];
@@ -124,8 +129,6 @@ namespace WPF_XML_Tutorial
                     DisplayPathID ();
                 }
             }
-            
-            
         }
 
         // Event handler for PathID overlay not appearing on ActionPath tab
@@ -192,7 +195,6 @@ namespace WPF_XML_Tutorial
                     break;
                 }
             }
-        
            
             // For each main node (xmlNode would be one ActionPath), check if it has a tab of it's own
             // If it does not have a tab specified in <Tabs_XEDITOR>, ignore it
@@ -365,7 +367,6 @@ namespace WPF_XML_Tutorial
                 }
             }
 
-            listView.Items.Add ( new Separator () );
             listView.Items.Add ( new Separator () );
 
             // If xmlNode contains only text, then display
@@ -682,7 +683,7 @@ namespace WPF_XML_Tutorial
             {
                 if ( xmlChildNode.HasChildNodes )
                 {
-                    // Things like <help>, <source>, <destination> etc..
+                    // Parse text elements such as <help>, <source>, <destination> etc..
                     if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text )
                     {
                         Grid newGrid = new Grid
@@ -732,7 +733,7 @@ namespace WPF_XML_Tutorial
                         listView.Items.Add ( newGrid );
                     }
 
-                    // Let's say there is a child element in ActionPath that isn't given its own tab in <Tabs_XEDITOR>
+                    // Let's say there is a non-text child element in ActionPath that isn't given its own tab in <Tabs_XEDITOR>
                     // This is where it is handled, because we still want to print its info
                     if ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
                     {
@@ -871,8 +872,23 @@ namespace WPF_XML_Tutorial
             {
                 ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true );
             }
-            //listView.Items.Add ( new Separator () );
-            //listView.Items.Add ( new Separator () );
+
+            // Insert separator at the end of a non-text child node 
+            if ( isSubElement && isLastSubElement ( xmlChildNode ) &&
+                ( xmlChildNode.NodeType != XmlNodeType.Text ) )
+            {
+                listView.Items.Add ( new Separator () );
+            }
+        }
+
+        private bool isLastSubElement( XmlNode xmlChildNode )
+        {
+            XmlNode parentNode = xmlChildNode.ParentNode;
+            if ( parentNode.LastChild == xmlChildNode )
+            {
+                return true;
+            }
+            return false;
         }
 
         // Only called for elements with/that could have sub-items
