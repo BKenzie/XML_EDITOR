@@ -8,6 +8,19 @@
         Height="408" Width="750">
 
 
+    <Window.CommandBindings>
+        <CommandBinding Command="Open" Executed="OpenCommandBinding"/>
+        <CommandBinding Command="Save" Executed="SaveCommandBinding"/>
+        <CommandBinding Command="New" Executed="NewDocumentCommandBinding"/>
+        <CommandBinding Command="Undo" Executed="UndoCommandBinding"/>
+    </Window.CommandBindings>
+
+    <Window.InputBindings>
+        <KeyBinding Key="o" Modifiers="Control" Command="Open"></KeyBinding>
+        <KeyBinding Key="s" Modifiers="Control" Command="Save"></KeyBinding>
+        <KeyBinding Key="n" Modifiers="Control" Command="New"></KeyBinding>
+    </Window.InputBindings>
+    
     <Grid>
         <TabControl Name="MainTabControl" Margin="0,81,0,0"/>
         <Rectangle Name="DragRectangle" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Height="66" Margin="0,-1,-9482,0" VerticalAlignment="Top" Width="9999" Panel.ZIndex="0" />
@@ -24,14 +37,14 @@
         
         <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="34" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
             <MenuItem Header="File" VerticalAlignment="Center" FontSize="16">
-                <MenuItem Header="_New XML file" Click="NewXML_Click"/>
                 <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0"/>
-                <MenuItem Header="Open new document" Click="Open_New_Button_Click" FontSize="16"/>
-                <MenuItem Header="Save as.." Click="Save_Button_Click" FontSize="16"/>
-                <MenuItem Header="Undo" Click="Undo_Click"/>
+                <MenuItem Header="_New XML file" Name="New_Button" Command="New"/>
+                <MenuItem Header="Open new document" Command="Open" FontSize="16"/>
+                <MenuItem Header="Save as.." Command="Save" FontSize="16"/>
+                <MenuItem Header="Undo" Name="Undo_Button" Command="Undo"/>
             </MenuItem>
-            <MenuItem Name="Open_Button" Header="_Open" Click="Open_New_Button_Click" FontSize="16"/>
-            <MenuItem Name="Save_Button" Header="_Save" Click="Save_Button_Click" FontSize="16"/>
+            <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
+            <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>
             <MenuItem Header="_Delete" FontSize="16">
                 <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0"/>
                 <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0"/>

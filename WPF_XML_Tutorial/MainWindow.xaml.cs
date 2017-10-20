@@ -1245,71 +1245,6 @@ namespace WPF_XML_Tutorial
             MainTabControl.SelectedIndex = MainTabControl.Items.IndexOf ( tabItem );
         }
 
-        private void Open_New_Button_Click( object sender, RoutedEventArgs e )
-        {
-            string message = "Save changes to xml document?\nOpening a new xml file will close this one.\nUnsaved changes will be lost.";
-            string header = "Caution - save changes?";
-            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
-            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
-            if ( msgBoxResult == MessageBoxResult.Yes )
-            {
-                // Save the document first then continue with open command
-                Save_Button.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
-            }
-            else if ( msgBoxResult == MessageBoxResult.No )
-            {
-                // Continue open command without saving
-            }
-            else if ( msgBoxResult == MessageBoxResult.Cancel )
-            {
-                // Cancel open command, no need to save
-                return;
-            }
-
-            // Get the user chosen XML file
-            OpenFileDialog openFileDialog = new OpenFileDialog ();
-            openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
-            openFileDialog.FilterIndex = 1;
-            openFileDialog.RestoreDirectory = true;
-            string filePath = "";
-            Nullable<bool> result = openFileDialog.ShowDialog ();
-            if ( result == true )
-            {
-                filePath = openFileDialog.FileName;
-            }
-
-            if ( filePath != "" )
-            {
-                // TODO: Check if XML file is in the proper format 
-                // If it is, pass the XML fileName to MainWindow and initialize it
-                pathIDComboBox = null;
-                MainWindow mainWindow = new MainWindow ( filePath );
-                mainWindow.Show ();
-                this.Close ();
-
-            }
-        }
-
-        private void Save_Button_Click( object sender, RoutedEventArgs e )
-        {
-            // Get file name/location to save from user
-            SaveFileDialog saveFileDialog = new SaveFileDialog ();
-            saveFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
-            saveFileDialog.FilterIndex = 1;
-            saveFileDialog.ShowDialog ();
-            string fileSavePath = saveFileDialog.FileName;
-            if ( fileSavePath == "" )
-            {
-                MessageBox.Show ( "File save aborted" );
-                return;
-            }
-            XmlDocument xmlDocTosave = new XmlDocument ();
-            XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
-
-            xmlDocSave.SaveAll ( tabItems, pathIDComboBox );
-
-        }
-
         private void newAttributeButton_Click( object sender, RoutedEventArgs e )
         {
             NewElemOrAttrib newAttributeWindow = new NewElemOrAttrib ( this, "attribute" );
@@ -1421,36 +1356,6 @@ namespace WPF_XML_Tutorial
             return -1;
         }
 
-        private void NewXML_Click( object sender, RoutedEventArgs e )
-        {
-            string message = "Save changes to xml document?\nCreating a new xml file will close this one.\nUnsaved changes will be lost.";
-            string header = "Caution - save changes?";
-            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
-            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
-            if ( msgBoxResult == MessageBoxResult.Yes )
-            {
-                // Save the document first then continue with open command
-                Save_Button.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
-            }
-            else if ( msgBoxResult == MessageBoxResult.No )
-            {
-                // Continue with new xml file command without saving
-            }
-            else if ( msgBoxResult == MessageBoxResult.Cancel )
-            {
-                // Cancel command, no need to save
-                return;
-            }
-
-            // Accesses the ActionPathsTemplate.xml file
-            string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
-            pathIDComboBox = null;
-            ResetAllTabs ();
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
-            mainWindow.Show ();
-            this.Close ();
-        }
-
         private void Delete_AP_Button_Click( object sender, RoutedEventArgs e )
         {
             if ( currentPathID == -1 )
@@ -1509,7 +1414,6 @@ namespace WPF_XML_Tutorial
             {
                 // User cancelled, do nothing
             }
-
         }
 
         private void DeleteActiveTab()
@@ -1517,14 +1421,108 @@ namespace WPF_XML_Tutorial
             throw new NotImplementedException ();
         }
 
-        private void Undo_Click( object sender, RoutedEventArgs e )
+        private void Modify_Template_Click( object sender, RoutedEventArgs e )
         {
             throw new NotImplementedException ();
         }
 
-        private void Modify_Template_Click( object sender, RoutedEventArgs e )
+        private void OpenCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
-            throw new NotImplementedException ();
+            string message = "Save changes to xml document?\nOpening a new xml file will close this one.\nUnsaved changes will be lost.";
+            string header = "Caution - save changes?";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                // Save the document first then continue with open command
+                Save_Button.Command.Execute ( null );
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // Continue open command without saving
+            }
+            else if ( msgBoxResult == MessageBoxResult.Cancel )
+            {
+                // Cancel open command, no need to save
+                return;
+            }
+
+            // Get the user chosen XML file
+            OpenFileDialog openFileDialog = new OpenFileDialog ();
+            openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
+            openFileDialog.FilterIndex = 1;
+            openFileDialog.RestoreDirectory = true;
+            string filePath = "";
+            Nullable<bool> result = openFileDialog.ShowDialog ();
+            if ( result == true )
+            {
+                filePath = openFileDialog.FileName;
+            }
+
+            if ( filePath != "" )
+            {
+                // TODO: Check if XML file is in the proper format 
+                // If it is, pass the XML fileName to MainWindow and initialize it
+                pathIDComboBox = null;
+                MainWindow mainWindow = new MainWindow ( filePath );
+                mainWindow.Show ();
+                this.Close ();
+
+            }
+        }
+
+        private void SaveCommandBinding( object sender, ExecutedRoutedEventArgs e )
+        {
+            // Get file name/location to save from user
+            SaveFileDialog saveFileDialog = new SaveFileDialog ();
+            saveFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
+            saveFileDialog.FilterIndex = 1;
+            saveFileDialog.ShowDialog ();
+            string fileSavePath = saveFileDialog.FileName;
+            if ( fileSavePath == "" )
+            {
+                MessageBox.Show ( "File save aborted" );
+                return;
+            }
+            XmlDocument xmlDocTosave = new XmlDocument ();
+            XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath );
+
+            xmlDocSave.SaveAll ( tabItems, pathIDComboBox );
+        }
+
+        private void NewDocumentCommandBinding( object sender, ExecutedRoutedEventArgs e )
+        {
+            string message = "Save changes to xml document?\nCreating a new xml file will close this one.\nUnsaved changes will be lost.";
+            string header = "Caution - save changes?";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                // Save the document first then continue with open command
+                Save_Button.Command.Execute(null);
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // Continue with new xml file command without saving
+            }
+            else if ( msgBoxResult == MessageBoxResult.Cancel )
+            {
+                // Cancel command, no need to save
+                return;
+            }
+
+            // Accesses the ActionPathsTemplate.xml file
+            string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
+            pathIDComboBox = null;
+            ResetAllTabs ();
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
+            mainWindow.Show ();
+            this.Close ();
+        }
+
+        private void UndoCommandBinding( object sender, ExecutedRoutedEventArgs e )
+        {
+            throw new NotImplementedException();
         }
     }
 }
