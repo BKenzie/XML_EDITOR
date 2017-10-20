@@ -92,18 +92,24 @@ namespace WPF_XML_Tutorial
             mainAttributesPassed = false;
             foreach ( TabItem tabItem in tabItems )
             {
-                XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", (string)tabItem.Header, "" ); 
-
-                WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
-                xmlTabNodes.Add ( xmlTabNode );
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", (string) tabItem.Header, "" );
+                    WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
+                    xmlTabNodes.Add ( xmlTabNode );
+                }
+                
             }
 
             // Now for each tab, go through and add any sub nodes 
             foreach ( TabItem tabItem in tabItems )
             {
-                string nodeName = (string)tabItem.Header;
-                XmlNode xmlTabNode = GetXmlTabNode ( nodeName );
-                InsertSubNodes ( tabItem, xmlTabNode ); 
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    string nodeName = (string) tabItem.Header;
+                    XmlNode xmlTabNode = GetXmlTabNode ( nodeName );
+                    InsertSubNodes ( tabItem, xmlTabNode );
+                }
             } 
             
             // Add to xmlDoc any main tab nodes that are not sub nodes
@@ -143,8 +149,11 @@ namespace WPF_XML_Tutorial
                     {
                         string buttonName = (string) tabLinkButton.Content;
                         XmlNode subNodeToAppend = GetXmlTabNode ( buttonName );
-                        xmlTabNode.AppendChild ( subNodeToAppend );
-                        xmlSubNodes.Add ( subNodeToAppend );
+                        if ( subNodeToAppend != null )
+                        {
+                            xmlTabNode.AppendChild ( subNodeToAppend );
+                            xmlSubNodes.Add ( subNodeToAppend );
+                        }
                     }
                 }
             }

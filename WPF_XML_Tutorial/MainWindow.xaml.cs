@@ -25,14 +25,19 @@ namespace WPF_XML_Tutorial
     {
         private string xmlFilePath;
         private string rootName;
+        private XmlDocument xmlDoc;
         private List<string> tabHeaders = null;
         private List<TabItem> tabItems = new List<TabItem> ();
-        // private List<TabItem> activeTabItems = new List<TabItem> ();
         private List<TextBox> textBoxes = new List<TextBox> ();
-        // private TabItem commentsTab;
-        private XmlDocument xmlDoc;
+        private List<Button> tabLinkButtons = new List<Button> ();
         private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
-        Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
+
+        private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
+        private enum UndoableType { delAP, delTab };
+        private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
+        private Stack<ActionPathXmlNode> deletedActionPaths = new Stack<ActionPathXmlNode> ();
+
+        private Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
         public static ComboBox pathIDComboBox;
         public int currentPathID = -1;
         public int numTabs;
@@ -529,7 +534,6 @@ namespace WPF_XML_Tutorial
                     gotoTab_Button.Height = 37;
                     gotoTab_Button.Width = 160;
                     gotoTab_Button.Background = new SolidColorBrush ( Colors.LightGray );
-                    //gotoTab_Button.Foreground = new SolidColorBrush ( Colors.DarkOrange );
                     gotoTab_Button.BorderBrush = new SolidColorBrush ( Colors.Transparent );
 
                     Style customButtonStyle = new Style ();
@@ -1190,8 +1194,32 @@ namespace WPF_XML_Tutorial
             }
             // Now get corresponding tabItem..
             TabItem apTabItem = GetTabItemWithHeader ( "ActionPath" );
+            if ( actionPath == null )
+            {
+                throw new Exception ( "Error: actionPath should not be null." );
+            }
             RecursiveParseTabInfo ( apTabItem, actionPath );
             RemoveEmptyTabs ();
+            PopulateTabLinkButtons ();
+        }
+
+        // Helper called whenever the active ActionPath is changed
+        private void PopulateTabLinkButtons()
+        {
+            TabItem actionPathTab = MainTabControl.Items[0] as TabItem;
+            foreach ( Grid grid in ( actionPathTab.Content as ListView ).Items.OfType<Grid>() )
+            {
+                List<Button> tempList = grid.Children.OfType<Button> ().ToList ();
+                if ( tempList != null && tempList.Count != 0 )
+                {
+                    Button tabLinkButton = tempList[0];
+                    if ( tabLinkButton != null )
+                    {
+                        tabLinkButtons.Add ( tabLinkButton );
+                    }
+                }
+                
+            }
         }
 
         // Helper for retrieving a certain tabItem from list tabItems
@@ -1380,6 +1408,8 @@ namespace WPF_XML_Tutorial
 
         private void DeleteActiveActionPath()
         {
+            undoableCommands.Push ( UndoableType.delAP );
+
             ComboBoxItem removeItem = null;
             foreach ( ComboBoxItem item in pathIDComboBox.Items )
             {
@@ -1393,15 +1423,29 @@ namespace WPF_XML_Tutorial
             }
             pathIDComboBox.Items.Remove ( removeItem );
             pathIDComboBox.SelectedIndex = -1;
+            // Delete previous saved state
+            if ( pathIDHistories.ContainsKey ( currentPathID ) )
+            {
+                pathIDHistories.Remove ( currentPathID );
+            }
             ResetAllTabs ();
             DisplayPathID ();
             MainTabControl.SelectedIndex = 0;
-            pathIDHistories.Remove ( currentPathID );
+            XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
+            XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
+            ActionPathXmlNode removedActionPath = new ActionPathXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID );
+            deletedActionPaths.Push ( removedActionPath );
             currentPathID = -1;
         }
 
         private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
         {
+            if ( MainTabControl.SelectedIndex == 0 )
+            {
+                MessageBox.Show ( "Cannot delete the main tab.\nIf you are trying to delete an ActionPath, select that option in the \"Delete\" drop down menu.", "Error" );
+                return;
+            }
+
             string message = String.Format("Are you sure you want to remove tab with header \"{0}\"?", ((TabItem)MainTabControl.SelectedItem).Header);
             string header = "Delete active Tab";
             MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
@@ -1418,7 +1462,25 @@ namespace WPF_XML_Tutorial
 
         private void DeleteActiveTab()
         {
-            throw new NotImplementedException ();
+            undoableCommands.Push ( UndoableType.delTab );
+            // Make tab visibility collapsed -- this makes it easier to undo
+            // When saving, only include tabs which have Visibility.Visible
+            TabItem activeTab = MainTabControl.SelectedItem as TabItem;
+            activeTab.Visibility = Visibility.Collapsed;
+            deletedTabs.Push ( activeTab );
+            // Direct user control back to main tab
+            MainTabControl.SelectedIndex = 0;
+
+            // Make the tab link button disappear
+            Button tabLinkButton = null;
+            foreach ( Button curButton in tabLinkButtons )
+            {
+                if ( (string) activeTab.Header == (string) curButton.Content )
+                {
+                    tabLinkButton = curButton;
+                    tabLinkButton.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
         private void Modify_Template_Click( object sender, RoutedEventArgs e )
@@ -1522,7 +1584,66 @@ namespace WPF_XML_Tutorial
 
         private void UndoCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
-            throw new NotImplementedException();
+            if ( undoableCommands.Count == 0 )
+            {
+                MessageBox.Show ( "There are currently no commands to undo.\nNote: undoable commands include ActionPath and tab deletion.", "Error" );
+                return;
+            }
+
+            UndoableType undoType = undoableCommands.Pop ();
+            string message = "";
+            if ( undoType == UndoableType.delTab )
+            {
+                message = "Undo previous tab deletion?";
+            }
+            else if ( undoType == UndoableType.delAP )
+            {
+                message = "Undo previous ActionPath deletion?";
+            }
+
+            string header = "Message";
+            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
+            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+            if ( msgBoxResult == MessageBoxResult.Yes )
+            {
+                // Continue with undo
+            }
+            else if ( msgBoxResult == MessageBoxResult.No )
+            {
+                // Cancel undo action
+                undoableCommands.Push ( undoType );
+                return;
+            }
+
+            if ( undoType == UndoableType.delTab )
+            {
+                TabItem deletedTab = deletedTabs.Pop ();
+                deletedTab.Visibility = Visibility.Visible;
+
+                // Make the tab link button appear
+                Button tabLinkButton = null;
+                foreach ( Button curButton in tabLinkButtons )
+                {
+                    if ( (string) deletedTab.Header == (string) curButton.Content )
+                    {
+                        tabLinkButton = curButton;
+                        tabLinkButton.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+            else if ( undoType == UndoableType.delAP )
+            {
+                ActionPathXmlNode deletedActionPath = deletedActionPaths.Pop ();
+                XmlNode deletedXmlNode = deletedActionPath.XmlNode;
+                int pathID = deletedActionPath.PathID;
+                pathIDHistories.Add ( pathID, deletedXmlNode );
+                ComboBoxItem pathIDComboBoxItem = new ComboBoxItem ()
+                {
+                    Content = pathID,
+                };
+                AddNewPathID ( pathIDComboBox, pathIDComboBoxItem );
+                SwitchCurrentActionPath ( pathID );
+            }
         }
     }
 }
