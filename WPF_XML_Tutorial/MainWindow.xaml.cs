@@ -47,7 +47,8 @@ namespace WPF_XML_Tutorial
         {
             InitializeComponent ();
             KeyboardNavigation.SetTabNavigation ( MainTabControl, KeyboardNavigationMode.None );
-            
+            KeyboardNavigation.SetTabNavigation ( MainWindowMenuBar, KeyboardNavigationMode.None );
+
             xmlFilePath = filePath;
             xmlDoc = new XmlDocument ();
             xmlDoc.Load ( xmlFilePath );
@@ -169,6 +170,21 @@ namespace WPF_XML_Tutorial
             {
                 TextPathIDOverlay.Visibility = Visibility.Visible;
                 NumPathIDOverlay.Visibility = Visibility.Visible;
+            }
+
+            // Clear tab and then re-populate with the new active tab's textboxes
+            textBoxes.Clear ();
+            TabItem activeTab = (TabItem) ( (TabControl) sender ).SelectedItem;
+            ListView listView = (ListView) activeTab.Content;
+            foreach ( Grid grid in listView.Items.OfType<Grid> () )
+            {
+                // TextBox textBox = (TextBox) grid.Children.OfType<TextBox> ().ToList ()[0];
+                List<TextBox> tempList = grid.Children.OfType<TextBox> ().ToList ();
+                if ( tempList != null && tempList.Count > 0 )
+                {
+                    TextBox textBox = (TextBox) tempList[0];
+                    textBoxes.Add ( textBox );
+                }
             }
         }
 
@@ -374,7 +390,6 @@ namespace WPF_XML_Tutorial
                     newGrid.Children.Add ( textBlock );
 
                     TextBox textBoxAttrib = new TextBox ();
-                    textBoxes.Add ( textBoxAttrib );
                     textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
                     textBoxAttrib.AcceptsReturn = true;
                     textBoxAttrib.Text = ( attribute.Value );
@@ -419,7 +434,6 @@ namespace WPF_XML_Tutorial
                     newGrid.Children.Add ( textBlock );
 
                     TextBox textBoxNodeText = new TextBox ();
-                    textBoxes.Add ( textBoxNodeText );
                     textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                     textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
                     textBoxNodeText.ToolTip = "Text field";
@@ -757,7 +771,6 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
-                        textBoxes.Add ( textBoxNodeText );
                         textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                         textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
                         textBoxNodeText.AcceptsReturn = true;
@@ -845,7 +858,6 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( nameTextBlock );
 
                         TextBox textBoxNodeText = new TextBox ();
-                        textBoxes.Add ( textBoxNodeText );
                         textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
                         textBoxNodeText.AppendText ( "EMPTY" );
                         textBoxNodeText.AcceptsReturn = true;
@@ -904,7 +916,6 @@ namespace WPF_XML_Tutorial
                         newGrid.Children.Add ( textBlockSubAttrib );
 
                         TextBox attributeTextBox = new TextBox ();
-                        textBoxes.Add ( attributeTextBox );
                         attributeTextBox.KeyDown += new KeyEventHandler ( OnTabPressed );
                         attributeTextBox.Text = attribute.Value;
                         attributeTextBox.ToolTip = xmlChildNode.Name + "'s attribute";
@@ -1335,7 +1346,6 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( textBlock );
 
             TextBox textBoxAttrib = new TextBox ();
-            textBoxes.Add ( textBoxAttrib );
             textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
             textBoxAttrib.AcceptsReturn = true;
             textBoxAttrib.Text = ( value );
@@ -1378,7 +1388,6 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( textBlock );
 
             TextBox textBoxElem = new TextBox ();
-            textBoxes.Add ( textBoxElem );
             textBoxElem.KeyDown += new KeyEventHandler ( OnTabPressed );
             textBoxElem.AcceptsReturn = true;
             textBoxElem.Text = ( value );
