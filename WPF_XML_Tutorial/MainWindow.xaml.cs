@@ -1163,6 +1163,7 @@ namespace WPF_XML_Tutorial
                 }
             }
             ActionPathXmlNode newActionPath = new ActionPathXmlNode ( newXmlNode, pathID );
+            actionPathXmlNodes.Remove ( newActionPath ); // to get rid of old one if it exists
             actionPathXmlNodes.Add ( newActionPath );
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
             newPathIDItem.Content = pathID;
@@ -1490,7 +1491,8 @@ namespace WPF_XML_Tutorial
             ResetAllTabs ();
             DisplayPathID ();
             MainTabControl.SelectedIndex = 0;
-
+            pathIDHistories.Remove ( currentPathID );
+            currentPathID = -1;
         }
 
         private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
