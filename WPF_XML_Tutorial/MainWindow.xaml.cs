@@ -1421,20 +1421,20 @@ namespace WPF_XML_Tutorial
                     }
                 }
             }
-            pathIDComboBox.Items.Remove ( removeItem );
-            pathIDComboBox.SelectedIndex = -1;
             // Delete previous saved state
             if ( pathIDHistories.ContainsKey ( currentPathID ) )
             {
                 pathIDHistories.Remove ( currentPathID );
             }
-            ResetAllTabs ();
-            DisplayPathID ();
-            MainTabControl.SelectedIndex = 0;
             XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
             XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             ActionPathXmlNode removedActionPath = new ActionPathXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID );
             deletedActionPaths.Push ( removedActionPath );
+            pathIDComboBox.Items.Remove ( removeItem );
+            ResetAllTabs ();
+            DisplayPathID ();
+            MainTabControl.SelectedIndex = 0;
+            pathIDComboBox.SelectedIndex = -1;
             currentPathID = -1;
         }
 
@@ -1481,11 +1481,6 @@ namespace WPF_XML_Tutorial
                     tabLinkButton.Visibility = Visibility.Collapsed;
                 }
             }
-        }
-
-        private void Modify_Template_Click( object sender, RoutedEventArgs e )
-        {
-            throw new NotImplementedException ();
         }
 
         private void OpenCommandBinding( object sender, ExecutedRoutedEventArgs e )
@@ -1601,7 +1596,7 @@ namespace WPF_XML_Tutorial
                 message = "Undo previous ActionPath deletion?";
             }
 
-            string header = "Message";
+            string header = "Undo";
             MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
             MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
             if ( msgBoxResult == MessageBoxResult.Yes )
@@ -1642,8 +1637,16 @@ namespace WPF_XML_Tutorial
                     Content = pathID,
                 };
                 AddNewPathID ( pathIDComboBox, pathIDComboBoxItem );
-                SwitchCurrentActionPath ( pathID );
+                pathIDComboBox.SelectedItem = pathIDComboBoxItem;
             }
+        }
+
+        private void Modify_Template_Click( object sender, RoutedEventArgs e )
+        {
+            // Will need to be able to parse -- check implementation for new file creation
+
+            ModifyTemplateWindow newTemplateWindow = new ModifyTemplateWindow ( this );
+            newTemplateWindow.Show ();
         }
     }
 }

@@ -54,11 +54,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ModifyTemplateWindow.xaml.cs">
+      <DependentUpon>ModifyTemplateWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="NewActionPath.xaml.cs">
       <DependentUpon>NewActionPath.xaml</DependentUpon>
     </Compile>
     <Compile Include="NewElemOrAttrib.xaml.cs">
       <DependentUpon>NewElemOrAttrib.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NewTemplateName.xaml.cs">
+      <DependentUpon>NewTemplateName.xaml</DependentUpon>
     </Compile>
     <Compile Include="XMLDocSave.cs" />
     <Page Include="InputXMLWindow.xaml">
@@ -81,11 +87,19 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ModifyTemplateWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="NewActionPath.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NewElemOrAttrib.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NewTemplateName.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
