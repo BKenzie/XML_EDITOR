@@ -66,7 +66,7 @@ namespace WPF_XML_Tutorial
                 ListBoxItem selectedItem = TemplatesListBox.SelectedItem as ListBoxItem;
                 string name = selectedItem.Content as string;
                 TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( name );
-                ModifyTemplateWindow modifyTemplateWindow = new ModifyTemplateWindow ( templateXmlNode, mainWindowCaller );
+                MainWindow modifyTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (), isTemplateWindow: true, templateXmlNodeParam: templateXmlNode, caller: mainWindowCaller );
                 modifyTemplateWindow.Show ();
                 this.Close ();
             }

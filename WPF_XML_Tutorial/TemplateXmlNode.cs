@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Collections.Generic;
+using System.Xml;
 
 namespace WPF_XML_Tutorial
 {
@@ -12,6 +13,11 @@ namespace WPF_XML_Tutorial
         }
 
         public XmlNode XmlNode
+        {
+            get; set;
+        }
+
+        public List<string> TabHeaders
         {
             get; set;
         }

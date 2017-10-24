@@ -36,7 +36,7 @@
         
         
         <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="34" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
-            <MenuItem Header="File" VerticalAlignment="Center" FontSize="16">
+            <MenuItem Name="FileMenu" Header="File" VerticalAlignment="Center" FontSize="16">
                 <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0"/>
                 <MenuItem Header="_New XML file" Name="New_Button" Command="New"/>
                 <MenuItem Header="Open new document" Command="Open" FontSize="16"/>
@@ -45,9 +45,9 @@
             </MenuItem>
             <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
             <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>
-            <MenuItem Header="_Delete" FontSize="16">
+            <MenuItem Name="DeleteMenu" Header="_Delete" FontSize="16">
                 <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0"/>
-                <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0"/>
+                <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveActionPath"/>
             </MenuItem>
         </Menu>
         

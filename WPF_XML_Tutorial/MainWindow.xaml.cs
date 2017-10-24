@@ -49,11 +49,17 @@ namespace WPF_XML_Tutorial
             Width = GRID_WIDTH,
         };
 
-        public MainWindow( string filePath, List<TemplateXmlNode> existingTemplates = null )
+        private bool isTemplateWindow = false;
+        private MainWindow mainEditorWindow;
+        private TemplateXmlNode templateXmlNode;
+
+        public MainWindow( string filePath, List<TemplateXmlNode> existingTemplates = null, 
+                bool isTemplateWindow = false, TemplateXmlNode templateXmlNodeParam = null, MainWindow caller = null )
         {
             InitializeComponent ();
             KeyboardNavigation.SetTabNavigation ( MainTabControl, KeyboardNavigationMode.None );
             KeyboardNavigation.SetTabNavigation ( MainWindowMenuBar, KeyboardNavigationMode.None );
+            MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
 
             // Setup available templates
             if ( existingTemplates != null )
@@ -68,54 +74,107 @@ namespace WPF_XML_Tutorial
                 helperXmlDoc.Load ( templateFilePath );
                 XmlNode templateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <ActionPath> node
                 TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( templateXmlNode, "Default template" );
+                string strHeaders = helperXmlDoc.LastChild.FirstChild.InnerText;
+                defaultTemplateXmlNode.TabHeaders = new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) );
                 templateXmlNodes.Add ( defaultTemplateXmlNode );
             }
 
-            xmlFilePath = filePath;
-            xmlDoc = new XmlDocument ();
-            xmlDoc.Load ( xmlFilePath );
-
-            MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
-
-            // Initialize the window elements depending on the XML doc 
-            using ( FileStream fileStream = new FileStream ( xmlFilePath, FileMode.Open ) )
-            using ( XmlReader reader = XmlReader.Create ( fileStream ) )
+            if ( isTemplateWindow )
             {
-                while ( reader.Read () )
+                mainEditorWindow = caller;
+                this.isTemplateWindow = true;
+                this.templateXmlNode = templateXmlNodeParam;
+                xmlDoc = new XmlDocument ();
+                XmlNode xml = xmlDoc.CreateNode ( XmlNodeType.Element, "root", "" );
+                XmlNode node = templateXmlNodeParam.XmlNode;
+                XmlNode importNode = xml.OwnerDocument.ImportNode ( node, true );
+                xml.AppendChild( importNode );
+                xmlDoc.AppendChild ( xml );
+                tabHeaders = templateXmlNodeParam.TabHeaders;
+                foreach ( string header in tabHeaders )
                 {
-                    if ( reader.NodeType == XmlNodeType.Element )
-                    {
-                        // Needs to have the <Tabs_XEDITOR> element in order for this program to work
-                        if ( reader.Name == "Tabs_XEDITOR" )
-                        {
-                            ReadTabHeaderInformation ( reader );
-                            numTabs = tabHeaders.Count ();
-                            // Populate list of tabItems
-                            foreach ( string header in tabHeaders )
-                            {
-                                TabItem newTabItem = new TabItem ();
-                                newTabItem.Name = header;
-                                newTabItem.Header = header;
-                                newTabItem.FontSize = 18;
-                                newTabItem.IsTabStop = false;
-                                MainTabControl.Items.Add ( newTabItem );
-                                tabItems.Add ( newTabItem );
-                            }
+                    TabItem newTabItem = new TabItem ();
+                    newTabItem.Name = header;
+                    newTabItem.Header = header;
+                    newTabItem.FontSize = 18;
+                    newTabItem.IsTabStop = false;
+                    MainTabControl.Items.Add ( newTabItem );
+                    tabItems.Add ( newTabItem );
+                }
+                ReadAllTabInformation ();
 
-                            ReadAllTabInformation ();
-                            break;
+                // Menu changes
+                FileMenu.Visibility = Visibility.Collapsed;
+                Open_Button.Visibility = Visibility.Collapsed;
+                RemoveActionPath.Visibility = Visibility.Collapsed;
+                DeleteMenu.Visibility = Visibility.Collapsed;
+                Save_Button.Visibility = Visibility.Collapsed;
+
+                MenuItem TabMenuOptions = new MenuItem ();
+                TabMenuOptions.Header = "Tabs";
+                TabMenuOptions.FontSize = 16;
+                MenuItem deleteTabMenuItem = new MenuItem ();
+                deleteTabMenuItem.Header = "Delete active tab";
+                deleteTabMenuItem.Click += new RoutedEventHandler ( Delete_Tab_Button_Click );
+                MenuItem addTabMenuItem = new MenuItem ();
+                addTabMenuItem.Header = "Add new tab";
+                addTabMenuItem.Click += new RoutedEventHandler ( AddTab_Click );
+                TabMenuOptions.Items.Add ( deleteTabMenuItem );
+                TabMenuOptions.Items.Add ( addTabMenuItem );
+                MainWindowMenuBar.Items.Add ( TabMenuOptions );
+
+                MenuItem SaveTemplate = new MenuItem ();
+                SaveTemplate.Header = "Save Template";
+                SaveTemplate.FontSize = 16;
+                SaveTemplate.Click += new RoutedEventHandler ( SaveTemplate_Click );
+                MainWindowMenuBar.Items.Add ( SaveTemplate );
+
+            }
+            else
+            {
+                xmlFilePath = filePath;
+                xmlDoc = new XmlDocument ();
+                xmlDoc.Load ( xmlFilePath );
+
+                // Initialize the window elements depending on the XML doc 
+                using ( FileStream fileStream = new FileStream ( xmlFilePath, FileMode.Open ) )
+                using ( XmlReader reader = XmlReader.Create ( fileStream ) )
+                {
+                    while ( reader.Read () )
+                    {
+                        if ( reader.NodeType == XmlNodeType.Element )
+                        {
+                            // Needs to have the <Tabs_XEDITOR> element in order for this program to work
+                            if ( reader.Name == "Tabs_XEDITOR" )
+                            {
+                                ReadTabHeaderInformation ( reader );
+                                numTabs = tabHeaders.Count ();
+                                // Populate list of tabItems
+                                foreach ( string header in tabHeaders )
+                                {
+                                    TabItem newTabItem = new TabItem ();
+                                    newTabItem.Name = header;
+                                    newTabItem.Header = header;
+                                    newTabItem.FontSize = 18;
+                                    newTabItem.IsTabStop = false;
+                                    MainTabControl.Items.Add ( newTabItem );
+                                    tabItems.Add ( newTabItem );
+                                }
+
+                                ReadAllTabInformation ();
+                                break;
+                            }
                         }
                     }
                 }
+                // Send error message if <Tabs_XEDITOR> is empty or not found
+                if ( tabHeaders == null )
+                {
+                    MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR>", "Error" );
+                    return;
+                }
+                FinalLogic ();
             }
-            // Send error message if <Tabs_XEDITOR> is empty or not found
-            if ( tabHeaders == null )
-            {
-                MessageBox.Show ( "No tabs specified in xml file under <Tabs_XEDITOR>", "Error" );
-                return;
-            }
-            
-            FinalLogic (); 
         }
 
         // Helper for directly before MainWindow is shown to user
@@ -589,7 +648,7 @@ namespace WPF_XML_Tutorial
 
             // ListView construction is over, now set as the tabItem content
             tabItem.Content = listView;
-            }
+        }
 
         // Switches keyboard focus to the next textbox. Called for all appropriate textboxes
         private void OnTabPressed( object sender, KeyEventArgs e )
@@ -639,71 +698,29 @@ namespace WPF_XML_Tutorial
             // Special behaviour if currently parsing ActionPath's PathID
             if ( xmlChildNode.Name == "PathID" )
             {
-                if ( xmlChildNode.FirstChild == null )
+                if ( this.isTemplateWindow )
                 {
-                    // Creates a ComboBox for PathIDs if does not already exist
-                    // else add PathID to existing ComboBox
-                    if ( pathIDComboBox == null )
-                    {
-                        // Initialize pathIDComboBox with event handling for switching paths
-                        InitializePathIDComboBox ();
-                    }
-
-                    if (pathIDComboBox.Items.Count == 0 || 
-                        Convert.ToString(((ComboBoxItem)pathIDComboBox.Items[pathIDComboBox.Items.Count - 1]).Content) != "New ActionPath")
-                    {
-                        ComboBoxItem addNewActionPath = new ComboBoxItem ();
-                        addNewActionPath.Content = "New ActionPath";
-                        pathIDComboBox.Items.Add ( addNewActionPath );
-                    }
-                    
-                    TextBlock pathIDTextBlock = new TextBlock ();
-                    pathIDTextBlock.Text = "PathID:";
-                    pathIDTextBlock.ToolTip = "Current PathID - Change to switch active ActionPath";
-                    Grid.SetRow ( pathIDTextBlock, 0 );
-                    Grid.SetColumn ( pathIDTextBlock, 0 );
-
-                    if ( pathIDGrid.ColumnDefinitions.Count == 0 )
-                    {
-                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
-                    }
-                    
-
-                    pathIDGrid.Children.Add ( pathIDTextBlock );
-                    if ( pathIDComboBox.Parent != null )
-                    {
-                        Grid parent = (Grid) pathIDComboBox.Parent;
-                        parent.Children.Remove ( pathIDComboBox );
-                    }
-                    pathIDGrid.Children.Add ( pathIDComboBox );
-                    RemoveGridFromListViewParent ( pathIDGrid );
-                    listView.Items.Add ( pathIDGrid );
+                    // Do nothing
                 }
                 else
                 {
-                    // Created a ComboBox for PathIDs if does not already exist
-                    // else add PathID to existing ComboBox
-                    if ( pathIDComboBox == null )
+                    if ( xmlChildNode.FirstChild == null )
                     {
-                        // Initialize pathIDComboBox with event handling for switching paths
-                        pathIDComboBox = new ComboBox ();
-                        ComboBoxItem addNewActionPath = new ComboBoxItem ();
-                        addNewActionPath.Content = "New ActionPath";
-                        pathIDComboBox.Items.Add ( addNewActionPath );
-                        pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
-                        ComboBoxItem newPathID = new ComboBoxItem ();
-                        newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
-                        AddNewPathID ( pathIDComboBox, newPathID );
+                        // Creates a ComboBox for PathIDs if does not already exist
+                        // else add PathID to existing ComboBox
+                        if ( pathIDComboBox == null )
+                        {
+                            // Initialize pathIDComboBox with event handling for switching paths
+                            InitializePathIDComboBox ();
+                        }
 
-                        Grid.SetRow ( pathIDComboBox, 0 );
-                        Grid.SetColumn ( pathIDComboBox, 1 );
-
-                        // Add PathIDComboBox to the listView
-                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
+                        if ( pathIDComboBox.Items.Count == 0 ||
+                            Convert.ToString ( ( (ComboBoxItem) pathIDComboBox.Items[pathIDComboBox.Items.Count - 1] ).Content ) != "New ActionPath" )
+                        {
+                            ComboBoxItem addNewActionPath = new ComboBoxItem ();
+                            addNewActionPath.Content = "New ActionPath";
+                            pathIDComboBox.Items.Add ( addNewActionPath );
+                        }
 
                         TextBlock pathIDTextBlock = new TextBlock ();
                         pathIDTextBlock.Text = "PathID:";
@@ -711,30 +728,78 @@ namespace WPF_XML_Tutorial
                         Grid.SetRow ( pathIDTextBlock, 0 );
                         Grid.SetColumn ( pathIDTextBlock, 0 );
 
+                        if ( pathIDGrid.ColumnDefinitions.Count == 0 )
+                        {
+                            pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                            pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                            pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
+                        }
+
+
                         pathIDGrid.Children.Add ( pathIDTextBlock );
+                        if ( pathIDComboBox.Parent != null )
+                        {
+                            Grid parent = (Grid) pathIDComboBox.Parent;
+                            parent.Children.Remove ( pathIDComboBox );
+                        }
                         pathIDGrid.Children.Add ( pathIDComboBox );
                         RemoveGridFromListViewParent ( pathIDGrid );
                         listView.Items.Add ( pathIDGrid );
-
                     }
                     else
                     {
-                        ComboBoxItem newPathID = new ComboBoxItem ();
-                        newPathID.Content = xmlChildNode.FirstChild.Value;
-                        if ( !ContainsPathID ( pathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                        // Created a ComboBox for PathIDs if does not already exist
+                        // else add PathID to existing ComboBox
+                        if ( pathIDComboBox == null )
                         {
+                            // Initialize pathIDComboBox with event handling for switching paths
+                            pathIDComboBox = new ComboBox ();
+                            ComboBoxItem addNewActionPath = new ComboBoxItem ();
+                            addNewActionPath.Content = "New ActionPath";
+                            pathIDComboBox.Items.Add ( addNewActionPath );
+                            pathIDComboBox.SelectionChanged += new SelectionChangedEventHandler ( PathIDChanged );
+                            ComboBoxItem newPathID = new ComboBoxItem ();
+                            newPathID.Content = xmlChildNode.FirstChild.Value; // PathID value
                             AddNewPathID ( pathIDComboBox, newPathID );
-                        }
 
-                        if ( !listView.Items.Contains ( pathIDGrid ) )
-                        {
+                            Grid.SetRow ( pathIDComboBox, 0 );
+                            Grid.SetColumn ( pathIDComboBox, 1 );
+
+                            // Add PathIDComboBox to the listView
+                            pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                            pathIDGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                            pathIDGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                            TextBlock pathIDTextBlock = new TextBlock ();
+                            pathIDTextBlock.Text = "PathID:";
+                            pathIDTextBlock.ToolTip = "Current PathID - Change to switch active ActionPath";
+                            Grid.SetRow ( pathIDTextBlock, 0 );
+                            Grid.SetColumn ( pathIDTextBlock, 0 );
+
+                            pathIDGrid.Children.Add ( pathIDTextBlock );
+                            pathIDGrid.Children.Add ( pathIDComboBox );
                             RemoveGridFromListViewParent ( pathIDGrid );
                             listView.Items.Add ( pathIDGrid );
+
+                        }
+                        else
+                        {
+                            ComboBoxItem newPathID = new ComboBoxItem ();
+                            newPathID.Content = xmlChildNode.FirstChild.Value;
+                            if ( !ContainsPathID ( pathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                            {
+                                AddNewPathID ( pathIDComboBox, newPathID );
+                            }
+
+                            if ( !listView.Items.Contains ( pathIDGrid ) )
+                            {
+                                RemoveGridFromListViewParent ( pathIDGrid );
+                                listView.Items.Add ( pathIDGrid );
+                            }
                         }
                     }
+                    #endregion
                 }
-                #endregion
-
             }
             else
             {
@@ -1634,6 +1699,11 @@ namespace WPF_XML_Tutorial
             return templateXmlNodes;
         }
 
+        public List<TabItem> GetTabItems()
+        {
+            return tabItems;
+        }
+
         private void Modify_Template_Click( object sender, RoutedEventArgs e )
         {
             // Will need to be able to parse -- check implementation for new file creation
@@ -1647,6 +1717,21 @@ namespace WPF_XML_Tutorial
         {
             this.IsEnabled = true;
             templateXmlNodes.Add ( newTemplate );
+        }
+
+        private void SaveTemplate_Click( object sender, RoutedEventArgs e )
+        {
+            XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
+            XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
+            this.templateXmlNode.XmlNode = savedActiveTabsState.FirstChild.LastChild;
+            NewTemplateName inputTemplateNameWindow = new NewTemplateName ( this, mainEditorWindow, this.templateXmlNode );
+            inputTemplateNameWindow.Show ();
+            this.IsEnabled = false;
+        }
+
+        private void AddTab_Click( object sender, RoutedEventArgs e )
+        {
+            throw new NotImplementedException ();
         }
     }
 }
