@@ -19,9 +19,15 @@ namespace WPF_XML_Tutorial
     /// </summary>
     public partial class ModifyTemplateWindow : Window
     {
-        public ModifyTemplateWindow()
+        TemplateXmlNode activeTemplate;
+        MainWindow mainWindow;
+
+        public ModifyTemplateWindow( TemplateXmlNode template, MainWindow mainWindow )
         {
             InitializeComponent ();
+            activeTemplate = template;
+            this.mainWindow = mainWindow;
+
         }
 
         private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
@@ -39,11 +45,9 @@ namespace WPF_XML_Tutorial
         private void SaveCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
             // Need to figure out implementation details 
-            // Should the user have access to a list of templates they can choose from?
-            // Need to still have the default ActionPath template, not overwritten by this method
-            throw new NotImplementedException ();
-
-            NewTemplateName inputNameWindow = new NewTemplateName ();
+            
+            NewTemplateName inputNameWindow = new NewTemplateName ( this, mainWindow, activeTemplate ); // TODO: need to register changes for activeTemplate
+            this.IsEnabled = false;
             inputNameWindow.Show ();
         }
 

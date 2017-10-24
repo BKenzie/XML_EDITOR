@@ -30,7 +30,8 @@ namespace WPF_XML_Tutorial
         private List<TabItem> tabItems = new List<TabItem> ();
         private List<TextBox> textBoxes = new List<TextBox> ();
         private List<Button> tabLinkButtons = new List<Button> ();
-        private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode>();
+        private List<ActionPathXmlNode> actionPathXmlNodes = new List<ActionPathXmlNode> ();
+        private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
         private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
         private enum UndoableType { delAP, delTab };
@@ -48,44 +49,31 @@ namespace WPF_XML_Tutorial
             Width = GRID_WIDTH,
         };
 
-        public MainWindow( string filePath )
+        public MainWindow( string filePath, List<TemplateXmlNode> existingTemplates = null )
         {
             InitializeComponent ();
             KeyboardNavigation.SetTabNavigation ( MainTabControl, KeyboardNavigationMode.None );
             KeyboardNavigation.SetTabNavigation ( MainWindowMenuBar, KeyboardNavigationMode.None );
 
+            // Setup available templates
+            if ( existingTemplates != null )
+            {
+                templateXmlNodes = existingTemplates;
+            }
+            else
+            {
+                // if existingTemplates is null, add the default template
+                XmlDocument helperXmlDoc = new XmlDocument ();
+                string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
+                helperXmlDoc.Load ( templateFilePath );
+                XmlNode templateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <ActionPath> node
+                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( templateXmlNode, "Default template" );
+                templateXmlNodes.Add ( defaultTemplateXmlNode );
+            }
+
             xmlFilePath = filePath;
             xmlDoc = new XmlDocument ();
             xmlDoc.Load ( xmlFilePath );
-
-            //#region Open and Save buttons
-            //Style customButtonStyle = new Style ();
-            //customButtonStyle.TargetType = typeof ( Button );
-            //MultiDataTrigger trigger = new MultiDataTrigger ();
-            //Condition condition = new Condition ();
-            //condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
-            //condition.Value = true;
-            //Setter foregroundSetter = new Setter ();
-            //foregroundSetter.Property = Button.ForegroundProperty;
-            //foregroundSetter.Value = Brushes.DarkOrange;
-            //Setter cursorSetter = new Setter ();
-            //cursorSetter.Property = Button.CursorProperty;
-            //cursorSetter.Value = Cursors.Hand;
-            //Setter textSetter = new Setter ();
-            //textSetter.Property = Button.FontWeightProperty;
-            //textSetter.Value = FontWeights.ExtraBold;
-            //Setter setter = new Setter ();
-            //trigger.Conditions.Add ( condition );
-            //trigger.Setters.Add ( foregroundSetter );
-            //trigger.Setters.Add ( cursorSetter );
-            //trigger.Setters.Add ( textSetter );
-            //customButtonStyle.Triggers.Clear ();
-            //customButtonStyle.Triggers.Add ( trigger );
-            //Open_New_Button.Focusable = false;
-            //Save_Button.Focusable = false;
-            //Open_New_Button.Style = customButtonStyle;
-            //Save_Button.Style = customButtonStyle;
-            //#endregion
 
             MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
 
@@ -1521,7 +1509,7 @@ namespace WPF_XML_Tutorial
                 // TODO: Check if XML file is in the proper format 
                 // If it is, pass the XML fileName to MainWindow and initialize it
                 pathIDComboBox = null;
-                MainWindow mainWindow = new MainWindow ( filePath );
+                MainWindow mainWindow = new MainWindow ( filePath, templateXmlNodes );
                 mainWindow.Show ();
                 this.Close ();
 
@@ -1572,7 +1560,7 @@ namespace WPF_XML_Tutorial
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
             pathIDComboBox = null;
             ResetAllTabs ();
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml", templateXmlNodes );
             mainWindow.Show ();
             this.Close ();
         }
@@ -1641,12 +1629,24 @@ namespace WPF_XML_Tutorial
             }
         }
 
+        public List<TemplateXmlNode> GetAvailableTemplates()
+        {
+            return templateXmlNodes;
+        }
+
         private void Modify_Template_Click( object sender, RoutedEventArgs e )
         {
             // Will need to be able to parse -- check implementation for new file creation
+            // Should be able to choose which template to edit, not just the default one
+            TemplateListWindow templatesWindow = new TemplateListWindow ( this, "Modify" );
+            templatesWindow.Show ();
+            this.IsEnabled = false;
+        }
 
-            ModifyTemplateWindow newTemplateWindow = new ModifyTemplateWindow ( this );
-            newTemplateWindow.Show ();
+        public void NewTemplateEntered( TemplateXmlNode newTemplate )
+        {
+            this.IsEnabled = true;
+            templateXmlNodes.Add ( newTemplate );
         }
     }
 }

@@ -19,9 +19,17 @@ namespace WPF_XML_Tutorial
     /// </summary>
     public partial class NewTemplateName : Window
     {
-        public NewTemplateName()
+        ModifyTemplateWindow modifyTemplateWindowCaller;
+        MainWindow mainWindow;
+        TemplateXmlNode newTemplate;
+
+        public NewTemplateName( ModifyTemplateWindow caller, MainWindow mainWindow, TemplateXmlNode template )
         {
             InitializeComponent ();
+            modifyTemplateWindowCaller = caller;
+            this.Topmost = true;
+            this.mainWindow = mainWindow;
+            this.newTemplate = new TemplateXmlNode ( template.XmlNode, template.Name );
         }
 
         private void Drag_MouseLeftButtonDown( object sender, MouseButtonEventArgs e )
@@ -32,6 +40,7 @@ namespace WPF_XML_Tutorial
         private void Close_Button_NewTemplateNameWindow_Click( object sender, MouseButtonEventArgs e )
         {
             this.Close ();
+            modifyTemplateWindowCaller.IsEnabled = true;
         }
 
         private void TextBox_KeyUp( object sender, KeyEventArgs e )
@@ -44,10 +53,15 @@ namespace WPF_XML_Tutorial
 
         private void EnterButton_Click( object sender, RoutedEventArgs e )
         {
-            // Going to need to return to the MainWindow? 
+            // Going to need to return to the MainWindow 
             // Need to add the new ActionPath template to the list of templates 
             // TODO: implement that list of templates and an option for the user to choose which template they want to use
-            throw new NotImplementedException ();
+
+            modifyTemplateWindowCaller.Close ();
+            newTemplate.Name = NewTemplateNameTextBox.Text;
+            mainWindow.NewTemplateEntered ( newTemplate );
+            this.Close ();
+
         }
     }
 }

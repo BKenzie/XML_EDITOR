@@ -66,6 +66,10 @@
     <Compile Include="NewTemplateName.xaml.cs">
       <DependentUpon>NewTemplateName.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TemplateListWindow.xaml.cs">
+      <DependentUpon>TemplateListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TemplateXmlNode.cs" />
     <Compile Include="XMLDocSave.cs" />
     <Page Include="InputXMLWindow.xaml">
       <SubType>Designer</SubType>
@@ -100,6 +104,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NewTemplateName.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TemplateListWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
