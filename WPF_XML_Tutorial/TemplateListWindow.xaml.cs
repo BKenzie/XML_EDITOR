@@ -58,18 +58,26 @@ namespace WPF_XML_Tutorial
 
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
         {
-            this.Close ();
             mainWindowCaller.IsEnabled = true;
+            MainWindow.pathIDComboBox.SelectedIndex = -1;
+            this.Close ();
         }
 
         private void TemplateSelectButton_Click( object sender, RoutedEventArgs e )
         {
+            if ( TemplatesListBox.SelectedIndex == -1 )
+            {
+                MessageBox.Show ( "Please select a template and try again.", "No template selected" );
+                return;
+            }
+
             if ( currentMode == Mode.Modify )
             {
                 ListBoxItem selectedItem = TemplatesListBox.SelectedItem as ListBoxItem;
                 string name = selectedItem.Content as string;
                 TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( name );
-                MainWindow modifyTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (), isTemplateWindow: true, templateXmlNodeParam: templateXmlNode, caller: mainWindowCaller );
+                MainWindow modifyTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (), 
+                        isTemplateWindow: true, templateXmlNodeParam: templateXmlNode, caller: mainWindowCaller );
                 modifyTemplateWindow.Show ();
                 this.Close ();
             }

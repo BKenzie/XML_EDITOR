@@ -1213,16 +1213,10 @@ namespace WPF_XML_Tutorial
 
         public void NewPathIDEntered( int pathID )
         {
-        //    XmlDocument helperXmlDoc = new XmlDocument ();
-        //    string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
-        //    helperXmlDoc.Load ( templateFilePath );
-        //    XmlNode newXmlNode = helperXmlDoc.LastChild.LastChild; // this retrieves just the template <ActionPath> node
-
             // Allow user to select template for new ActionPath
-            TemplateListWindow templateListWindow = new TemplateListWindow ( this, "select", pathID );
+            TemplateListWindow templateListWindow = new TemplateListWindow ( this, "Select", pathID );
             templateListWindow.Show ();
             this.IsEnabled = false;
-
             
         }
 
@@ -1327,10 +1321,25 @@ namespace WPF_XML_Tutorial
 
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
         {
-            this.Close ();
             if ( isTemplateWindow )
             {
-                mainEditorWindow.IsEnabled = true;
+                string message = "Caution -- this will exit the template editor without saving.\nProceed?";
+                string header = "Warning";
+                MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
+                MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+                if ( msgBoxResult == MessageBoxResult.Yes )
+                {
+                    this.Close ();
+                    mainEditorWindow.IsEnabled = true;
+                }
+                else if ( msgBoxResult == MessageBoxResult.No )
+                {
+                    return;
+                }
+            }
+            else
+            {
+                this.Close ();
             }
         }
 
@@ -1751,7 +1760,15 @@ namespace WPF_XML_Tutorial
         {
             XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
+            XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
             this.templateXmlNode.XmlNode = savedActiveTabsState.FirstChild.LastChild;
+            XmlDocument xmlDoc = new XmlDocument ();
+            string xmlString = "<ActionPath><PathID></PathID>" + templateXmlNode.XmlNode.InnerXml + "</ActionPath>";
+            xmlDoc.LoadXml ( xmlString );
+            this.templateXmlNode.XmlNode = xmlDoc.DocumentElement;
+
+            //XmlNode importNode = this.templateXmlNode.XmlNode.OwnerDocument.ImportNode ( pathIDXmlNode, true );
+            //this.templateXmlNode.XmlNode.AppendChild ( importNode );
             List<String> curTabHeaders = new List<string> ();
             foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem> () )
             {
@@ -1768,7 +1785,26 @@ namespace WPF_XML_Tutorial
 
         private void AddTab_Click( object sender, RoutedEventArgs e )
         {
-            throw new NotImplementedException ();
+            // Open a new window to give the user the options for the following:
+            // New tab's name 
+            // Whether or not there should be a tab link button? NOT SURE, the editor might not even save tabs that don't have tab link buttons iirc
+            // TODO: above
+
+            NewTabName newTabNameWindow = new NewTabName ( this );
+            newTabNameWindow.Show ();
+            this.IsEnabled = false;
+        }
+
+        public void NewTabEntered( string tabName )
+        {
+            TabItem newTabItem = new TabItem ();
+            newTabItem.Header = tabName;
+            newTabItem.Name = tabName;
+            newTabItem.FontSize = 18;
+            ListView newListView = new ListView ();
+            newTabItem.Content = newListView;
+            MainTabControl.Items.Add ( newTabItem );
+
         }
     }
 }

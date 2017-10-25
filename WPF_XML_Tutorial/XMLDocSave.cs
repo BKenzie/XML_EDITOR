@@ -74,7 +74,7 @@ namespace WPF_XML_Tutorial
             }
         }
 
-        private void NullifyEmptyNodes( XmlNode root)
+        public static XmlNode NullifyEmptyNodes( XmlNode root)
         {
             foreach ( XmlNode xmlNode in root.ChildNodes )
             {
@@ -84,6 +84,7 @@ namespace WPF_XML_Tutorial
                 }
                 NullifyEmptyNodes ( xmlNode );
             }
+            return root;
         }
 
         // Called for each PathID

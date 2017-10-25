@@ -29,7 +29,7 @@ namespace WPF_XML_Tutorial
             mainWindowCaller = caller;
             this.Topmost = true;
             this.mainEditorWindow = mainWindow;
-            this.newTemplate = new TemplateXmlNode ( template.XmlNode, template.Name, template.TabHeaders );
+            this.newTemplate = new TemplateXmlNode ( template.XmlNode, "", template.TabHeaders );
         }
 
         private void Drag_MouseLeftButtonDown( object sender, MouseButtonEventArgs e )
@@ -53,11 +53,6 @@ namespace WPF_XML_Tutorial
 
         private void EnterButton_Click( object sender, RoutedEventArgs e )
         {
-            // Going to need to return to the MainWindow 
-            // Need to add the new ActionPath template to the list of templates 
-            // TODO: implement that list of templates and an option for the user to choose which template they want to use
-
-
             foreach ( TemplateXmlNode template in mainEditorWindow.GetAvailableTemplates() )
             {
                 if ( NewTemplateNameTextBox.Text.ToLower() == template.Name.ToLower() )
@@ -71,7 +66,6 @@ namespace WPF_XML_Tutorial
             newTemplate.Name = NewTemplateNameTextBox.Text;
             mainEditorWindow.NewTemplateEntered ( newTemplate );
             this.Close ();
-
         }
     }
 }
