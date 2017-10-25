@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_XML_Tutorial"
         mc:Ignorable="d" WindowStyle="None" WindowStartupLocation="CenterScreen"
-        Height="395" Width="400" ResizeMode="NoResize"
+        Height="370" Width="400" ResizeMode="NoResize"
         Title="TemplateListWindow">
 
     <Grid>
@@ -14,9 +14,9 @@
 
         <Rectangle Name="Close_Button" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" HorizontalAlignment="Right" Height="26" Margin="0,10,10,0" VerticalAlignment="Top" Width="26"/>
         <Label Content="X" FontFamily="Browallia New" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" HorizontalAlignment="Right" Margin="0,-4,10,0" VerticalAlignment="Top" FontSize="36" Foreground="DarkOrange" Height="40"/>
-        <TextBlock Foreground="DarkOrange" MouseDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Select Template" VerticalAlignment="Top" FontSize="18" FontWeight="Bold"/>
-        <ListBox Name="TemplatesListBox" HorizontalAlignment="Left" Height="308" Margin="10,45,0,0" VerticalAlignment="Top" Width="380"/>
-        <Button Name="TemplateSelectButton" FontSize="14" Click="TemplateSelectButton_Click" HorizontalAlignment="Left" Margin="315,359,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBlock Foreground="DarkOrange" MouseDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Select Template" VerticalAlignment="Top" FontSize="20" FontWeight="Bold"/>
+        <ListBox Name="TemplatesListBox" HorizontalAlignment="Left" Height="283" Margin="10,45,0,0" VerticalAlignment="Top" Width="380"/>
+        <Button Name="TemplateSelectButton" FontSize="14" Click="TemplateSelectButton_Click" HorizontalAlignment="Left" Margin="315,334,0,0" VerticalAlignment="Top" Width="75"/>
 
 
 

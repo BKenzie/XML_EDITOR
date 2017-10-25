@@ -72,15 +72,17 @@ namespace WPF_XML_Tutorial
                 XmlDocument helperXmlDoc = new XmlDocument ();
                 string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
                 helperXmlDoc.Load ( templateFilePath );
-                XmlNode templateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <ActionPath> node
-                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( templateXmlNode, "Default template" );
                 string strHeaders = helperXmlDoc.LastChild.FirstChild.InnerText;
-                defaultTemplateXmlNode.TabHeaders = new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) );
+                XmlNode templateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <ActionPath> node
+                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( templateXmlNode, "Default template", 
+                    new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ));
                 templateXmlNodes.Add ( defaultTemplateXmlNode );
             }
 
             if ( isTemplateWindow )
             {
+                TemplateWindowHeader.Visibility = Visibility.Visible;
+                StemCell_Logo.Visibility = Visibility.Hidden;
                 mainEditorWindow = caller;
                 this.isTemplateWindow = true;
                 this.templateXmlNode = templateXmlNodeParam;
@@ -114,7 +116,7 @@ namespace WPF_XML_Tutorial
                 TabMenuOptions.Header = "Tabs";
                 TabMenuOptions.FontSize = 16;
                 MenuItem deleteTabMenuItem = new MenuItem ();
-                deleteTabMenuItem.Header = "Delete active tab";
+                deleteTabMenuItem.Header = "Remove current tab";
                 deleteTabMenuItem.Click += new RoutedEventHandler ( Delete_Tab_Button_Click );
                 MenuItem addTabMenuItem = new MenuItem ();
                 addTabMenuItem.Header = "Add new tab";
@@ -220,8 +222,12 @@ namespace WPF_XML_Tutorial
             }
             else
             {
-                TextPathIDOverlay.Visibility = Visibility.Visible;
-                NumPathIDOverlay.Visibility = Visibility.Visible;
+                if ( !isTemplateWindow )
+                {
+                    TextPathIDOverlay.Visibility = Visibility.Visible;
+                    NumPathIDOverlay.Visibility = Visibility.Visible;
+                }
+                
             }
 
             // Clear tab and then re-populate with the new active tab's textboxes
@@ -1207,10 +1213,23 @@ namespace WPF_XML_Tutorial
 
         public void NewPathIDEntered( int pathID )
         {
-            XmlDocument helperXmlDoc = new XmlDocument ();
-            string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
-            helperXmlDoc.Load ( templateFilePath );
-            XmlNode newXmlNode = helperXmlDoc.LastChild.LastChild; // this retrieves just the template <ActionPath> node
+        //    XmlDocument helperXmlDoc = new XmlDocument ();
+        //    string templateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\ActionPathsTemplate.xml";
+        //    helperXmlDoc.Load ( templateFilePath );
+        //    XmlNode newXmlNode = helperXmlDoc.LastChild.LastChild; // this retrieves just the template <ActionPath> node
+
+            // Allow user to select template for new ActionPath
+            TemplateListWindow templateListWindow = new TemplateListWindow ( this, "select", pathID );
+            templateListWindow.Show ();
+            this.IsEnabled = false;
+
+            
+        }
+
+        public void UserSelectedTemplate(TemplateXmlNode templateXmlNode, int pathID)
+        {
+            XmlNode newXmlNode = templateXmlNode.XmlNode;
+
             // Need to set the PathID into the newXmlNode so that it isn't empty
             foreach ( XmlNode xmlNode in newXmlNode.ChildNodes )
             {
@@ -1225,7 +1244,7 @@ namespace WPF_XML_Tutorial
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
             newPathIDItem.Content = pathID;
             AddNewPathID ( pathIDComboBox, newPathIDItem );
-            
+
             pathIDComboBox.SelectedIndex = pathIDComboBox.Items.IndexOf ( newPathIDItem );
         }
 
@@ -1309,6 +1328,10 @@ namespace WPF_XML_Tutorial
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
         {
             this.Close ();
+            if ( isTemplateWindow )
+            {
+                mainEditorWindow.IsEnabled = true;
+            }
         }
 
         private void gotoTabButton_Click( object sender, RoutedEventArgs e )
@@ -1515,6 +1538,11 @@ namespace WPF_XML_Tutorial
 
         private void DeleteActiveTab()
         {
+            if ( isTemplateWindow )
+            {
+                PopulateTabLinkButtons ();
+            }
+
             undoableCommands.Push ( UndoableType.delTab );
             // Make tab visibility collapsed -- this makes it easier to undo
             // When saving, only include tabs which have Visibility.Visible
@@ -1724,6 +1752,15 @@ namespace WPF_XML_Tutorial
             XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             this.templateXmlNode.XmlNode = savedActiveTabsState.FirstChild.LastChild;
+            List<String> curTabHeaders = new List<string> ();
+            foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem> () )
+            {
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    curTabHeaders.Add ( tabItem.Name ); 
+                }
+            }
+            this.templateXmlNode.TabHeaders = curTabHeaders;
             NewTemplateName inputTemplateNameWindow = new NewTemplateName ( this, mainEditorWindow, this.templateXmlNode );
             inputTemplateNameWindow.Show ();
             this.IsEnabled = false;

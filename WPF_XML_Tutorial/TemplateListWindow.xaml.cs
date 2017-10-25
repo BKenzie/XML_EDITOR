@@ -20,13 +20,15 @@ namespace WPF_XML_Tutorial
     public partial class TemplateListWindow : Window
     {
         private MainWindow mainWindowCaller;
+        private int pathID;
         private enum Mode{ Modify, Select };
         private Mode currentMode;
 
-        public TemplateListWindow( MainWindow caller, string strMode )
+        public TemplateListWindow( MainWindow caller, string strMode, int pathID = -1 )
         {
             InitializeComponent ();
             this.Topmost = true;
+            this.pathID = pathID;
             mainWindowCaller = caller;
             TemplateSelectButton.Content = strMode;
             if ( strMode.ToLower () == "modify" )
@@ -42,8 +44,9 @@ namespace WPF_XML_Tutorial
             {
                 ListBoxItem listBoxItem = new ListBoxItem ();
                 listBoxItem.Content = template.Name;
-                listBoxItem.FontSize = 16;
-                TemplatesListBox.Items.Add ( listBoxItem ); 
+                listBoxItem.FontSize = 20;
+                TemplatesListBox.Items.Add ( listBoxItem );
+                TemplatesListBox.Items.Add ( new Separator () );
             }
 
         }
@@ -72,7 +75,11 @@ namespace WPF_XML_Tutorial
             }
             else if ( currentMode == Mode.Select )
             {
-                throw new NotImplementedException ();
+                ListBoxItem selectedItem = TemplatesListBox.SelectedItem as ListBoxItem;
+                string name = selectedItem.Content as string;
+                TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( name );
+                mainWindowCaller.UserSelectedTemplate ( templateXmlNode, pathID );
+                this.Close ();
             }
         }
 
