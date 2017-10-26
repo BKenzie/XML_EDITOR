@@ -20,10 +20,16 @@ namespace WPF_XML_Tutorial
             get; set;
         }
 
-        public ActionPathXmlNode( XmlNode xmlNode, int pathID )
+        public List<String> TabHeaders
+        {
+            get; set;
+        }
+
+        public ActionPathXmlNode( XmlNode xmlNode, int pathID, List<string> tabHeaders )
         {
             PathID = pathID;
             XmlNode = xmlNode;
+            TabHeaders = tabHeaders;
         }
 
         public bool Equals( ActionPathXmlNode other )

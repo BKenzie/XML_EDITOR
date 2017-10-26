@@ -96,7 +96,6 @@ namespace WPF_XML_Tutorial
                 foreach ( string header in tabHeaders )
                 {
                     TabItem newTabItem = new TabItem ();
-                    newTabItem.Name = header;
                     newTabItem.Header = header;
                     newTabItem.FontSize = 18;
                     newTabItem.IsTabStop = false;
@@ -131,6 +130,19 @@ namespace WPF_XML_Tutorial
                 SaveTemplate.Click += new RoutedEventHandler ( SaveTemplate_Click );
                 MainWindowMenuBar.Items.Add ( SaveTemplate );
 
+                // Set tabs not in this.templateXmlNode.tabHeaders to not be visible
+                foreach ( TabItem tabItem in MainTabControl.Items )
+                {
+                    if ( !this.templateXmlNode.TabHeaders.Contains ( tabItem.Header ) )
+                    {
+                        tabItem.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        tabItem.Visibility = Visibility.Visible;
+                    }
+                }
+
             }
             else
             {
@@ -155,7 +167,7 @@ namespace WPF_XML_Tutorial
                                 foreach ( string header in tabHeaders )
                                 {
                                     TabItem newTabItem = new TabItem ();
-                                    newTabItem.Name = header;
+                                    // newTabItem.Name = header;
                                     newTabItem.Header = header;
                                     newTabItem.FontSize = 18;
                                     newTabItem.IsTabStop = false;
@@ -197,16 +209,16 @@ namespace WPF_XML_Tutorial
 
         private void RemoveEmptyTabs()
         {
-            foreach ( TabItem tab in MainTabControl.Items )
+            foreach ( TabItem tabItem in MainTabControl.Items )
             {
-                ListView listView = tab.Content as ListView;
+                ListView listView = tabItem.Content as ListView;
                 if ( listView.Items.Count == 0 )
                 {
-                    tab.Visibility = Visibility.Collapsed; // Visibility.Hidden;
+                    tabItem.Visibility = Visibility.Collapsed; // Visibility.Hidden;
                 }
                 else
                 {
-                    tab.Visibility = Visibility.Visible;
+                    tabItem.Visibility = Visibility.Visible;
                 }
             }
         }
@@ -230,7 +242,7 @@ namespace WPF_XML_Tutorial
                 
             }
 
-            // Clear tab and then re-populate with the new active tab's textboxes
+            // Clear textBoxes and then re-populate with the new active tab's textboxes
             textBoxes.Clear ();
             TabItem activeTab = (TabItem) ( (TabControl) sender ).SelectedItem;
             ListView listView = (ListView) activeTab.Content;
@@ -302,11 +314,11 @@ namespace WPF_XML_Tutorial
                 if ( tabHeaders.Contains ( xmlNode.Name ) )
                 {
                     // Get matching tabItem for xmlNode
-                    // NOTE: tabItem.Name is same as matching xmlNode.Name
+                    // NOTE: tabItem.Header is same as matching xmlNode.Name
                     TabItem tabItem = new TabItem ();
                     foreach ( TabItem curTabItem in tabItems )
                     {
-                        if ( curTabItem.Name == xmlNode.Name )
+                        if ( (curTabItem.Header as string) == xmlNode.Name )
                         {
                             tabItem = curTabItem;
                         }
@@ -342,8 +354,6 @@ namespace WPF_XML_Tutorial
 
             // If xmlNode child node/element has its own tab in <Tabs_XEDITOR> link to its tab
             ListView listView = new ListView ();
-            // BindWidth ( MainTabControl, this );
-            // BindWidth ( listView, MainTabControl );
                         
             // Every time a new ActionPath is sent to this method, it resets all of the current tabs
             if ( xmlNode.Name == "ActionPath" && ( xmlNode.NodeType == XmlNodeType.Element ) )
@@ -353,8 +363,15 @@ namespace WPF_XML_Tutorial
                 // Add ActionPath node to actionPathXmlNodes, this makes it possible to switch between different ActionPaths
                 int actionPathId = GetActionPathID ( xmlNode );
 
-                //currentPathID = actionPathId; should be able to get rid of this line
-                ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, actionPathId );
+                List<string> curTabHeaders = new List<string> ();
+                foreach ( TabItem curTabItem in MainTabControl.Items.OfType<TabItem> () )
+                {
+                    if ( curTabItem.Visibility == Visibility.Visible )
+                    {
+                        curTabHeaders.Add ( curTabItem.Header as String );
+                    }
+                }
+                ActionPathXmlNode newAPNode = new ActionPathXmlNode ( xmlNode, actionPathId, curTabHeaders );
                 if ( !actionPathXmlNodes.Contains ( newAPNode ) )
                 {
                     actionPathXmlNodes.Add ( newAPNode );
@@ -578,7 +595,7 @@ namespace WPF_XML_Tutorial
                     newGrid.RowDefinitions.Add ( new RowDefinition () );
                     newGrid.RowDefinitions.Add ( new RowDefinition () );
 
-                    #region BUTTON CODE
+                    #region TabLinkButton code
 
                     // Code for buttons linking to other tabs
                     Button gotoTab_Button = new Button ();
@@ -632,11 +649,11 @@ namespace WPF_XML_Tutorial
                     listView.Items.Add ( newGrid );
 
                     // Get matching tabItem for xmlNode
-                    // NOTE: tabItem.Name is same as matching xmlNode.Name
+                    // NOTE: tabItem.Header is same as matching xmlNode.Name
                     TabItem tabItem2 = new TabItem ();
                     foreach ( TabItem curTabItem in tabItems )
                     {
-                        if ( curTabItem.Name == xmlChildNode.Name )
+                        if ( (curTabItem.Header as string) == xmlChildNode.Name )
                         {
                             tabItem2 = curTabItem;
                         }
@@ -1183,7 +1200,7 @@ namespace WPF_XML_Tutorial
             {
                 // Change PathID overlay
                 NumPathIDOverlay.Text = Convert.ToString ( ( (ComboBoxItem) pathIDComboBox.SelectedItem ).Content );
-                // Want to save any changes to the currently active tabs before switching to a new active ActionPath
+                // Save any changes to the currently active tabs before switching to a new active ActionPath
                 // At this point, the selected PathID has been changed but the tabItems list has not yet been updated
                 XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
                 XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
@@ -1222,6 +1239,7 @@ namespace WPF_XML_Tutorial
 
         public void UserSelectedTemplate(TemplateXmlNode templateXmlNode, int pathID)
         {
+            this.tabHeaders = templateXmlNode.TabHeaders;
             XmlNode newXmlNode = templateXmlNode.XmlNode;
 
             // Need to set the PathID into the newXmlNode so that it isn't empty
@@ -1232,7 +1250,8 @@ namespace WPF_XML_Tutorial
                     xmlNode.InnerText = Convert.ToString ( pathID );
                 }
             }
-            ActionPathXmlNode newActionPath = new ActionPathXmlNode ( newXmlNode, pathID );
+
+            ActionPathXmlNode newActionPath = new ActionPathXmlNode ( newXmlNode, pathID, templateXmlNode.TabHeaders );
             actionPathXmlNodes.Remove ( newActionPath ); // to get rid of old one if it exists
             actionPathXmlNodes.Add ( newActionPath );
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
@@ -1256,6 +1275,7 @@ namespace WPF_XML_Tutorial
                 if ( actionPathXmlNode.PathID == pathID )
                 {
                     actionPath = actionPathXmlNode.XmlNode;
+                    this.tabHeaders = actionPathXmlNode.TabHeaders;
                 }
             }
             // Now get corresponding tabItem..
@@ -1264,6 +1284,7 @@ namespace WPF_XML_Tutorial
             {
                 throw new Exception ( "Error: actionPath should not be null." );
             }
+
             RecursiveParseTabInfo ( apTabItem, actionPath );
             RemoveEmptyTabs ();
             PopulateTabLinkButtons ();
@@ -1346,11 +1367,11 @@ namespace WPF_XML_Tutorial
         private void gotoTabButton_Click( object sender, RoutedEventArgs e )
         {
             // Get matching tabItem for button click
-            // NOTE: tabItem.Name is same as matching xmlNode.Name
+            // NOTE: tabItem.Header is same as matching button.Tag
             TabItem tabItem = new TabItem ();
             foreach ( TabItem curTabItem in tabItems )
             {
-                if ( curTabItem.Name == (string) ( (Button) sender ).Tag )
+                if ( ((string) curTabItem.Header) == (string) ( (Button) sender ).Tag )
                 {
                     tabItem = curTabItem;
                 }
@@ -1513,7 +1534,15 @@ namespace WPF_XML_Tutorial
             }
             XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
             XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
-            ActionPathXmlNode removedActionPath = new ActionPathXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID );
+            List<string> curTabHeaders = new List<string> ();
+            foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem>() )
+            {
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    curTabHeaders.Add ( tabItem.Header as String );
+                }
+            }
+            ActionPathXmlNode removedActionPath = new ActionPathXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID, curTabHeaders );
             deletedActionPaths.Push ( removedActionPath );
             pathIDComboBox.Items.Remove ( removeItem );
             ResetAllTabs ();
@@ -1761,24 +1790,19 @@ namespace WPF_XML_Tutorial
             XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "" );
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
-            this.templateXmlNode.XmlNode = savedActiveTabsState.FirstChild.LastChild;
             XmlDocument xmlDoc = new XmlDocument ();
-            string xmlString = "<ActionPath><PathID></PathID>" + templateXmlNode.XmlNode.InnerXml + "</ActionPath>";
+            string xmlString = "<ActionPath><PathID></PathID>" + savedActiveTabsState.FirstChild.LastChild.InnerXml + "</ActionPath>";
             xmlDoc.LoadXml ( xmlString );
-            this.templateXmlNode.XmlNode = xmlDoc.DocumentElement;
-
-            //XmlNode importNode = this.templateXmlNode.XmlNode.OwnerDocument.ImportNode ( pathIDXmlNode, true );
-            //this.templateXmlNode.XmlNode.AppendChild ( importNode );
             List<String> curTabHeaders = new List<string> ();
             foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem> () )
             {
                 if ( tabItem.Visibility == Visibility.Visible )
                 {
-                    curTabHeaders.Add ( tabItem.Name ); 
+                    curTabHeaders.Add ( tabItem.Header as string ); 
                 }
             }
-            this.templateXmlNode.TabHeaders = curTabHeaders;
-            NewTemplateName inputTemplateNameWindow = new NewTemplateName ( this, mainEditorWindow, this.templateXmlNode );
+            TemplateXmlNode newTemplateXmlNode = new TemplateXmlNode ( xmlDoc.DocumentElement, "", curTabHeaders);
+            NewTemplateName inputTemplateNameWindow = new NewTemplateName ( this, mainEditorWindow, newTemplateXmlNode );
             inputTemplateNameWindow.Show ();
             this.IsEnabled = false;
         }
@@ -1797,13 +1821,89 @@ namespace WPF_XML_Tutorial
 
         public void NewTabEntered( string tabName )
         {
-            TabItem newTabItem = new TabItem ();
-            newTabItem.Header = tabName;
-            newTabItem.Name = tabName;
-            newTabItem.FontSize = 18;
-            ListView newListView = new ListView ();
-            newTabItem.Content = newListView;
-            MainTabControl.Items.Add ( newTabItem );
+            TabItem newTabItem1 = new TabItem ();
+            newTabItem1.Header = tabName;
+            newTabItem1.FontSize = 18;
+            MainTabControl.Items.Add ( newTabItem1 );
+            tabItems.Add ( newTabItem1 );
+
+            TabItem newTabItem2 = new TabItem ();
+            newTabItem2.Visibility = Visibility.Collapsed;
+            newTabItem2.Header = tabName;
+            newTabItem2.FontSize = 18;
+            if ( mainEditorWindow != null )
+            {
+                mainEditorWindow.tabItems.Add ( newTabItem2 );
+                mainEditorWindow.MainTabControl.Items.Add ( newTabItem2 );
+            }
+            
+
+            // create new tabLinkButton
+            // add to tabLinkButtons
+            // create new grid and add to grid
+            // add grid to the end of the listView in the main tab 
+
+            // Set up button grid
+            Grid newGrid = new Grid{ Width = GRID_WIDTH };
+            newGrid.ShowGridLines = false;
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+            #region TabLinkButton code
+            Button newTabLinkButton = new Button ();
+            newTabLinkButton.Content = tabName;
+            newTabLinkButton.Tag = tabName;
+            newTabLinkButton.Height = 37;
+            newTabLinkButton.Width = 160;
+            newTabLinkButton.Background = new SolidColorBrush ( Colors.LightGray );
+            newTabLinkButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+
+            Style customButtonStyle = new Style ();
+            customButtonStyle.TargetType = typeof ( Button );
+            MultiDataTrigger trigger = new MultiDataTrigger ();
+            Condition condition = new Condition ();
+            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            condition.Value = true;
+            Setter foregroundSetter = new Setter ();
+            foregroundSetter.Property = Button.ForegroundProperty;
+            foregroundSetter.Value = Brushes.DarkOrange;
+            Setter cursorSetter = new Setter ();
+            cursorSetter.Property = Button.CursorProperty;
+            cursorSetter.Value = Cursors.Hand;
+            Setter textSetter = new Setter ();
+            textSetter.Property = Button.FontWeightProperty;
+            textSetter.Value = FontWeights.ExtraBold;
+            trigger.Conditions.Add ( condition );
+            trigger.Setters.Add ( foregroundSetter );
+            trigger.Setters.Add ( cursorSetter );
+            trigger.Setters.Add ( textSetter );
+            customButtonStyle.Triggers.Clear ();
+            customButtonStyle.Triggers.Add ( trigger );
+            newTabLinkButton.Style = customButtonStyle;
+            newTabLinkButton.Click += gotoTabButton_Click;
+
+            Rectangle gotoTabRect = new Rectangle ();
+            gotoTabRect.Fill = new SolidColorBrush ( Colors.Transparent );
+            gotoTabRect.Width = 120;
+            gotoTabRect.Height = 14;
+            Grid.SetRow ( gotoTabRect, 0 );
+            Grid.SetColumn ( gotoTabRect, 1 );
+            newGrid.Children.Add ( gotoTabRect );
+
+            Grid.SetRow ( newTabLinkButton, 1 );
+            Grid.SetColumn ( newTabLinkButton, 2 );
+            newGrid.Children.Add ( newTabLinkButton );
+            #endregion
+
+            ListView mainTabListView = ( (ListView) ( (TabItem) MainTabControl.Items[0] ).Content );
+            mainTabListView.Items.Add ( newGrid );
+
+            string strNodeName = new String ( tabName.Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray () );
+            RecursiveParseTabInfo ( newTabItem1, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
+            RecursiveParseTabInfo ( newTabItem2, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
 
         }
     }

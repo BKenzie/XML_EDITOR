@@ -95,7 +95,8 @@ namespace WPF_XML_Tutorial
             {
                 if ( tabItem.Visibility == Visibility.Visible )
                 {
-                    XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", (string) tabItem.Header, "" );
+                    string strNodeName =  new String(( (string) tabItem.Header ).Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray());
+                    XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", strNodeName, "" );
                     WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
                     xmlTabNodes.Add ( xmlTabNode );
                 }

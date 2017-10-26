@@ -51,7 +51,7 @@
                 <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveActionPath"/>
             </MenuItem>
         </Menu>
-        <Label Name="TemplateWindowHeader" Visibility="Hidden" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
+        <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
 
 
     </Grid>

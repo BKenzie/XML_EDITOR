@@ -94,7 +94,6 @@ namespace WPF_XML_Tutorial
                 mainWindow.Show ();
                 this.Close ();
             }
-            
         }
 
         public void NewXML_Click( object sender, RoutedEventArgs e )
