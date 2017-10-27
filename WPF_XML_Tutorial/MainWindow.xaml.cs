@@ -34,9 +34,13 @@ namespace WPF_XML_Tutorial
         private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
         private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
-        private enum UndoableType { delAP, delTab };
+        private enum UndoableType { delAP, delTab, createTab, createAP, delElem, createElem, delAttrib, createAttrib };
         private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
         private Stack<ActionPathXmlNode> deletedActionPaths = new Stack<ActionPathXmlNode> ();
+        private Stack<XmlAttribute> deletedXmlAttributes = new Stack<XmlAttribute> ();
+        private Stack<XmlElement> deletedXmlElements = new Stack<XmlElement> ();
+        private Stack<Grid> createdXmlAttributes = new Stack<Grid> ();
+        private Stack<Grid> createdXmlElements = new Stack<Grid> ();
 
         private Dictionary<int, XmlNode> pathIDHistories = new Dictionary<int, XmlNode> ();
         public static ComboBox pathIDComboBox;
@@ -1089,16 +1093,45 @@ namespace WPF_XML_Tutorial
             TextBlock senderTextBlock = grid.Children[0] as TextBlock;
             string senderToolTip = (string) senderTextBlock.ToolTip;
 
-            // If an attribute, just delete
+            // If an attribute, just delete and add a new XmlAttribute to deletedXmlAttributes
             if (senderToolTip != null && senderToolTip.Length >= 9 
                 && ( senderToolTip.Substring ( senderToolTip.Length - 9 ).ToLower () == "attribute"))
             {
+                // Remove attribute grid
                 listView.Items.Remove ( grid );
+                // Create and save deletedXmlAttribute (undoable action)
+                undoableCommands.Push ( UndoableType.delAttrib );
+                TextBlock attribNameTextBlock = grid.Children.OfType<TextBlock> ().First ();
+                TextBox attribValueTextBox = grid.Children.OfType<TextBox> ().First ();
+                string attribName = attribNameTextBlock.Text.Replace ( ":", "" );
+                string attribValue = attribValueTextBox.Text;
+                XmlAttribute deletedXmlAttribute = null;
+                if ( attribName[0] != '[' )
+                {
+                    deletedXmlAttribute = new XmlDocument ().CreateAttribute ( attribName );
+                }
+                else
+                {
+                    // TODO: figure out undoing editor sub attributes. Check for same TODO not far below
+                    attribName = "TODO";
+                    deletedXmlAttribute = new XmlDocument ().CreateAttribute ( attribName );
+                }
+                deletedXmlAttribute.Value = attribValue;
+                deletedXmlAttributes.Push ( deletedXmlAttribute );
                 return;
             }
             else
             {
-                // If an element, delete all element attributes 
+                // If an element, delete all element attributes
+                // Also add a new XmlElement to deletedXmlElements
+                undoableCommands.Push ( UndoableType.delElem );
+                TextBlock elemNameTextBlock = grid.Children.OfType<TextBlock> ().First ();
+                TextBox elemValueTextBox = grid.Children.OfType<TextBox> ().First ();
+                string elemName = elemNameTextBlock.Text.Replace(":","");
+                string elemValue = elemValueTextBox.Text;
+                XmlElement deletedXmlElement = new XmlDocument ().CreateElement ( elemName );
+                deletedXmlElement.InnerText = elemValue;
+
                 while ( true )
                 {
                     if ( listView.Items.Count == index + 1)
@@ -1114,6 +1147,16 @@ namespace WPF_XML_Tutorial
                         && toolTip.Substring ( toolTip.Length - 9 ).ToLower () == "attribute" )
                     {
                         listView.Items.Remove ( next );
+
+                        // TODO
+                        //TextBlock subAttribNameTextBlock = ( (Grid) next ).Children.OfType<TextBlock> ().First ();
+                        //TextBox subAttribValueTextBox = ( (Grid) next ).Children.OfType<TextBox> ().First ();
+                        //string subAttribName = subAttribNameTextBlock.Text.Replace ( ":", "" );
+                        //string subAttribValue = subAttribValueTextBox.Text;
+                        //subAttribName = "TODO";
+                        //XmlAttribute subDeletedXmlAttribute = new XmlDocument ().CreateAttribute ( subAttribName );
+                        //subDeletedXmlAttribute.Value = subAttribValue;
+                        //deletedXmlElement.Attributes.Append ( subDeletedXmlAttribute );
                     }
                     else
                     {
@@ -1121,6 +1164,7 @@ namespace WPF_XML_Tutorial
                     }
                 }
                 listView.Items.Remove ( grid );
+                deletedXmlElements.Push ( deletedXmlElement );
             }
         }
 
@@ -1432,6 +1476,8 @@ namespace WPF_XML_Tutorial
             newGrid.ContextMenu = rightClickMenu;
 
             currentListView.Items.Insert ( 2, newGrid );
+            createdXmlAttributes.Push ( newGrid );
+            undoableCommands.Push ( UndoableType.createAttrib );
 
         }
 
@@ -1475,6 +1521,8 @@ namespace WPF_XML_Tutorial
 
             int insertIndex = GetElementHeaderIndex ( currentListView );
             currentListView.Items.Insert ( insertIndex + 2, newGrid );
+            createdXmlElements.Push ( newGrid );
+            undoableCommands.Push ( UndoableType.createElem );
         }
 
         // Helper function
@@ -1706,13 +1754,39 @@ namespace WPF_XML_Tutorial
 
             UndoableType undoType = undoableCommands.Pop ();
             string message = "";
-            if ( undoType == UndoableType.delTab )
+            switch ( undoType )
             {
-                message = "Undo previous tab deletion?";
-            }
-            else if ( undoType == UndoableType.delAP )
-            {
-                message = "Undo previous ActionPath deletion?";
+                case UndoableType.delAP:
+                    message = "Undo previous ActionPath deletion?";
+                    break;
+
+                case UndoableType.delTab:
+                    message = "Undo previous tab deletion?";
+                    break;
+
+                case UndoableType.delAttrib:
+                    message = "Undo previous attribute deletion?";
+                    break;
+
+                case UndoableType.delElem:
+                    message = "Undo previous element deletion?";
+                    break;
+
+                case UndoableType.createAP:
+                    message = "Undo previous ActionPath creation?";
+                    break;
+
+                case UndoableType.createTab:
+                    message = "Undo previous tab creation?";
+                    break;
+
+                case UndoableType.createAttrib:
+                    message = "Undo previous attribute creation?";
+                    break;
+
+                case UndoableType.createElem:
+                    message = "Undo previous element creation?";
+                    break;
             }
 
             string header = "Undo";
@@ -1729,34 +1803,60 @@ namespace WPF_XML_Tutorial
                 return;
             }
 
-            if ( undoType == UndoableType.delTab )
+            switch ( undoType )
             {
-                TabItem deletedTab = deletedTabs.Pop ();
-                deletedTab.Visibility = Visibility.Visible;
+                case UndoableType.delAP:
+                    ActionPathXmlNode deletedActionPath = deletedActionPaths.Pop ();
+                    XmlNode deletedXmlNode = deletedActionPath.XmlNode;
+                    int pathID = deletedActionPath.PathID;
+                    pathIDHistories.Add ( pathID, deletedXmlNode );
+                    ComboBoxItem pathIDComboBoxItem = new ComboBoxItem () { Content = pathID };
+                    AddNewPathID ( pathIDComboBox, pathIDComboBoxItem );
+                    pathIDComboBox.SelectedItem = pathIDComboBoxItem;
+                    break;
 
-                // Make the tab link button appear
-                Button tabLinkButton = null;
-                foreach ( Button curButton in tabLinkButtons )
-                {
-                    if ( (string) deletedTab.Header == (string) curButton.Content )
+                case UndoableType.delTab:
+                    TabItem deletedTab = deletedTabs.Pop ();
+                    deletedTab.Visibility = Visibility.Visible;
+
+                    // Make the tab link button appear
+                    Button tabLinkButton = null;
+                    foreach ( Button curButton in tabLinkButtons )
                     {
-                        tabLinkButton = curButton;
-                        tabLinkButton.Visibility = Visibility.Visible;
+                        if ( (string) deletedTab.Header == (string) curButton.Content )
+                        {
+                            tabLinkButton = curButton;
+                            tabLinkButton.Visibility = Visibility.Visible;
+                        }
                     }
-                }
-            }
-            else if ( undoType == UndoableType.delAP )
-            {
-                ActionPathXmlNode deletedActionPath = deletedActionPaths.Pop ();
-                XmlNode deletedXmlNode = deletedActionPath.XmlNode;
-                int pathID = deletedActionPath.PathID;
-                pathIDHistories.Add ( pathID, deletedXmlNode );
-                ComboBoxItem pathIDComboBoxItem = new ComboBoxItem ()
-                {
-                    Content = pathID,
-                };
-                AddNewPathID ( pathIDComboBox, pathIDComboBoxItem );
-                pathIDComboBox.SelectedItem = pathIDComboBoxItem;
+                    break;
+
+                case UndoableType.delAttrib:
+                    XmlAttribute deletedXmlAttribute = deletedXmlAttributes.Pop ();
+                    AddNewAttribute ( deletedXmlAttribute.Name, deletedXmlAttribute.Value );
+                    break;
+
+                case UndoableType.delElem:
+                    XmlElement deletedXmlElement = deletedXmlElements.Pop ();
+                    AddNewElement ( deletedXmlElement.Name, deletedXmlElement.Value );
+                    // TODO: add all element attributes as well. Check for previously used function somewhere maybe..
+                    break;
+
+                case UndoableType.createAP:
+                    break;
+
+                case UndoableType.createTab:
+                    break;
+
+                case UndoableType.createAttrib:
+                    Grid attributeGrid = createdXmlAttributes.Pop ();
+                    ( attributeGrid.Parent as ListView ).Items.Remove ( attributeGrid );
+                    break;
+
+                case UndoableType.createElem:
+                    Grid elementGrid = createdXmlElements.Pop ();
+                    ( elementGrid.Parent as ListView ).Items.Remove ( elementGrid );
+                    break;
             }
         }
 

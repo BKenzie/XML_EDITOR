@@ -56,7 +56,6 @@ namespace WPF_XML_Tutorial
                     if ( userInputPathID >= 0 )
                     {
                         mainWindowCaller.NewPathIDEntered ( userInputPathID );
-                        mainWindowCaller.IsEnabled = true;
                         this.Close ();
                     }
                     else

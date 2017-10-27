@@ -95,6 +95,7 @@ namespace WPF_XML_Tutorial
                 string name = selectedItem.Content as string;
                 TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( name );
                 mainWindowCaller.UserSelectedTemplate ( templateXmlNode, pathID );
+                mainWindowCaller.IsEnabled = true;
                 this.Close ();
             }
         }
