@@ -39,7 +39,10 @@ namespace WPF_XML_Tutorial
         {
             mainWindowCaller.IsEnabled = true;
             MainWindow.pathIDComboBox.SelectedIndex = -1;
+            mainWindowCaller.currentPathID = -1;
+            mainWindowCaller.FinalLogic ();
             this.Close ();
+
         }
 
         private void EnterPathIDButton_Click( object sender, RoutedEventArgs e )

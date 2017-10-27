@@ -192,7 +192,7 @@ namespace WPF_XML_Tutorial
         }
 
         // Helper for directly before MainWindow is shown to user
-        private void FinalLogic()
+        public void FinalLogic()
         {
             if ( pathIDGrid.Children != null && pathIDGrid.Children.Count != 0 )
             {
@@ -254,6 +254,7 @@ namespace WPF_XML_Tutorial
                 {
                     TextBox textBox = (TextBox) tempList[0];
                     textBoxes.Add ( textBox );
+                    textBox.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
                 }
             }
         }
@@ -442,7 +443,6 @@ namespace WPF_XML_Tutorial
                     {
                         Width = GRID_WIDTH,
                     };
-                    // BindWidth ( newGrid, listView); 
                     newGrid.ShowGridLines = false;
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );

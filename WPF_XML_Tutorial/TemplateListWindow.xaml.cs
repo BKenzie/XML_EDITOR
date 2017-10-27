@@ -45,10 +45,16 @@ namespace WPF_XML_Tutorial
                 ListBoxItem listBoxItem = new ListBoxItem ();
                 listBoxItem.Content = template.Name;
                 listBoxItem.FontSize = 20;
+                listBoxItem.MouseDoubleClick += new MouseButtonEventHandler ( mouseDoubleClick );
                 TemplatesListBox.Items.Add ( listBoxItem );
                 TemplatesListBox.Items.Add ( new Separator () );
             }
 
+        }
+
+        private void mouseDoubleClick( object sender, MouseButtonEventArgs e )
+        {
+            TemplateSelectButton.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
         }
 
         private void DragRectangle_MouseLeftButtonDown( object sender, MouseButtonEventArgs e )
@@ -60,6 +66,8 @@ namespace WPF_XML_Tutorial
         {
             mainWindowCaller.IsEnabled = true;
             MainWindow.pathIDComboBox.SelectedIndex = -1;
+            mainWindowCaller.currentPathID = -1;
+            mainWindowCaller.FinalLogic ();
             this.Close ();
         }
 

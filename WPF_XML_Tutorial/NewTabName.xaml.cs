@@ -59,6 +59,11 @@ namespace WPF_XML_Tutorial
                 MessageBox.Show ( "Chosen tab name is already active in the editor.\nPlease choose a new name and try again.", "Tab name already exists" );
                 return;
             }
+            if ( tabName.Trim ().Contains ( " " ) )
+            {
+                MessageBox.Show ( "New tab name cannot contain any spaces.\nPlease choose a new name and try again.", "Tab name error" );
+                return;
+            }
 
             // Need to call a newTab function in mainwindow with the tab name
             mainWindowCaller.NewTabEntered ( tabName.Trim() );
