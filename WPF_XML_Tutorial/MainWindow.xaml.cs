@@ -34,10 +34,11 @@ namespace WPF_XML_Tutorial
         private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
         private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
-        private enum UndoableType { delAP, delTab, createTab, createAP, delElem, createElem, delAttrib, createAttrib };
+        private enum UndoableType { delAP, delTab, createTab, createAP, delElem, createElem, delAttrib, delSubAttrib, createAttrib };
         private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
         private Stack<ActionPathXmlNode> deletedActionPaths = new Stack<ActionPathXmlNode> ();
         private Stack<XmlAttribute> deletedXmlAttributes = new Stack<XmlAttribute> ();
+        private Stack<SubAttribute> deletedXmlSubAttributes = new Stack<SubAttribute> ();
         private Stack<XmlElement> deletedXmlElements = new Stack<XmlElement> ();
         private Stack<Grid> createdXmlAttributes = new Stack<Grid> ();
         private Stack<Grid> createdXmlElements = new Stack<Grid> ();
@@ -48,10 +49,26 @@ namespace WPF_XML_Tutorial
         public int numTabs;
         public int apParsed = 0;
         public const int GRID_WIDTH = 698;
-        Grid pathIDGrid = new Grid
+        Grid pathIDGrid = new Grid { Width = GRID_WIDTH };
+
+        private struct SubAttribute
         {
-            Width = GRID_WIDTH,
-        };
+            public XmlAttribute XmlAttribute
+            {
+                get; set;
+            }
+
+            public string ElementName
+            {
+                get; set;
+            }
+
+            public SubAttribute( XmlAttribute xmlAttribute, string elemName )
+            {
+                XmlAttribute = xmlAttribute;
+                ElementName = elemName;
+            }
+        }
 
         private bool isTemplateWindow = false;
         private MainWindow mainEditorWindow;
@@ -1100,24 +1117,30 @@ namespace WPF_XML_Tutorial
                 // Remove attribute grid
                 listView.Items.Remove ( grid );
                 // Create and save deletedXmlAttribute (undoable action)
-                undoableCommands.Push ( UndoableType.delAttrib );
                 TextBlock attribNameTextBlock = grid.Children.OfType<TextBlock> ().First ();
                 TextBox attribValueTextBox = grid.Children.OfType<TextBox> ().First ();
-                string attribName = attribNameTextBlock.Text.Replace ( ":", "" );
-                string attribValue = attribValueTextBox.Text;
-                XmlAttribute deletedXmlAttribute = null;
-                if ( attribName[0] != '[' )
+                string subAttribName = attribNameTextBlock.Text.Replace ( ":", "" );
+                string subAttribValue = attribValueTextBox.Text;
+                if ( subAttribName[0] == '[' )
                 {
-                    deletedXmlAttribute = new XmlDocument ().CreateAttribute ( attribName );
+                    // TODO: figure out undoing editor sub attributes. Check for same TODO not far below
+                    // subAttribName = "TODO";
+                    string elementName = GetSubAttributeElementName ( subAttribName );
+                    subAttribName = subAttribName.Substring ( subAttribName.LastIndexOf ( " " ) + 1 );
+                    XmlAttribute deletedXmlSubAttribute = new XmlDocument ().CreateAttribute ( subAttribName );
+                    deletedXmlSubAttribute.Value = subAttribValue;
+                    SubAttribute subAttribute = new SubAttribute ( deletedXmlSubAttribute, elementName );
+                    deletedXmlSubAttributes.Push ( subAttribute );
+                    undoableCommands.Push ( UndoableType.delSubAttrib );
                 }
                 else
                 {
-                    // TODO: figure out undoing editor sub attributes. Check for same TODO not far below
-                    attribName = "TODO";
-                    deletedXmlAttribute = new XmlDocument ().CreateAttribute ( attribName );
+                    XmlAttribute deletedXmlAttribute = new XmlDocument ().CreateAttribute ( subAttribName );
+                    deletedXmlAttribute.Value = subAttribValue;
+                    deletedXmlAttributes.Push ( deletedXmlAttribute );
+                    undoableCommands.Push ( UndoableType.delAttrib );
                 }
-                deletedXmlAttribute.Value = attribValue;
-                deletedXmlAttributes.Push ( deletedXmlAttribute );
+                
                 return;
             }
             else
@@ -1125,12 +1148,32 @@ namespace WPF_XML_Tutorial
                 // If an element, delete all element attributes
                 // Also add a new XmlElement to deletedXmlElements
                 undoableCommands.Push ( UndoableType.delElem );
+                XmlDocument helperXmlDoc = new XmlDocument ();
                 TextBlock elemNameTextBlock = grid.Children.OfType<TextBlock> ().First ();
                 TextBox elemValueTextBox = grid.Children.OfType<TextBox> ().First ();
                 string elemName = elemNameTextBlock.Text.Replace(":","");
                 string elemValue = elemValueTextBox.Text;
-                XmlElement deletedXmlElement = new XmlDocument ().CreateElement ( elemName );
-                deletedXmlElement.InnerText = elemValue;
+                string elemToolTip = elemNameTextBlock.ToolTip as string;
+                elemToolTip = elemToolTip.Substring ( elemToolTip.Length - 5 );
+                XmlElement deletedXmlElement = null;
+                XmlElement parentXmlElement = null;
+                if ( elemToolTip.ToLower () == "(sub)" )
+                {
+                    // Find parent element with helper function
+                    // Attach to parent
+                    // Make sure that when undo is called, element sub-elements get put into the right place and all attributes are returned
+                    string parentStr = FindSubElementParentString ( grid );
+                    parentXmlElement = helperXmlDoc.CreateElement ( parentStr );
+                    XmlElement importNode = helperXmlDoc.CreateElement ( elemName );
+                    importNode.InnerText = elemValue;
+                    deletedXmlElement = (XmlElement)  parentXmlElement.OwnerDocument.ImportNode ( importNode, true );
+                    parentXmlElement.AppendChild ( deletedXmlElement );
+                }
+                else
+                {
+                    deletedXmlElement = helperXmlDoc.CreateElement ( elemName );
+                    deletedXmlElement.InnerText = elemValue;
+                }
 
                 while ( true )
                 {
@@ -1140,23 +1183,23 @@ namespace WPF_XML_Tutorial
                     }
                     var next = listView.Items[index + 1];
                     if ( next is TextBlock || next is Separator ) { break; }
-                    TextBlock textBlock = ( (Grid) next ).Children[0] as TextBlock;
+                    TextBlock textBlock = ( (Grid) next ).Children.OfType<TextBlock> ().First ();
                     if ( textBlock == null ){ break; }
-                    string toolTip = ( string ) textBlock.ToolTip;
+                    string toolTip = textBlock.ToolTip as string;
+                    // Check if next is an attribute
                     if ( ( next is Grid && ( toolTip != null && toolTip.Length >= 9 ) )
                         && toolTip.Substring ( toolTip.Length - 9 ).ToLower () == "attribute" )
                     {
+                        // Remove and temp save all attributes
                         listView.Items.Remove ( next );
-
-                        // TODO
-                        //TextBlock subAttribNameTextBlock = ( (Grid) next ).Children.OfType<TextBlock> ().First ();
-                        //TextBox subAttribValueTextBox = ( (Grid) next ).Children.OfType<TextBox> ().First ();
-                        //string subAttribName = subAttribNameTextBlock.Text.Replace ( ":", "" );
-                        //string subAttribValue = subAttribValueTextBox.Text;
-                        //subAttribName = "TODO";
-                        //XmlAttribute subDeletedXmlAttribute = new XmlDocument ().CreateAttribute ( subAttribName );
-                        //subDeletedXmlAttribute.Value = subAttribValue;
-                        //deletedXmlElement.Attributes.Append ( subDeletedXmlAttribute );
+                        TextBlock subAttribNameTextBlock = ( (Grid) next ).Children.OfType<TextBlock> ().First ();
+                        TextBox subAttribValueTextBox = ( (Grid) next ).Children.OfType<TextBox> ().First ();
+                        string subAttribName = subAttribNameTextBlock.Text.Replace ( ":", "" );
+                        string subAttribValue = subAttribValueTextBox.Text;
+                        subAttribName = GetSubAttributeName ( deletedXmlElement.Name, subAttribName );
+                        XmlAttribute subDeletedXmlAttribute = helperXmlDoc.CreateAttribute ( subAttribName );
+                        subDeletedXmlAttribute.Value = subAttribValue;
+                        deletedXmlElement.Attributes.Append ( subDeletedXmlAttribute );
                     }
                     else
                     {
@@ -1166,6 +1209,40 @@ namespace WPF_XML_Tutorial
                 listView.Items.Remove ( grid );
                 deletedXmlElements.Push ( deletedXmlElement );
             }
+        }
+
+        // Helper function
+        private string GetSubAttributeElementName( string subAttribStr )
+        {
+            return subAttribStr.Substring ( 1, subAttribStr.IndexOf ( " " ) - 1 );
+        }
+
+        // Helper function
+        private string GetSubAttributeName( string elementName, string subAttribTextBlockStr )
+        {
+            int index = 13 + elementName.Length;
+            string subAttribName = subAttribTextBlockStr.Substring ( index );
+            return subAttribName;
+        }
+
+        private string FindSubElementParentString( Grid elementGrid )
+        {
+            ListView listView = elementGrid.Parent as ListView;
+            int index = listView.Items.IndexOf ( elementGrid );
+            TextBlock subElementParentTextBlock = null;
+            for ( int i = (index - 1); i >= 0; i-- )
+            {
+                if ( listView.Items[i] is Grid )
+                {
+                    subElementParentTextBlock = ( listView.Items[i] as Grid ).Children.OfType<TextBlock> ().First();
+                    if ( subElementParentTextBlock.FontWeight == FontWeights.Bold )
+                    {
+                        break;
+                    }
+                }
+            }
+            return subElementParentTextBlock.Text.Replace ( ":", "" );
+
         }
 
         private void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
@@ -1437,7 +1514,7 @@ namespace WPF_XML_Tutorial
             this.IsEnabled = false;
         }
 
-        public void AddNewAttribute( string name, string value )
+        public void AddNewAttribute( string name, string value, bool undoable, string elementName = null)
         {
             TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
             ListView currentListView = currentTabItem.Content as ListView;
@@ -1475,13 +1552,25 @@ namespace WPF_XML_Tutorial
             rightClickMenu.Items.Add ( deleteItem );
             newGrid.ContextMenu = rightClickMenu;
 
-            currentListView.Items.Insert ( 2, newGrid );
-            createdXmlAttributes.Push ( newGrid );
-            undoableCommands.Push ( UndoableType.createAttrib );
+            if ( elementName == null )
+            {
+                currentListView.Items.Insert ( 2, newGrid );
+            }
+            else
+            {
+                int elementIndex = GetElementIndex ( currentListView, elementName );
+                textBlock.Text = ( "[" + elementName + " attribute] " + textBlock.Text );
+                currentListView.Items.Insert ( elementIndex + 1, newGrid );
+            }
 
+            if ( undoable )
+            {
+                createdXmlAttributes.Push ( newGrid );
+                undoableCommands.Push ( UndoableType.createAttrib );
+            }
         }
 
-        public void AddNewElement( string name, string value )
+        public void AddNewElement( string name, string value, bool undoable, bool isSubElem = false, string parentNodeName = null )
         {
             TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
             ListView currentListView = currentTabItem.Content as ListView;
@@ -1497,7 +1586,14 @@ namespace WPF_XML_Tutorial
 
             TextBlock textBlock = new TextBlock ();
             textBlock.Text = name + ":";
-            textBlock.ToolTip = "Element";
+            if ( isSubElem )
+            {
+                textBlock.ToolTip = "Element (sub)";
+            }
+            else
+            {
+                textBlock.ToolTip = "Element";
+            }
             textBlock.Name = name;
             Grid.SetRow ( textBlock, 0 );
             Grid.SetColumn ( textBlock, 0 );
@@ -1519,10 +1615,90 @@ namespace WPF_XML_Tutorial
             rightClickMenu.Items.Add ( deleteItem );
             newGrid.ContextMenu = rightClickMenu;
 
-            int insertIndex = GetElementHeaderIndex ( currentListView );
-            currentListView.Items.Insert ( insertIndex + 2, newGrid );
-            createdXmlElements.Push ( newGrid );
-            undoableCommands.Push ( UndoableType.createElem );
+            if ( isSubElem )
+            {
+                // Insert after parent
+                int parentIndex = GetParentElementHeaderIndex ( currentListView, parentNodeName );
+                int numParentAttributes = GetNumParentAttributes ( currentListView, parentNodeName );
+                currentListView.Items.Insert ( parentIndex + numParentAttributes + 1, newGrid );
+            }
+            else
+            {
+                int insertIndex = GetElementHeaderIndex ( currentListView );
+                currentListView.Items.Insert ( insertIndex + 2, newGrid );
+            }
+
+            if ( undoable )
+            {
+                createdXmlElements.Push ( newGrid );
+                undoableCommands.Push ( UndoableType.createElem );
+            }
+        }
+
+        // Helper function
+        private int GetElementIndex( ListView currentListView, string elementName )
+        {
+            foreach ( Grid grid in currentListView.Items.OfType<Grid> () )
+            {
+                TextBlock elemTextBlock = grid.Children.OfType<TextBlock> ().First ();
+                if ( elemTextBlock != null && elemTextBlock.Text == elementName + ":" )
+                {
+                    return currentListView.Items.IndexOf ( grid );
+                }
+            }
+            return -1;
+        }
+
+        // Helper function
+        private int GetNumParentAttributes( ListView listView, string parentNodeName )
+        {
+            int numAttributes = 0;
+            foreach ( Grid grid in listView.Items.OfType<Grid> () )
+            {
+                TextBlock textBlock = grid.Children.OfType<TextBlock> ().First ();
+                if ( textBlock != null && textBlock.Text == parentNodeName + ":" && textBlock.FontWeight == FontWeights.Bold )
+                {
+                    int index = listView.Items.IndexOf ( grid ) + 1; // Start at parent index + 1
+                    while ( true )
+                    {
+                        Grid attribGrid = listView.Items[index] as Grid;
+                        if ( attribGrid == null )
+                        {
+                            return numAttributes;
+                        }
+                        TextBlock attribTextBlock = attribGrid.Children.OfType<TextBlock> ().First ();
+                        if ( attribTextBlock == null )
+                        {
+                            return numAttributes;
+                        }
+                        string toolTip = attribTextBlock.ToolTip as string;
+                        if ( toolTip != null && toolTip.Length >= 9 && ( toolTip.Substring ( toolTip.Length - 9 ).ToLower () == "attribute" ) )
+                        {
+                            numAttributes++;
+                        }
+                        else
+                        {
+                            return numAttributes;
+                        }
+                        index++;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        // Helper function
+        private int GetParentElementHeaderIndex( ListView listView, string parentNodeName )
+        {
+            foreach ( Grid grid in listView.Items.OfType<Grid> () )
+            {
+                TextBlock textBlock = grid.Children.OfType<TextBlock>().First ();
+                if ( textBlock != null && textBlock.Text ==  parentNodeName + ":" && textBlock.FontWeight == FontWeights.Bold )
+                {
+                    return listView.Items.IndexOf ( grid );
+                }
+            }
+            return -1;
         }
 
         // Helper function
@@ -1768,6 +1944,10 @@ namespace WPF_XML_Tutorial
                     message = "Undo previous attribute deletion?";
                     break;
 
+                case UndoableType.delSubAttrib:
+                    message = "Undo previous sub-attribute deletion?";
+                    break;
+
                 case UndoableType.delElem:
                     message = "Undo previous element deletion?";
                     break;
@@ -1833,12 +2013,41 @@ namespace WPF_XML_Tutorial
 
                 case UndoableType.delAttrib:
                     XmlAttribute deletedXmlAttribute = deletedXmlAttributes.Pop ();
-                    AddNewAttribute ( deletedXmlAttribute.Name, deletedXmlAttribute.Value );
+                    string attribValue = deletedXmlAttribute.Value;
+                    if (attribValue == ""){ attribValue = "EMPTY"; }
+                    AddNewAttribute ( deletedXmlAttribute.Name, attribValue, undoable: false );
+                    break;
+
+                case UndoableType.delSubAttrib:
+                    SubAttribute subAttribute = deletedXmlSubAttributes.Pop ();
+                    XmlAttribute deletedXmlSubAttribute = subAttribute.XmlAttribute;
+                    string subAttribValue = deletedXmlSubAttribute.Value;
+                    if ( subAttribValue == "" )
+                    {
+                        subAttribValue = "EMPTY";
+                    }
+                    AddNewAttribute ( deletedXmlSubAttribute.Name, subAttribValue, undoable: false, elementName: subAttribute.ElementName );
                     break;
 
                 case UndoableType.delElem:
                     XmlElement deletedXmlElement = deletedXmlElements.Pop ();
-                    AddNewElement ( deletedXmlElement.Name, deletedXmlElement.Value );
+                    string innerText = deletedXmlElement.InnerText;
+                    if( innerText == ""){ innerText = "EMPTY"; }
+                    if ( deletedXmlElement.ParentNode != null )
+                    {
+                        AddNewElement ( deletedXmlElement.Name, innerText, undoable: false, isSubElem: true, 
+                            parentNodeName: deletedXmlElement.ParentNode.Name );
+                    }
+                    else
+                    {
+                        AddNewElement ( deletedXmlElement.Name, innerText, undoable: false, isSubElem: false );
+                    }
+
+                    foreach ( XmlAttribute attribute in deletedXmlElement.Attributes )
+                    {
+                        AddNewAttribute ( attribute.Name, attribute.Value, undoable: false, elementName: deletedXmlElement.Name );
+                    }
+
                     // TODO: add all element attributes as well. Check for previously used function somewhere maybe..
                     break;
 

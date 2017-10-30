@@ -64,24 +64,32 @@ namespace WPF_XML_Tutorial
             {
                 MessageBox.Show ( "Name parameter must not be empty.", "Error" );
             }
-            else if ( name.Any(char.IsDigit) )
+            else if ( name.Any ( char.IsDigit ) )
             {
                 MessageBox.Show ( "Name parameter must not contain any numbers.", "Error" );
             }
-            else 
+            else
             {
-                if ( this.type == Type.Attribute )
+                try
                 {
-                    mainWindowCaller.AddNewAttribute ( name, value );
-                    mainWindowCaller.IsEnabled = true;
-                    this.Close ();
+                    if ( this.type == Type.Attribute )
+                    {
+                        mainWindowCaller.AddNewAttribute ( name, value, undoable: true );
+                        mainWindowCaller.IsEnabled = true;
+                        this.Close ();
+                    }
+                    else if ( this.type == Type.Element )
+                    {
+                        mainWindowCaller.AddNewElement ( name, value, undoable: true );
+                        mainWindowCaller.IsEnabled = true;
+                        this.Close ();
+                    }
                 }
-                else if ( this.type == Type.Element )
+                catch( ArgumentException ae)
                 {
-                    mainWindowCaller.AddNewElement ( name, value );
-                    mainWindowCaller.IsEnabled = true;
-                    this.Close ();
+                    MessageBox.Show ( "Name parameter contains illegal character(s).\nPlease try again using only letters.", "Error" );
                 }
+                
             }
         }
 
