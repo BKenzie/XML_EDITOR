@@ -137,9 +137,17 @@ namespace WPF_XML_Tutorial
                 TabMenuOptions.FontSize = 16;
                 MenuItem deleteTabMenuItem = new MenuItem ();
                 deleteTabMenuItem.Header = "Remove current tab";
+                deleteTabMenuItem.Icon = new Image
+                {
+                    Source = new BitmapImage ( new Uri ( @"C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\ui-tab--minus.png" ) )
+                };
                 deleteTabMenuItem.Click += new RoutedEventHandler ( Delete_Tab_Button_Click );
                 MenuItem addTabMenuItem = new MenuItem ();
                 addTabMenuItem.Header = "Add new tab";
+                addTabMenuItem.Icon = new Image
+                {
+                    Source = new BitmapImage ( new Uri ( @"C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\ui-tab--plus.png" ) )
+                };
                 addTabMenuItem.Click += new RoutedEventHandler ( AddTab_Click );
                 TabMenuOptions.Items.Add ( deleteTabMenuItem );
                 TabMenuOptions.Items.Add ( addTabMenuItem );
@@ -233,14 +241,17 @@ namespace WPF_XML_Tutorial
             foreach ( TabItem tabItem in MainTabControl.Items )
             {
                 ListView listView = tabItem.Content as ListView;
-                if ( listView.Items.Count == 0 )
+
+                if ( listView == null || listView.Items.Count == 0 )
                 {
-                    tabItem.Visibility = Visibility.Collapsed; // Visibility.Hidden;
+                    tabItem.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
                     tabItem.Visibility = Visibility.Visible;
                 }
+
+
             }
         }
 
