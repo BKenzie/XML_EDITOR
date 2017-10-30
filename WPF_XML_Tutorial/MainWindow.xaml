@@ -20,7 +20,7 @@
         <KeyBinding Key="s" Modifiers="Control" Command="Save"></KeyBinding>
         <KeyBinding Key="n" Modifiers="Control" Command="New"></KeyBinding>
     </Window.InputBindings>
-    
+
     <Grid>
         <TabControl Name="MainTabControl" Margin="0,81,0,0">
         </TabControl>
@@ -34,21 +34,49 @@
         <Label Content="X" FontFamily="Browallia New" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" HorizontalAlignment="Right" Margin="0,-4,10,0" VerticalAlignment="Top" FontSize="36" Foreground="DarkOrange" Height="40"/>
         <TextBlock Name="TextPathIDOverlay" HorizontalAlignment="Left" Margin="7,0,0,5" TextWrapping="Wrap" Text="Current PathID #" VerticalAlignment="Bottom"/>
         <TextBlock x:Name="NumPathIDOverlay" HorizontalAlignment="Left" Margin="96,0,0,5" TextWrapping="Wrap" VerticalAlignment="Bottom" />
-        
-        
+
+
         <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="34" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
             <MenuItem Name="FileMenu" Header="File" VerticalAlignment="Center" FontSize="16">
-                <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0"/>
-                <MenuItem Header="_New XML file" Name="New_Button" Command="New"/>
-                <MenuItem Header="Open new document" Command="Open" FontSize="16"/>
-                <MenuItem Header="Save as.." Command="Save" FontSize="16"/>
-                <MenuItem Header="Undo" Name="Undo_Button" Command="Undo"/>
+                <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--pencil.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_New XML file" Name="New_Button" Command="New">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--plus.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Open new document" Command="Open" FontSize="16">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\book-open.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Save as.." Command="Save" FontSize="16">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\application-small-blue.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Undo" Name="Undo_Button" Command="Undo">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\arrow-circle-135-left.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
             <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>
             <MenuItem Name="DeleteMenu" Header="_Delete" FontSize="16">
-                <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0"/>
-                <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveActionPath"/>
+                <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\ui-tab--minus.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveActionPath">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\cross-script.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
         </Menu>
         <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
