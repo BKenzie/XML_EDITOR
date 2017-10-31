@@ -34,12 +34,13 @@ namespace WPF_XML_Tutorial
         private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
         private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
-        private enum UndoableType { delAP, delTab, createTab, createAP, delElem, createElem, delAttrib, delSubAttrib, createAttrib };
+        private enum UndoableType { delAP, delTab, createTab, createAP, delElem, createElem, createAttrib, delAttrib, delSubAttrib, delElemHeader };
         private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
         private Stack<ActionPathXmlNode> deletedActionPaths = new Stack<ActionPathXmlNode> ();
         private Stack<XmlAttribute> deletedXmlAttributes = new Stack<XmlAttribute> ();
         private Stack<SubAttribute> deletedXmlSubAttributes = new Stack<SubAttribute> ();
         private Stack<XmlElement> deletedXmlElements = new Stack<XmlElement> ();
+        private Stack<string> deletedElementHeaders = new Stack<string> ();
         private Stack<Grid> createdXmlAttributes = new Stack<Grid> ();
         private Stack<Grid> createdXmlElements = new Stack<Grid> ();
 
@@ -1091,24 +1092,17 @@ namespace WPF_XML_Tutorial
                         if ( toolTip == "(sub)" || toolTip == "ibute" ) // Fix for sub item having its own attributes
                         {
                             MessageBox.Show ( "Cannot delete elements with existing sub-items.", "Error" );
-                        }
-                        else
-                        {
-                            // No sub items -- can delete
-                            listView.Items.Remove ( grid );
+                            return;
                         }
                     }
                 }
-                else
-                {
-                    listView.Items.Remove ( grid );
-                }
             }
-            else
-            {
-                listView.Items.Remove ( grid );
-            }
-            
+            listView.Items.Remove ( grid );
+            string elemHeader = grid.Children.OfType<TextBlock> ().First ().Text.Replace ( ":", "" );
+            deletedElementHeaders.Push ( elemHeader );
+            undoableCommands.Push ( UndoableType.delElemHeader );
+
+
         }
 
         // Only called for an attribute or an element -- not for elements with sub-items
@@ -1651,7 +1645,11 @@ namespace WPF_XML_Tutorial
         {
             foreach ( Grid grid in currentListView.Items.OfType<Grid> () )
             {
-                TextBlock elemTextBlock = grid.Children.OfType<TextBlock> ().First ();
+                TextBlock elemTextBlock = null;
+                if ( grid.Children.OfType<TextBlock> ().Count () > 0 )
+                {
+                    elemTextBlock = grid.Children.OfType<TextBlock> ().First ();
+                }
                 if ( elemTextBlock != null && elemTextBlock.Text == elementName + ":" )
                 {
                     return currentListView.Items.IndexOf ( grid );
@@ -1666,12 +1664,20 @@ namespace WPF_XML_Tutorial
             int numAttributes = 0;
             foreach ( Grid grid in listView.Items.OfType<Grid> () )
             {
-                TextBlock textBlock = grid.Children.OfType<TextBlock> ().First ();
+                TextBlock textBlock = null;
+                if ( grid.Children.OfType<TextBlock> ().Count () > 0 )
+                {
+                    textBlock = grid.Children.OfType<TextBlock> ().First ();
+                }
                 if ( textBlock != null && textBlock.Text == parentNodeName + ":" && textBlock.FontWeight == FontWeights.Bold )
                 {
                     int index = listView.Items.IndexOf ( grid ) + 1; // Start at parent index + 1
                     while ( true )
                     {
+                        if ( listView.Items.Count == index )
+                        {
+                            return numAttributes;
+                        }
                         Grid attribGrid = listView.Items[index] as Grid;
                         if ( attribGrid == null )
                         {
@@ -1703,7 +1709,11 @@ namespace WPF_XML_Tutorial
         {
             foreach ( Grid grid in listView.Items.OfType<Grid> () )
             {
-                TextBlock textBlock = grid.Children.OfType<TextBlock>().First ();
+                TextBlock textBlock = null;
+                if ( grid.Children.OfType<TextBlock> ().Count() > 0 )
+                {
+                    textBlock = grid.Children.OfType<TextBlock> ().First ();
+                }
                 if ( textBlock != null && textBlock.Text ==  parentNodeName + ":" && textBlock.FontWeight == FontWeights.Bold )
                 {
                     return listView.Items.IndexOf ( grid );
@@ -1935,7 +1945,7 @@ namespace WPF_XML_Tutorial
         {
             if ( undoableCommands.Count == 0 )
             {
-                MessageBox.Show ( "There are currently no commands to undo.\nNote: undoable commands include ActionPath and tab deletion.", "Error" );
+                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include: ActionPath, tab, element, and attribute creation & deletion.", "Error" );
                 return;
             }
 
@@ -1977,6 +1987,9 @@ namespace WPF_XML_Tutorial
 
                 case UndoableType.createElem:
                     message = "Undo previous element creation?";
+                    break;
+                case UndoableType.delElemHeader:
+                    message = "Undo previous element header deletion?";
                     break;
             }
 
@@ -2058,8 +2071,11 @@ namespace WPF_XML_Tutorial
                     {
                         AddNewAttribute ( attribute.Name, attribute.Value, undoable: false, elementName: deletedXmlElement.Name );
                     }
+                    break;
 
-                    // TODO: add all element attributes as well. Check for previously used function somewhere maybe..
+                case UndoableType.delElemHeader:
+                    string elemHeader = deletedElementHeaders.Pop ();
+                    AddElementHeader ( elemHeader );
                     break;
 
                 case UndoableType.createAP:
@@ -2078,6 +2094,21 @@ namespace WPF_XML_Tutorial
                     ( elementGrid.Parent as ListView ).Items.Remove ( elementGrid );
                     break;
             }
+        }
+
+        private void AddElementHeader( string elemHeader )
+        {
+            Grid newGrid = new Grid (){ Width = GRID_WIDTH };
+            TextBlock textBlock = new TextBlock ()
+            {
+                Text = elemHeader + ":",
+                FontWeight = FontWeights.Bold,
+            };
+            newGrid.Children.Add ( textBlock );
+            ListView listView = ( MainTabControl.SelectedItem as TabItem ).Content as ListView;
+            listView.Items.Add ( newGrid );
+
+
         }
 
         public List<TemplateXmlNode> GetAvailableTemplates()
