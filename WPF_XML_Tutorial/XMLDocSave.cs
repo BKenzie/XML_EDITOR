@@ -21,16 +21,17 @@ namespace WPF_XML_Tutorial
         private bool mainAttributesPassed = false;
         private XmlElement curElement = null;
         private XmlElement curSubElement = null;
-
+        private MainWindow mainWindowCaller;
+        private XmlNode activeMainXmlNode = null;
 
         // Creates instance of XmlDocSave with proper Tabs_XEDITOR element 
-        public XmlDocSave( XmlDocument document, List<string> headers, string path )
+        public XmlDocSave( XmlDocument document, List<string> headers, string path, MainWindow caller )
         {
             // Create xml document with root node
             xmlDoc = document;
             fileSavePath = path;
             xmlDoc.AppendChild ( xmlDoc.CreateNode ( "element", "root", "" ) );
-
+            mainWindowCaller = caller;
 
             tabHeaders = headers;
             AddTabHeadersToTabs_XEDITOR ();
@@ -40,6 +41,7 @@ namespace WPF_XML_Tutorial
         {
             XmlNode tabs_XEDITOR = xmlDoc.CreateNode ( "element", "Tabs_XEDITOR", "" );
             string innerText = String.Join ( ",", tabHeaders );
+            // mainWindowCaller.ActiveMainNodeName + "," + String.Join ( ",", tabHeaders );
             tabs_XEDITOR.InnerText = innerText;
             xmlDoc.FirstChild.AppendChild ( tabs_XEDITOR );
         }
@@ -56,7 +58,7 @@ namespace WPF_XML_Tutorial
             {
                 foreach ( ComboBoxItem item in pathIDComboBox.Items )
                 {
-                    if ( Convert.ToString ( item.Content ) != "New ActionPath" )
+                    if ( Convert.ToString ( item.Content ) != "New UnitOperation" )
                     {
                         // Will trigger MainWindow.PathIDChange from the OnSelectedItemChanged event
                         pathIDComboBox.SelectedItem = item;
@@ -93,10 +95,28 @@ namespace WPF_XML_Tutorial
             mainAttributesPassed = false;
             foreach ( TabItem tabItem in tabItems )
             {
-                if ( tabItem.Visibility == Visibility.Visible )
+                if ( tabItem.Visibility == Visibility.Visible || (string) tabItem.Header == mainWindowCaller.activeMainNodeName )
                 {
                     string strNodeName =  new String(( (string) tabItem.Header ).Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray());
                     XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", strNodeName, "" );
+                    if ( strNodeName == mainWindowCaller.activeMainNodeName )
+                    {
+                        XmlElement pathIDElement = xmlDoc.CreateElement ( "PathID" );
+                        if ( pathID != -1 )
+                        {
+                            pathIDElement.InnerText = Convert.ToString ( pathID );
+                        }
+                        else
+                        {
+                            ComboBoxItem selectedPathIDItem = (ComboBoxItem) mainWindowCaller.PathIDComboBox.SelectedItem;
+                            if ( selectedPathIDItem != null )
+                            {
+                                pathIDElement.InnerText = Convert.ToString ( selectedPathIDItem.Content );
+                            }
+                        }
+                        xmlTabNode.AppendChild ( pathIDElement );
+                    }
+
                     WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
                     xmlTabNodes.Add ( xmlTabNode );
                 }
@@ -106,7 +126,7 @@ namespace WPF_XML_Tutorial
             // Now for each tab, go through and add any sub nodes 
             foreach ( TabItem tabItem in tabItems )
             {
-                if ( tabItem.Visibility == Visibility.Visible )
+                if ( tabItem.Visibility == Visibility.Visible || (string) tabItem.Header == mainWindowCaller.activeMainNodeName )
                 {
                     string nodeName = (string) tabItem.Header;
                     XmlNode xmlTabNode = GetXmlTabNode ( nodeName );
@@ -207,21 +227,7 @@ namespace WPF_XML_Tutorial
                     if ( pathID_TextBlock.Text == "PathID:" )
                     {
                         mainAttributesPassed = true;
-                        XmlElement pathIDElement = xmlDoc.CreateElement ( "PathID" );
-                        if ( pathID != -1 )
-                        {
-                            pathIDElement.InnerText = Convert.ToString ( pathID );
-                        }
-                        else
-                        {
-                            ComboBoxItem selectedPathIDItem = (ComboBoxItem) MainWindow.pathIDComboBox.SelectedItem;
-                            if ( selectedPathIDItem != null )
-                            {
-                                pathIDElement.InnerText = Convert.ToString ( selectedPathIDItem.Content );
-                            }
-                        }
-                        xmlTabNode.AppendChild ( pathIDElement );
-                        curElement = pathIDElement;
+                        return; // Do not save any elements with the name "PathID"
                     }
                 }
                 

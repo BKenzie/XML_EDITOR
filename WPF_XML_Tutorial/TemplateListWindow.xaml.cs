@@ -65,7 +65,7 @@ namespace WPF_XML_Tutorial
         private void Close_Button_MouseLeftButtonUp( object sender, MouseButtonEventArgs e )
         {
             mainWindowCaller.IsEnabled = true;
-            MainWindow.pathIDComboBox.SelectedIndex = -1;
+            mainWindowCaller.PathIDComboBox.SelectedIndex = -1;
             mainWindowCaller.currentPathID = -1;
             mainWindowCaller.FinalLogic ();
             this.Close ();

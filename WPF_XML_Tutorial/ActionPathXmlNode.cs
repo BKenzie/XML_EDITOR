@@ -8,7 +8,7 @@ using System.Xml;
 namespace WPF_XML_Tutorial
 {
     // Helper class for interchanging between different ActionPaths in the editor window
-    class ActionPathXmlNode : IEquatable<ActionPathXmlNode>
+    class UOPXmlNode : IEquatable<UOPXmlNode>
     {
         public int PathID
         {
@@ -25,14 +25,14 @@ namespace WPF_XML_Tutorial
             get; set;
         }
 
-        public ActionPathXmlNode( XmlNode xmlNode, int pathID, List<string> tabHeaders )
+        public UOPXmlNode( XmlNode xmlNode, int pathID, List<string> tabHeaders )
         {
             PathID = pathID;
             XmlNode = xmlNode;
             TabHeaders = tabHeaders;
         }
 
-        public bool Equals( ActionPathXmlNode other )
+        public bool Equals( UOPXmlNode other )
         {
             if ( other != null )
             {

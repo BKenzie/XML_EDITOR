@@ -3,17 +3,21 @@
 <ActionPaths>
 
 	<Tabs_XEDITOR>
-		<Show_Tabs> ActionPath, ValveState, PumpState, RockerState, MagnetState </Show_Tabs>
+		<Show_Tabs> UnitOperation, ActionPath, ValveState, PumpState, RockerState, MagnetState </Show_Tabs>
 	</Tabs_XEDITOR>
 
-	<ActionPath>
-		<help></help>
-		<PathID></PathID>
-		<Source></Source>
-		<Destination></Destination>
-		<Via_Path></Via_Path>
-		
-		<ValveState>
+	<UnitOperation>
+    
+    <PathID></PathID>
+
+    <ActionPath>
+      <help></help>
+      <Source></Source>
+      <Destination></Destination>
+      <Via_Path></Via_Path>
+    </ActionPath>
+
+    <ValveState>
 			<help></help>
 			<Valve1></Valve1>
 			<Valve2></Valve2>
@@ -47,6 +51,6 @@
 			<Magnet1></Magnet1>
 			<Magnet2></Magnet2>
 		</MagnetState>
-	</ActionPath>
+	</UnitOperation>
 	
 </ActionPaths>

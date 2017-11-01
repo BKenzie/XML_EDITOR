@@ -38,7 +38,7 @@ namespace WPF_XML_Tutorial
         private void Close_Button_InputPathIDWindow_Click( object sender, MouseButtonEventArgs e )
         {
             mainWindowCaller.IsEnabled = true;
-            MainWindow.pathIDComboBox.SelectedIndex = -1;
+            mainWindowCaller.PathIDComboBox.SelectedIndex = -1;
             mainWindowCaller.currentPathID = -1;
             mainWindowCaller.FinalLogic ();
             this.Close ();
@@ -83,10 +83,10 @@ namespace WPF_XML_Tutorial
         private List<int> GetPathIDs()
         {
             List<int> pathIDs = new List<int> ();
-            ComboBox pathIDCombobox = MainWindow.pathIDComboBox;
+            ComboBox pathIDCombobox = mainWindowCaller.PathIDComboBox;
             foreach ( ComboBoxItem item in pathIDCombobox.Items )
             {
-                if ( Convert.ToString(item.Content) != "New ActionPath" )
+                if ( Convert.ToString(item.Content) != "New UnitOperation" )
                 {
                     pathIDs.Add ( Convert.ToInt32 ( Convert.ToString ( item.Content ) ) );
                 }

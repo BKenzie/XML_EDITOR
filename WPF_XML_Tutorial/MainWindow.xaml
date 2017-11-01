@@ -22,7 +22,7 @@
     </Window.InputBindings>
 
     <Grid>
-        <TabControl Name="MainTabControl" Margin="0,81,0,0">
+        <TabControl Name="MainTabControl" Margin="0,81,0,0" Panel.ZIndex="1">
         </TabControl>
         <Rectangle Name="DragRectangle" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Height="70" Margin="0,-1,-9482,0" VerticalAlignment="Top" Width="9999" Panel.ZIndex="0" />
 
@@ -36,7 +36,7 @@
         <TextBlock x:Name="NumPathIDOverlay" HorizontalAlignment="Left" Margin="96,0,0,5" TextWrapping="Wrap" VerticalAlignment="Bottom" />
 
 
-        <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="34" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
+        <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="102" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
             <MenuItem Name="FileMenu" Header="File" VerticalAlignment="Center" FontSize="16">
                 <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0">
                     <MenuItem.Icon>
@@ -80,6 +80,8 @@
             </MenuItem>
         </Menu>
         <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
+        <TextBlock Name="PathIDTextBlock" HorizontalAlignment="Left" Margin="7,29,0,0" TextWrapping="Wrap" Text="UOP PathID:" VerticalAlignment="Top" FontSize="16"/>
+        <ComboBox Name="PathIDComboBox" x:FieldModifier="public" HorizontalAlignment="Left" Margin="99,30,0,0" VerticalAlignment="Top" Width="100"/>
 
 
     </Grid>

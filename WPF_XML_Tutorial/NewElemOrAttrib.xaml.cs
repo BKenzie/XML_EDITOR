@@ -47,7 +47,7 @@ namespace WPF_XML_Tutorial
         private void Close_Button_InputPathIDWindow_Click( object sender, MouseButtonEventArgs e )
         {
             mainWindowCaller.IsEnabled = true;
-            MainWindow.pathIDComboBox.SelectedIndex = -1;
+            mainWindowCaller.PathIDComboBox.SelectedIndex = -1;
             this.Close ();
         }
 
