@@ -98,11 +98,12 @@ namespace WPF_XML_Tutorial
 
         public void NewXML_Click( object sender, RoutedEventArgs e )
         {
-            // Accesses the ActionPathsTemplate.xml file
+            // Accesses the UnitOperationTemplate.xml file
             // There is likely a more direct way to do this
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\ActionPathsTemplate.xml" );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\UnitOperationTemplate.xml" );
             mainWindow.Show ();
+            mainWindow.HighlightPathIDSection ();
             this.Close ();
         }
 

@@ -66,32 +66,31 @@ namespace WPF_XML_Tutorial.Properties {
         ///&lt;ActionPaths&gt;
         ///
         ///	&lt;Tabs_XEDITOR&gt;
-        ///		&lt;Show_Tabs&gt; ActionPath, ValveState, PumpState, RockerState, MagnetState &lt;/Show_Tabs&gt;
+        ///		&lt;Show_Tabs&gt; UnitOperation, ActionPath, ValveState, PumpState, RockerState, MagnetState &lt;/Show_Tabs&gt;
         ///	&lt;/Tabs_XEDITOR&gt;
         ///
-        ///	&lt;ActionPath&gt;
-        ///		&lt;help&gt;&lt;/help&gt;
-        ///		&lt;PathID&gt;1&lt;/PathID&gt;
-        ///		&lt;Source&gt;&lt;/Source&gt;
-        ///		&lt;Destination&gt;&lt;/Destination&gt;
-        ///		&lt;Via_Path&gt;&lt;/Via_Path&gt;
-        ///		
-        ///		&lt;ValveState&gt;
+        ///	&lt;UnitOperation&gt;
+        ///    
+        ///    &lt;PathID&gt;&lt;/PathID&gt;
+        ///
+        ///    &lt;ActionPath&gt;
+        ///      &lt;help&gt;&lt;/help&gt;
+        ///      &lt;Source&gt;&lt;/Source&gt;
+        ///      &lt;Destination&gt;&lt;/Destination&gt;
+        ///      &lt;Via_Path&gt;&lt;/Via_Path&gt;
+        ///    &lt;/ActionPath&gt;
+        ///
+        ///    &lt;ValveState&gt;
         ///			&lt;help&gt;&lt;/help&gt;
         ///			&lt;Valve1&gt;&lt;/Valve1&gt;
         ///			&lt;Valve2&gt;&lt;/Valve2&gt;
         ///			&lt;Valve3&gt;&lt;/Valve3&gt;
         ///			&lt;Valve4&gt;&lt;/Valve4&gt;
-        ///			&lt;BinaryState&gt;&lt;/BinaryState&gt;
-        ///		&lt;/ValveState&gt;
-        ///		
-        ///		&lt;PumpState&gt;
-        ///			&lt;help&gt;&lt;/help&gt;
-        ///		 [rest of string was truncated]&quot;;.
+        ///			&lt;Bina [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string ActionPathsTemplate {
+        internal static string UnitOperationTemplate {
             get {
-                return ResourceManager.GetString("ActionPathsTemplate", resourceCulture);
+                return ResourceManager.GetString("UnitOperationTemplate", resourceCulture);
             }
         }
     }

@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 
-<ActionPaths>
+<root>
 
 	<Tabs_XEDITOR>
 		<Show_Tabs> UnitOperation, ActionPath, ValveState, PumpState, RockerState, MagnetState </Show_Tabs>
@@ -53,4 +53,4 @@
 		</MagnetState>
 	</UnitOperation>
 	
-</ActionPaths>
+</root>

@@ -15,13 +15,13 @@ using System.Windows.Shapes;
 namespace WPF_XML_Tutorial
 {
     /// <summary>
-    /// Interaction logic for NewActionPath.xaml
+    /// Interaction logic for NewUnitOperation.xaml
     /// </summary>
-    public partial class NewActionPath : Window
+    public partial class NewUnitOperation : Window
     {
         private MainWindow mainWindowCaller;
 
-        public NewActionPath( MainWindow caller)
+        public NewUnitOperation( MainWindow caller)
         {
             InitializeComponent ();
             mainWindowCaller = caller;
@@ -41,8 +41,8 @@ namespace WPF_XML_Tutorial
             mainWindowCaller.PathIDComboBox.SelectedIndex = -1;
             mainWindowCaller.currentPathID = -1;
             mainWindowCaller.FinalLogic ();
+            mainWindowCaller.HighlightPathIDSection ();
             this.Close ();
-
         }
 
         private void EnterPathIDButton_Click( object sender, RoutedEventArgs e )
@@ -61,23 +61,17 @@ namespace WPF_XML_Tutorial
                     else
                     {
                         MessageBox.Show ( "New PathID must not be a negative number.", "PathID value error" );
-
                     }
-
                 }
                 else
                 {
-                    MessageBox.Show ( "Chosen PathID already has an existing ActionPath active in the editor.", "PathID already exists" );
+                    MessageBox.Show ( "Chosen PathID already exists and is active in the editor.", "PathID already exists" );
                 }
-
-
             }
             catch(Exception ex)
             {
                 MessageBox.Show ( "Input a valid PathID\n" + ex.Message, "Error" );
             }
-
-            
         }
 
         private List<int> GetPathIDs()

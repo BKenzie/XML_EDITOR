@@ -54,8 +54,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="NewActionPath.xaml.cs">
-      <DependentUpon>NewActionPath.xaml</DependentUpon>
+    <Compile Include="NewUnitOperation.xaml.cs">
+      <DependentUpon>NewUnitOperation.xaml</DependentUpon>
     </Compile>
     <Compile Include="NewElemOrAttrib.xaml.cs">
       <DependentUpon>NewElemOrAttrib.xaml</DependentUpon>
@@ -91,7 +91,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="NewActionPath.xaml">
+    <Page Include="NewUnitOperation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -143,7 +143,10 @@
     <Resource Include="Images\STEMCELL_Color_JPG.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ActionPathsTemplate.xml" />
+    <Resource Include="Resources\UnitOperationTemplate.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\BlankTemplate.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

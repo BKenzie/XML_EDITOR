@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace WPF_XML_Tutorial
 {
-    // Helper class for interchanging between different ActionPaths in the editor window
+    // Helper class for interchanging between different UOPs in the editor window
     class UOPXmlNode : IEquatable<UOPXmlNode>
     {
         public int PathID

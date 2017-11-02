@@ -38,7 +38,7 @@
 
         <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="102" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
             <MenuItem Name="FileMenu" Header="File" VerticalAlignment="Center" FontSize="16">
-                <MenuItem Header="Modify ActionPath template" Click="Modify_Template_Click" Margin="0,0,-46,0">
+                <MenuItem Header="Modify templates" Click="Modify_Template_Click" Margin="0,0,-46,0">
                     <MenuItem.Icon>
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--pencil.png"/>
                     </MenuItem.Icon>
@@ -72,7 +72,7 @@
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\ui-tab--minus.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Remove current ActionPath" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveActionPath">
+                <MenuItem Header="Remove current UOP" Click="Delete_AP_Button_Click" Margin="0,0,-38,0" Name="RemoveUOP">
                     <MenuItem.Icon>
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\cross-script.png"/>
                     </MenuItem.Icon>
