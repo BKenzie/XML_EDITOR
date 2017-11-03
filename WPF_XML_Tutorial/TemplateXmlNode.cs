@@ -22,11 +22,17 @@ namespace WPF_XML_Tutorial
             get; set;
         }
 
-        public TemplateXmlNode( XmlNode xmlNode, string name, List<string> tabHeaders )
+        public string MainNodeName
+        {
+            get; set;
+        }
+
+        public TemplateXmlNode( XmlNode xmlNode, string name, List<string> tabHeaders, string mainNodeName )
         {
             Name = name;
             XmlNode = xmlNode;
             TabHeaders = tabHeaders;
+            MainNodeName = mainNodeName;
         }
 
         public bool Equals( TemplateXmlNode other )

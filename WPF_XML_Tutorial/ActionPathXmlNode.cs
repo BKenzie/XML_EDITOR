@@ -15,6 +15,11 @@ namespace WPF_XML_Tutorial
             get; set;
         }
 
+        public string MainNodeName
+        {
+            get; set;
+        }
+
         public XmlNode XmlNode
         {
             get; set;
@@ -25,11 +30,12 @@ namespace WPF_XML_Tutorial
             get; set;
         }
 
-        public UOPXmlNode( XmlNode xmlNode, int pathID, List<string> tabHeaders )
+        public UOPXmlNode( XmlNode xmlNode, int pathID, List<string> tabHeaders, string mainNodeName )
         {
             PathID = pathID;
             XmlNode = xmlNode;
             TabHeaders = tabHeaders;
+            MainNodeName = mainNodeName;
         }
 
         public bool Equals( UOPXmlNode other )

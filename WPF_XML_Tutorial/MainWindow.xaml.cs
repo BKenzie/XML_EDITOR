@@ -103,15 +103,16 @@ namespace WPF_XML_Tutorial
                 helperXmlDoc.Load ( defaultUOPTemplateFilePath );
                 string strHeaders = helperXmlDoc.LastChild.FirstChild.InnerText;
                 XmlNode defaultUOPTemplateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <UnitOperation> node
-                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( defaultUOPTemplateXmlNode, "Default UOP template", 
-                    new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ));
+                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( defaultUOPTemplateXmlNode, "Default cSep template",
+                    new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ), "UnitOperation" );
                 templateXmlNodes.Add ( defaultTemplateXmlNode );
 
-                string blankUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\BlankTemplate.xml";
-                helperXmlDoc.Load ( blankUOPTemplateFilePath );
-                XmlNode blankUOPTemplateXmlNode = helperXmlDoc.LastChild;
-                TemplateXmlNode blankTemplateXmlNode = new TemplateXmlNode ( blankUOPTemplateXmlNode, "Blank Template", new List<string> () );
-                templateXmlNodes.Add ( blankTemplateXmlNode );
+                //string blankUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\BlankTemplate.xml";
+                //helperXmlDoc.Load ( blankUOPTemplateFilePath );
+                //List<string> strBlankTemplateHeaders = new List<string> ();
+                //XmlNode blankUOPTemplateXmlNode = helperXmlDoc.LastChild;
+                //TemplateXmlNode blankTemplateXmlNode = new TemplateXmlNode ( blankUOPTemplateXmlNode, "Blank Template",  strBlankTemplateHeaders);
+                //templateXmlNodes.Add ( blankTemplateXmlNode );
             }
 
             if ( isTemplateWindow )
@@ -423,12 +424,11 @@ namespace WPF_XML_Tutorial
                         curTabHeaders.Add ( curTabItem.Header as String );
                     }
                 }
-                UOPXmlNode newUOPXmlNode = new UOPXmlNode ( xmlNode, pathId, curTabHeaders );
+                UOPXmlNode newUOPXmlNode = new UOPXmlNode ( xmlNode, pathId, curTabHeaders, activeMainNodeName );
                 if ( !UOPXmlNodes.Contains ( newUOPXmlNode ) )
                 {
                     UOPXmlNodes.Add ( newUOPXmlNode );
                 }
-
 
                 if ( UOPsParsed > 1 )
                 {
@@ -1336,6 +1336,10 @@ namespace WPF_XML_Tutorial
         {
             this.tabHeaders = templateXmlNode.TabHeaders;
             XmlNode newXmlNode = templateXmlNode.XmlNode.CloneNode ( true );
+            TabItem newMainNodeTabItem = new TabItem ();
+            newMainNodeTabItem.FontSize = 18;
+            newMainNodeTabItem.Header = templateXmlNode.MainNodeName;
+            tabItems.Add ( newMainNodeTabItem );
 
             // Need to set the PathID into the newXmlNode so that it isn't empty
             foreach ( XmlNode xmlNode in newXmlNode.ChildNodes )
@@ -1346,7 +1350,7 @@ namespace WPF_XML_Tutorial
                 }
             }
 
-            UOPXmlNode newUnitOperation = new UOPXmlNode ( newXmlNode, pathID, templateXmlNode.TabHeaders );
+            UOPXmlNode newUnitOperation = new UOPXmlNode ( newXmlNode, pathID, templateXmlNode.TabHeaders, templateXmlNode.MainNodeName );
             UOPXmlNodes.Remove ( newUnitOperation ); // to get rid of old one if it exists
             UOPXmlNodes.Add ( newUnitOperation );
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
@@ -1381,11 +1385,12 @@ namespace WPF_XML_Tutorial
                 if ( UOPXmlNode.PathID == pathID )
                 {
                     unitOperation = UOPXmlNode.XmlNode;
+                    this.activeMainNodeName = UOPXmlNode.MainNodeName;
                     this.tabHeaders = UOPXmlNode.TabHeaders;
                 }
             }
             // Now get corresponding tabItem..
-            TabItem UOPTabItem = GetTabItemWithHeader ( "UnitOperation" );
+            TabItem UOPTabItem = GetTabItemWithHeader ( activeMainNodeName );
             if ( unitOperation == null )
             {
                 throw new Exception ( "Error: var unitOperation should not be null." );
@@ -1767,7 +1772,7 @@ namespace WPF_XML_Tutorial
                     curTabHeaders.Add ( tabItem.Header as String );
                 }
             }
-            UOPXmlNode removedUOP = new UOPXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID, curTabHeaders );
+            UOPXmlNode removedUOP = new UOPXmlNode ( savedActiveTabsState.FirstChild.LastChild, currentPathID, curTabHeaders, activeMainNodeName );
             deletedUOPs.Push ( removedUOP );
             PathIDComboBox.Items.Remove ( removeItem );
             ResetAllTabs ();
@@ -2156,9 +2161,10 @@ namespace WPF_XML_Tutorial
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
             XmlDocument xmlDoc = new XmlDocument ();
-            string xmlString = "<UnitOperation><PathID></PathID>" + savedActiveTabsState.FirstChild.LastChild.InnerXml + "</UnitOperation>";
+            string xmlString = "<" + activeMainNodeName + ">" + savedActiveTabsState.FirstChild.LastChild.InnerXml + "</" + activeMainNodeName + ">";
             xmlDoc.LoadXml ( xmlString );
             List<String> curTabHeaders = new List<string> ();
+            curTabHeaders.Add ( activeMainNodeName );
             foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem> () )
             {
                 if ( tabItem.Visibility == Visibility.Visible )
@@ -2166,7 +2172,7 @@ namespace WPF_XML_Tutorial
                     curTabHeaders.Add ( tabItem.Header as string ); 
                 }
             }
-            TemplateXmlNode newTemplateXmlNode = new TemplateXmlNode ( xmlDoc.DocumentElement, "", curTabHeaders);
+            TemplateXmlNode newTemplateXmlNode = new TemplateXmlNode ( xmlDoc.DocumentElement, "", curTabHeaders, activeMainNodeName);
             NewTemplateName inputTemplateNameWindow = new NewTemplateName ( this, mainEditorWindow, newTemplateXmlNode );
             inputTemplateNameWindow.Show ();
             this.IsEnabled = false;
@@ -2201,6 +2207,70 @@ namespace WPF_XML_Tutorial
                 mainEditorWindow.tabItems.Add ( newTabItem2 );
                 mainEditorWindow.MainTabControl.Items.Add ( newTabItem2 );
             }
+            
+            // create new tabLinkButton
+            // add to tabLinkButtons
+            // create new grid and add to grid
+            // add grid to the end of the listView in the main tab 
+
+            // Set up button grid
+            Grid newGrid = new Grid { Width = GRID_WIDTH };
+            newGrid.ShowGridLines = false;
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+            newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+            #region TabLinkButton code
+            Button newTabLinkButton = new Button ();
+            newTabLinkButton.Content = tabName;
+            newTabLinkButton.Tag = tabName;
+            newTabLinkButton.Height = 37;
+            newTabLinkButton.Width = 160;
+            newTabLinkButton.Background = new SolidColorBrush ( Colors.LightGray );
+            newTabLinkButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+
+            Style customButtonStyle = new Style ();
+            customButtonStyle.TargetType = typeof ( Button );
+            MultiDataTrigger trigger = new MultiDataTrigger ();
+            Condition condition = new Condition ();
+            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            condition.Value = true;
+            Setter foregroundSetter = new Setter ();
+            foregroundSetter.Property = Button.ForegroundProperty;
+            foregroundSetter.Value = Brushes.DarkOrange;
+            Setter cursorSetter = new Setter ();
+            cursorSetter.Property = Button.CursorProperty;
+            cursorSetter.Value = Cursors.Hand;
+            Setter textSetter = new Setter ();
+            textSetter.Property = Button.FontWeightProperty;
+            textSetter.Value = FontWeights.ExtraBold;
+            trigger.Conditions.Add ( condition );
+            trigger.Setters.Add ( foregroundSetter );
+            trigger.Setters.Add ( cursorSetter );
+            trigger.Setters.Add ( textSetter );
+            customButtonStyle.Triggers.Clear ();
+            customButtonStyle.Triggers.Add ( trigger );
+            newTabLinkButton.Style = customButtonStyle;
+            newTabLinkButton.Click += gotoTabButton_Click;
+
+            Rectangle gotoTabRect = new Rectangle ();
+            gotoTabRect.Fill = new SolidColorBrush ( Colors.Transparent );
+            gotoTabRect.Width = 120;
+            gotoTabRect.Height = 14;
+            Grid.SetRow ( gotoTabRect, 0 );
+            Grid.SetColumn ( gotoTabRect, 1 );
+            newGrid.Children.Add ( gotoTabRect );
+
+            Grid.SetRow ( newTabLinkButton, 1 );
+            Grid.SetColumn ( newTabLinkButton, 2 );
+            newGrid.Children.Add ( newTabLinkButton );
+            #endregion
+
+            ListView mainTabListView = ( (ListView) ( (TabItem) MainTabControl.Items[0] ).Content );
+            mainTabListView.Items.Add ( newGrid );
+
             string strNodeName = new String ( tabName.Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray () );
             RecursiveParseTabInfo ( newTabItem1, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
             RecursiveParseTabInfo ( newTabItem2, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );

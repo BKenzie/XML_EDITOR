@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Xml;
 
 namespace WPF_XML_Tutorial
 {
@@ -21,7 +22,7 @@ namespace WPF_XML_Tutorial
     {
         private MainWindow mainWindowCaller;
         private int pathID;
-        private enum Mode{ Modify, Select };
+        private enum Mode { Modify, Select };
         private Mode currentMode;
 
         public TemplateListWindow( MainWindow caller, string strMode, int pathID = -1 )
@@ -38,6 +39,16 @@ namespace WPF_XML_Tutorial
             else if ( strMode.ToLower () == "select" )
             {
                 currentMode = Mode.Select;
+            }
+
+            if ( currentMode == Mode.Modify )
+            {
+                ListBoxItem blankTemplateListBoxItem = new ListBoxItem ();
+                blankTemplateListBoxItem.Content = "Create a new template";
+                blankTemplateListBoxItem.FontSize = 20;
+                blankTemplateListBoxItem.MouseDoubleClick += new MouseButtonEventHandler ( mouseDoubleClick );
+                TemplatesListBox.Items.Add ( blankTemplateListBoxItem );
+                TemplatesListBox.Items.Add ( new Separator () );
             }
 
             foreach ( TemplateXmlNode template in mainWindowCaller.GetAvailableTemplates () )
@@ -84,10 +95,20 @@ namespace WPF_XML_Tutorial
                 ListBoxItem selectedItem = TemplatesListBox.SelectedItem as ListBoxItem;
                 string name = selectedItem.Content as string;
                 TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( name );
-                MainWindow modifyTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (), 
-                        isTemplateWindow: true, templateXmlNodeParam: templateXmlNode, caller: mainWindowCaller );
-                modifyTemplateWindow.Show ();
-                this.Close ();
+
+                if ( name.ToLower () == "create a new template" )
+                {
+                    BlankTemplateUOPName mainNodeNameWindow = new BlankTemplateUOPName ( this, mainWindowCaller );
+                    mainNodeNameWindow.Show ();
+                    this.Close ();
+                }
+                else
+                {
+                    MainWindow modifyTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (),
+                                 isTemplateWindow: true, templateXmlNodeParam: templateXmlNode, caller: mainWindowCaller );
+                    modifyTemplateWindow.Show ();
+                    this.Close ();
+                }
             }
             else if ( currentMode == Mode.Select )
             {
@@ -110,6 +131,21 @@ namespace WPF_XML_Tutorial
                 }
             }
             return null;
+        }
+
+        public void UserEnteredNewMainNodeName( string mainNodeName )
+        {
+            List<string> blankTabHeaders = new List<string> ();
+            blankTabHeaders.Add ( mainNodeName );
+            //TemplateXmlNode templateXmlNode = GetTemplateXmlNodeWithName ( "Blank Template" );
+            XmlDocument helperXmlDoc = new XmlDocument ();
+            XmlNode blankXmlNode = helperXmlDoc.CreateNode ( "element", mainNodeName, "" );
+            // TODO: figure out if a <PathID> node needs to be appended to the blankXmlNode here
+            TemplateXmlNode blankTemplateXmlNode = new TemplateXmlNode ( blankXmlNode, "Blank Template", blankTabHeaders, mainNodeName );
+            MainWindow modifyBlankTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (),
+                        isTemplateWindow: true, templateXmlNodeParam: blankTemplateXmlNode, caller: mainWindowCaller );
+            modifyBlankTemplateWindow.Show ();
+            this.Close ();
         }
     }
 }

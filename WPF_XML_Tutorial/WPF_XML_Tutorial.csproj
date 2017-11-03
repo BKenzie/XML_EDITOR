@@ -54,6 +54,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BlankTemplateUOPName.xaml.cs">
+      <DependentUpon>BlankTemplateUOPName.xaml</DependentUpon>
+    </Compile>
     <Compile Include="NewUnitOperation.xaml.cs">
       <DependentUpon>NewUnitOperation.xaml</DependentUpon>
     </Compile>
@@ -71,6 +74,10 @@
     </Compile>
     <Compile Include="TemplateXmlNode.cs" />
     <Compile Include="XMLDocSave.cs" />
+    <Page Include="BlankTemplateUOPName.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="InputXMLWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -146,7 +153,9 @@
     <Resource Include="Resources\UnitOperationTemplate.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\BlankTemplate.xml" />
+    <Resource Include="Resources\BlankTemplate.xml">
+      <SubType>Designer</SubType>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
