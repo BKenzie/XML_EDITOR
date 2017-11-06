@@ -15,7 +15,7 @@ namespace WPF_XML_Tutorial
     {
         private XmlDocument xmlDoc;
         private string fileSavePath;
-        private List<string> tabHeaders;
+        private List<string> tabHeaders = new List<string> ();
         private List<XmlNode> xmlTabNodes = new List<XmlNode> ();
         private List<XmlNode> xmlSubNodes = new List<XmlNode> ();
         private bool mainAttributesPassed = false;
@@ -25,23 +25,29 @@ namespace WPF_XML_Tutorial
         private XmlNode activeMainXmlNode = null;
 
         // Creates instance of XmlDocSave with proper Tabs_XEDITOR element 
-        public XmlDocSave( XmlDocument document, List<string> headers, string path, MainWindow caller )
+        public XmlDocSave( XmlDocument document, string path, MainWindow caller )
         {
             // Create xml document with root node
             xmlDoc = document;
             fileSavePath = path;
             xmlDoc.AppendChild ( xmlDoc.CreateNode ( "element", "root", "" ) );
             mainWindowCaller = caller;
-
-            tabHeaders = headers;
+            List<TabItem> mainWindowTabItems = mainWindowCaller.GetTabItems ();
+            foreach ( TabItem tabItem in mainWindowTabItems )
+            {
+                if ( !tabHeaders.Contains ( tabItem.Header ) )
+                {
+                    tabHeaders.Add ( tabItem.Header as string );
+                }
+            }
             AddTabHeadersToTabs_XEDITOR ();
         }
 
         private void AddTabHeadersToTabs_XEDITOR()
         {
             XmlNode tabs_XEDITOR = xmlDoc.CreateNode ( "element", "Tabs_XEDITOR", "" );
+            // TODO: make tabHeaders list out of all headers in tabItems
             string innerText = String.Join ( ",", tabHeaders );
-            // mainWindowCaller.ActiveMainNodeName + "," + String.Join ( ",", tabHeaders );
             tabs_XEDITOR.InnerText = innerText;
             xmlDoc.FirstChild.AppendChild ( tabs_XEDITOR );
         }

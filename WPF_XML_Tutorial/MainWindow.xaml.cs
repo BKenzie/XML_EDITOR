@@ -72,6 +72,7 @@ namespace WPF_XML_Tutorial
         private bool isTemplateWindow = false;
         private MainWindow mainEditorWindow;
         private TemplateXmlNode templateXmlNode;
+        private MenuItem templateTabsMenuItem;
         private bool setUpPathIDComboBox = false;
         private bool parsedPathIDForCurrentUOP = true;
         private bool pathIDSectionHighlighted = false;
@@ -152,6 +153,7 @@ namespace WPF_XML_Tutorial
                 Save_Button.Visibility = Visibility.Collapsed;
 
                 MenuItem TabMenuOptions = new MenuItem ();
+                templateTabsMenuItem = TabMenuOptions;
                 TabMenuOptions.Header = "Tabs";
                 TabMenuOptions.FontSize = 16;
                 MenuItem deleteTabMenuItem = new MenuItem ();
@@ -178,8 +180,28 @@ namespace WPF_XML_Tutorial
                 SaveTemplate.Click += new RoutedEventHandler ( SaveTemplate_Click );
                 MainWindowMenuBar.Items.Add ( SaveTemplate );
 
+                if ( templateXmlNodeParam.Name.ToLower () == "blank template" )
+                {
+                    templateTabsMenuItem.FontWeight = FontWeights.Bold;
+                    deleteTabMenuItem.FontWeight = FontWeights.Normal;
+                }
+
                 // Set tabs not in this.templateXmlNode.tabHeaders to not be visible
                 SetTemplateTabVisibilty ();
+
+                TabItem mainTab = MainTabControl.Items[0] as TabItem;
+                ListView mainTabListView = ( (ListView) mainTab.Content );
+                foreach ( var item in mainTabListView.Items )
+                {
+                    if ( item is TextBlock )
+                    {
+                        ( item as TextBlock ).Visibility = Visibility.Collapsed;
+                    }
+                    else if ( item is Button )
+                    {
+                        ( item as Button ).Visibility = Visibility.Collapsed;
+                    }
+                }
             }
             else
             {
@@ -270,6 +292,10 @@ namespace WPF_XML_Tutorial
                     if ( (string) tabItem.Header != activeMainNodeName )
                     {
                         tabItem.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        tabItem.Visibility = Visibility.Collapsed;
                     }
                 }
             }
@@ -1281,7 +1307,7 @@ namespace WPF_XML_Tutorial
                 NumPathIDOverlay.Text = Convert.ToString ( ( (ComboBoxItem) PathIDComboBox.SelectedItem ).Content );
                 // Save any changes to the currently active tabs before switching to a new active UOP
                 // At this point, the selected PathID has been changed but the tabItems list has not yet been updated
-                XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "", this );
+                XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), "", this );
                 XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
                 // If exists, delete previous saved state and overwrite with new saved state
                 if ( pathIDHistories.ContainsKey ( currentPathID ) )
@@ -1308,20 +1334,7 @@ namespace WPF_XML_Tutorial
                     UnHighlightPathIDSection ();
                 }
             }
-
-            RepopulateTextBoxes ();
-
-            if ( MainTabControl.SelectedIndex == 1 )
-            {
-                foreach ( TextBox textBox in textBoxes )
-                {
-                    textBox.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
-                }
-            }
-            else
-            {
-                MainTabControl.SelectedIndex = 1;
-            }
+            RepopulateTextBoxes ();      
         }
 
         public void NewPathIDEntered( int pathID )
@@ -1339,7 +1352,24 @@ namespace WPF_XML_Tutorial
             TabItem newMainNodeTabItem = new TabItem ();
             newMainNodeTabItem.FontSize = 18;
             newMainNodeTabItem.Header = templateXmlNode.MainNodeName;
-            tabItems.Add ( newMainNodeTabItem );
+            if ( !TabItemsContainsHeader ( newMainNodeTabItem.Header as string ) )
+            {
+                tabItems.Add ( newMainNodeTabItem );
+            }
+            foreach ( string tabHeader in tabHeaders )
+            {
+                TabItem newTabItem = new TabItem ();
+                newTabItem.FontSize = 18;
+                newTabItem.Header = tabHeader;
+                if ( !MainTabControlContainsHeader ( tabHeader ) )
+                {
+                    MainTabControl.Items.Add ( newTabItem );
+                }
+                if ( !TabItemsContainsHeader ( tabHeader ) )
+                {
+                    tabItems.Add ( newTabItem );
+                }
+            }
 
             // Need to set the PathID into the newXmlNode so that it isn't empty
             foreach ( XmlNode xmlNode in newXmlNode.ChildNodes )
@@ -1356,19 +1386,33 @@ namespace WPF_XML_Tutorial
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
             newPathIDItem.Content = pathID;
             AddNewPathID ( newPathIDItem );
+            PathIDComboBox.SelectedIndex = PathIDComboBox.Items.IndexOf ( newPathIDItem ); // Switch to new PathID
+        }
 
-            PathIDComboBox.SelectedIndex = PathIDComboBox.Items.IndexOf ( newPathIDItem );
-            if ( MainTabControl.SelectedIndex == 1 )
+        // Helper function
+        private bool MainTabControlContainsHeader( string tabHeader )
+        {
+            foreach ( TabItem tabItem in MainTabControl.Items )
             {
-                foreach ( TextBox textBox in textBoxes )
+                if ( tabItem.Header as string == tabHeader )
                 {
-                    textBox.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
+                    return true;
                 }
             }
-            else
+            return false;
+        }
+
+        // Helper function
+        private bool TabItemsContainsHeader( string tabHeader )
+        {
+            foreach ( TabItem tabItem in tabItems )
             {
-                MainTabControl.SelectedIndex = 1;
+                if ( (string)tabItem.Header == tabHeader )
+                {
+                    return true;
+                }
             }
+            return false;
         }
 
         // Displays new UOP and sub-tabs associated with param pathID in window
@@ -1399,6 +1443,20 @@ namespace WPF_XML_Tutorial
             RecursiveParseTabInfo ( UOPTabItem, unitOperation );
             RemoveEmptyTabs ();
             PopulateTabLinkButtons ();
+
+            // Set active tab to be the first tabItem in MainTabControl with Visibility.Visible
+            foreach ( TabItem tabItem in MainTabControl.Items )
+            {
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    MainTabControl.SelectedItem = tabItem;
+                    foreach ( TextBox textBox in textBoxes )
+                    {
+                        textBox.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
+                    }
+                    break;
+                }
+            }
         }
 
         // Helper called whenever the active UOP is changed
@@ -1762,7 +1820,7 @@ namespace WPF_XML_Tutorial
             {
                 pathIDHistories.Remove ( currentPathID );
             }
-            XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "", this );
+            XmlDocSave historyDocSave = new XmlDocSave ( new XmlDocument (), "", this );
             XmlNode savedActiveTabsState = historyDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             List<string> curTabHeaders = new List<string> ();
             foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem>() )
@@ -1925,7 +1983,7 @@ namespace WPF_XML_Tutorial
                 return;
             }
             XmlDocument xmlDocTosave = new XmlDocument ();
-            XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, tabHeaders, fileSavePath, this );
+            XmlDocSave xmlDocSave = new XmlDocSave ( xmlDocTosave, fileSavePath, this );
 
             xmlDocSave.SaveAll ( tabItems, PathIDComboBox );
         }
@@ -1964,7 +2022,7 @@ namespace WPF_XML_Tutorial
         {
             if ( undoableCommands.Count == 0 )
             {
-                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include: UOP, tab, element, and attribute creation & deletion.", "Error" );
+                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include creation and deletion of tabs, elements, attributes, and Unit Operations.", "Error" );
                 return;
             }
 
@@ -2157,7 +2215,7 @@ namespace WPF_XML_Tutorial
 
         private void SaveTemplate_Click( object sender, RoutedEventArgs e )
         {
-            XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), tabHeaders, "", this );
+            XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), "", this );
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
             XmlDocument xmlDoc = new XmlDocument ();
@@ -2192,6 +2250,8 @@ namespace WPF_XML_Tutorial
 
         public void NewTabEntered( string tabName )
         {
+            templateTabsMenuItem.FontWeight = FontWeights.Normal;
+
             TabItem newTabItem1 = new TabItem ();
             newTabItem1.Header = tabName;
             newTabItem1.FontSize = 18;
@@ -2268,13 +2328,14 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( newTabLinkButton );
             #endregion
 
-            ListView mainTabListView = ( (ListView) ( (TabItem) MainTabControl.Items[0] ).Content );
+            TabItem mainTab = MainTabControl.Items[0] as TabItem;
+            ListView mainTabListView = ( (ListView) mainTab.Content );
             mainTabListView.Items.Add ( newGrid );
 
             string strNodeName = new String ( tabName.Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray () );
             RecursiveParseTabInfo ( newTabItem1, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
             RecursiveParseTabInfo ( newTabItem2, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
-
+            MainTabControl.SelectedItem = newTabItem1;
         }
     }
 }
