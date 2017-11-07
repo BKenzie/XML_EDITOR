@@ -34,7 +34,7 @@ namespace WPF_XML_Tutorial
         private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
         private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
-        private enum UndoableType { delUOP, delTab, createTab, createUOP, delElem, createElem, createAttrib, delAttrib, delSubAttrib, delElemHeader };
+        private enum UndoableType { delUOP, delTab, delElem, createElem, createAttrib, delAttrib, delSubAttrib, delElemHeader };
         private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
         private Stack<UOPXmlNode> deletedUOPs = new Stack<UOPXmlNode> ();
         private Stack<XmlAttribute> deletedXmlAttributes = new Stack<XmlAttribute> ();
@@ -113,7 +113,7 @@ namespace WPF_XML_Tutorial
                     XmlNode mainTemplateXmlNode = helperXmlDoc.LastChild.LastChild;
                     string templateName = GetTemplateName ( templateFilePath );
                     TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( mainTemplateXmlNode, templateName,
-                        new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ), "UnitOperation" );
+                        new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ), mainTemplateXmlNode.Name );
                     templateXmlNodes.Add ( defaultTemplateXmlNode );
                 }
             }
@@ -1552,7 +1552,7 @@ namespace WPF_XML_Tutorial
             else
             {
                 // Ask user if they want to save templates
-                if ( templateXmlNodes.Count > 1 )
+                if ( NewTemplateExists() )
                 {
                     string message = "Do you want to save your current templates before exiting the editor?";
                     string header = "Save templates?";
@@ -1574,6 +1574,25 @@ namespace WPF_XML_Tutorial
                 }
                 this.Close ();
             }
+        }
+
+        private bool NewTemplateExists()
+        {
+            string[] templateFilePaths = Directory.GetFiles ( Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates" );
+            List<string> templateNames = new List<string> ();
+            foreach ( string templateFilePath in templateFilePaths )
+            {
+                string templateName = templateFilePath.Substring ( templateFilePath.LastIndexOf ( "\\" ) + 1 );
+                templateNames.Add ( templateName );
+            }
+            foreach ( TemplateXmlNode templateXmlNode in templateXmlNodes )
+            {
+                if ( !templateNames.Contains ( templateXmlNode.Name ) )
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void SaveTemplates( string templateSavePath )
@@ -1910,7 +1929,7 @@ namespace WPF_XML_Tutorial
             PathIDComboBox.Items.Remove ( removeItem );
             ResetAllTabs ();
             RemoveEmptyTabs ();
-            MainTabControl.SelectedIndex = 1;
+            GoToFirstVisibleTab ();
             PathIDComboBox.SelectedIndex = -1;
             currentPathID = -1;
 
@@ -1984,8 +2003,7 @@ namespace WPF_XML_Tutorial
             TabItem activeTab = MainTabControl.SelectedItem as TabItem;
             activeTab.Visibility = Visibility.Collapsed;
             deletedTabs.Push ( activeTab );
-            // Direct user control back to main tab
-            MainTabControl.SelectedIndex = 1;
+            GoToFirstVisibleTab ();
 
             // Make the tab link button disappear
             Button tabLinkButton = null;
@@ -1995,6 +2013,18 @@ namespace WPF_XML_Tutorial
                 {
                     tabLinkButton = curButton;
                     tabLinkButton.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private void GoToFirstVisibleTab()
+        {
+            foreach ( TabItem tabItem in MainTabControl.Items )
+            {
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    MainTabControl.SelectedIndex = MainTabControl.Items.IndexOf ( tabItem );
+                    return;
                 }
             }
         }
@@ -2096,7 +2126,7 @@ namespace WPF_XML_Tutorial
         {
             if ( undoableCommands.Count == 0 )
             {
-                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include creation and deletion of tabs, elements, attributes, and Unit Operations.", "Error" );
+                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include creation and deletion of elements & attributes, as well as deletion of tabs & Unit Operations.", "Error" );
                 return;
             }
 
@@ -2122,14 +2152,6 @@ namespace WPF_XML_Tutorial
 
                 case UndoableType.delElem:
                     message = "Undo previous element deletion?";
-                    break;
-
-                case UndoableType.createUOP:
-                    message = "Undo previous UOP creation?";
-                    break;
-
-                case UndoableType.createTab:
-                    message = "Undo previous tab creation?";
                     break;
 
                 case UndoableType.createAttrib:
@@ -2173,7 +2195,7 @@ namespace WPF_XML_Tutorial
                 case UndoableType.delTab:
                     TabItem deletedTab = deletedTabs.Pop ();
                     deletedTab.Visibility = Visibility.Visible;
-
+                    MainTabControl.SelectedIndex = MainTabControl.Items.IndexOf ( deletedTab );
                     // Make the tab link button appear
                     Button tabLinkButton = null;
                     foreach ( Button curButton in tabLinkButtons )
@@ -2228,15 +2250,7 @@ namespace WPF_XML_Tutorial
                     string elemHeader = deletedElementHeaders.Pop ();
                     AddElementHeader ( elemHeader );
                     break;
-
-                case UndoableType.createUOP:
-                    // TODO
-                    break;
-
-                case UndoableType.createTab:
-                    // TODO
-                    break;
-
+                   
                 case UndoableType.createAttrib:
                     Grid attributeGrid = createdXmlAttributes.Pop ();
                     ( attributeGrid.Parent as ListView ).Items.Remove ( attributeGrid );

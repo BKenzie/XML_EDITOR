@@ -46,6 +46,8 @@ namespace WPF_XML_Tutorial
                 ListBoxItem blankTemplateListBoxItem = new ListBoxItem ();
                 blankTemplateListBoxItem.Content = "Create a new template";
                 blankTemplateListBoxItem.FontSize = 20;
+                blankTemplateListBoxItem.FontWeight = FontWeights.Bold;
+                //blankTemplateListBoxItem.Foreground = new SolidColorBrush ( Colors.DarkGray );
                 blankTemplateListBoxItem.MouseDoubleClick += new MouseButtonEventHandler ( mouseDoubleClick );
                 TemplatesListBox.Items.Add ( blankTemplateListBoxItem );
                 TemplatesListBox.Items.Add ( new Separator () );
