@@ -82,6 +82,8 @@
         <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
         <TextBlock Name="PathIDTextBlock" HorizontalAlignment="Left" Margin="7,29,0,0" TextWrapping="Wrap" Text="UOP PathID:" VerticalAlignment="Top" FontSize="16"/>
         <ComboBox Name="PathIDComboBox" x:FieldModifier="public" HorizontalAlignment="Left" Margin="99,30,0,0" VerticalAlignment="Top" Width="100"/>
+        <TextBlock x:Name="ActiveUOPTextBlock" HorizontalAlignment="Left" Margin="7,55,0,0" TextWrapping="Wrap" Text="Active UOP:" VerticalAlignment="Top" FontSize="16"/>
+        <TextBlock x:Name="ActiveUOPNameTextBlock" HorizontalAlignment="Left" Margin="99,55,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="16"/>
 
 
     </Grid>

@@ -150,12 +150,7 @@
     <Resource Include="Images\STEMCELL_Color_JPG.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\UnitOperationTemplate.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\BlankTemplate.xml">
-      <SubType>Designer</SubType>
-    </Resource>
+    <Resource Include="Resources\Templates\UnitOperationTemplate.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

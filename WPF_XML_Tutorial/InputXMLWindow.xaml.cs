@@ -101,7 +101,7 @@ namespace WPF_XML_Tutorial
             // Accesses the UnitOperationTemplate.xml file
             // There is likely a more direct way to do this
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\UnitOperationTemplate.xml" );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\UnitOperationTemplate.xml" );
             mainWindow.Show ();
             mainWindow.HighlightPathIDSection ();
             this.Close ();

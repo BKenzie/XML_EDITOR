@@ -100,20 +100,22 @@ namespace WPF_XML_Tutorial
             {
                 // If existingTemplates is null, add the starting templates
                 XmlDocument helperXmlDoc = new XmlDocument ();
-                string defaultUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\UnitOperationTemplate.xml";
-                helperXmlDoc.Load ( defaultUOPTemplateFilePath );
-                string strHeaders = helperXmlDoc.LastChild.FirstChild.InnerText;
-                XmlNode defaultUOPTemplateXmlNode = helperXmlDoc.LastChild.LastChild; // retrieve just the default template <UnitOperation> node
-                TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( defaultUOPTemplateXmlNode, "Default cSep template",
-                    new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ), "UnitOperation" );
-                templateXmlNodes.Add ( defaultTemplateXmlNode );
-
-                //string blankUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\BlankTemplate.xml";
-                //helperXmlDoc.Load ( blankUOPTemplateFilePath );
-                //List<string> strBlankTemplateHeaders = new List<string> ();
-                //XmlNode blankUOPTemplateXmlNode = helperXmlDoc.LastChild;
-                //TemplateXmlNode blankTemplateXmlNode = new TemplateXmlNode ( blankUOPTemplateXmlNode, "Blank Template",  strBlankTemplateHeaders);
-                //templateXmlNodes.Add ( blankTemplateXmlNode );
+                // string defaultUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates\UnitOperationTemplate.xml";
+                string[] templateFilePaths = Directory.GetFiles ( Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates" );
+                foreach ( string templateFilePath in templateFilePaths )
+                {
+                    if ( templateFilePath.Substring ( templateFilePath.LastIndexOf ( "." ) ) != ".xml" )
+                    {
+                        throw new Exception ( "Error -- Directory .\\Resources\\Templates can only contain .xml files." );
+                    }
+                    helperXmlDoc.Load ( templateFilePath );
+                    string strHeaders = helperXmlDoc.LastChild.FirstChild.InnerText;
+                    XmlNode mainTemplateXmlNode = helperXmlDoc.LastChild.LastChild;
+                    string templateName = GetTemplateName ( templateFilePath );
+                    TemplateXmlNode defaultTemplateXmlNode = new TemplateXmlNode ( mainTemplateXmlNode, templateName,
+                        new List<string> ( strHeaders.Split ( ',' ).Select ( s => s.Replace ( " ", "" ) ) ), "UnitOperation" );
+                    templateXmlNodes.Add ( defaultTemplateXmlNode );
+                }
             }
 
             if ( isTemplateWindow )
@@ -123,6 +125,7 @@ namespace WPF_XML_Tutorial
                 StemCell_Logo.Visibility = Visibility.Hidden;
                 PathIDComboBox.Visibility = Visibility.Hidden;
                 PathIDTextBlock.Visibility = Visibility.Hidden;
+                ActiveUOPTextBlock.Visibility = Visibility.Hidden;
                 mainEditorWindow = caller;
                 this.isTemplateWindow = true;
                 this.templateXmlNode = templateXmlNodeParam;
@@ -248,6 +251,12 @@ namespace WPF_XML_Tutorial
                 }
                 FinalLogic ();
             }
+        }
+
+        // Helper function
+        private string GetTemplateName( string templateFilePath )
+        {
+            return templateFilePath.Substring ( templateFilePath.LastIndexOf ( '\\' ) + 1 );
         }
 
         // Helper function
@@ -1334,6 +1343,10 @@ namespace WPF_XML_Tutorial
                     UnHighlightPathIDSection ();
                 }
             }
+            else
+            {
+                ActiveUOPNameTextBlock.Text = "";
+            }
             RepopulateTextBoxes ();      
         }
 
@@ -1423,23 +1436,19 @@ namespace WPF_XML_Tutorial
                 currentPathID = (int) pathID;
             }
             XmlNode unitOperation = null;
-            // Get proper XmlNode for UOP, PathIDs must be the same
-            foreach ( UOPXmlNode UOPXmlNode in UOPXmlNodes)
-            {
-                if ( UOPXmlNode.PathID == pathID )
-                {
-                    unitOperation = UOPXmlNode.XmlNode;
-                    this.activeMainNodeName = UOPXmlNode.MainNodeName;
-                    this.tabHeaders = UOPXmlNode.TabHeaders;
-                }
-            }
+
+            UOPXmlNode UOPXmlNode = GetUOPXmlNodeWithPathID ( pathID );
+            unitOperation = UOPXmlNode.XmlNode;
+            this.activeMainNodeName = UOPXmlNode.MainNodeName;
+            this.tabHeaders = UOPXmlNode.TabHeaders;
+            ActiveUOPNameTextBlock.Text = activeMainNodeName;
+            
             // Now get corresponding tabItem..
             TabItem UOPTabItem = GetTabItemWithHeader ( activeMainNodeName );
             if ( unitOperation == null )
             {
                 throw new Exception ( "Error: var unitOperation should not be null." );
             }
-
             RecursiveParseTabInfo ( UOPTabItem, unitOperation );
             RemoveEmptyTabs ();
             PopulateTabLinkButtons ();
@@ -1457,6 +1466,19 @@ namespace WPF_XML_Tutorial
                     break;
                 }
             }
+        }
+
+        private UOPXmlNode GetUOPXmlNodeWithPathID( int? pathID )
+        {
+            // Get proper XmlNode for UOP, PathIDs must be the same
+            foreach ( UOPXmlNode UOPXmlNode in UOPXmlNodes )
+            {
+                if ( UOPXmlNode.PathID == pathID )
+                {
+                    return UOPXmlNode;
+                }
+            }
+            return null;
         }
 
         // Helper called whenever the active UOP is changed
@@ -1529,7 +1551,60 @@ namespace WPF_XML_Tutorial
             }
             else
             {
+                // Ask user if they want to save templates
+                if ( templateXmlNodes.Count > 1 )
+                {
+                    string message = "Do you want to save your current templates before exiting the editor?";
+                    string header = "Save templates?";
+                    MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+                    MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+                    switch ( msgBoxResult )
+                    {
+                        case MessageBoxResult.Yes:
+                            // Save templates
+                            string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
+                            string templateSavePath = projectFilePath + @"\Resources\Templates\";
+                            SaveTemplates ( templateSavePath );
+                            break;
+                        case MessageBoxResult.No:
+                            break;
+                        case MessageBoxResult.Cancel:
+                            return;
+                    }
+                }
                 this.Close ();
+            }
+        }
+
+        private void SaveTemplates( string templateSavePath )
+        {
+            foreach ( TemplateXmlNode template in templateXmlNodes )
+            {
+                XmlDocument xmlDoc = new XmlDocument ();
+                // Get template's main xml element body
+                xmlDoc.LoadXml ( template.XmlNode.OuterXml );
+                XmlElement mainTemplateXmlElement = xmlDoc.DocumentElement;
+                // Set root for xml document
+                xmlDoc.LoadXml ( xmlDoc.CreateElement ( "root" ).OuterXml );
+                // Create and append <Tabs_XEDITOR> xml element
+                string strTabsXEDITOR = String.Join ( ",", template.TabHeaders.ToArray() );
+                XmlElement tabsXEDITORXmlElement = xmlDoc.CreateElement ( "Tabs_XEDITOR" );
+                tabsXEDITORXmlElement.InnerText = strTabsXEDITOR;
+                xmlDoc.DocumentElement.AppendChild ( tabsXEDITORXmlElement );
+                // Append template main xml element
+                xmlDoc.DocumentElement.AppendChild ( mainTemplateXmlElement );
+                // Name and save
+                string templateFileName;
+                templateFileName = template.Name.Replace ( " ", "" ).Trim ();
+                if ( !templateFileName.Contains(".") || templateFileName.Substring ( templateFileName.LastIndexOf ( "." ) ) != ".xml" )
+                {
+                    templateFileName = template.Name.Replace ( " ", "" ).Trim () + ".xml";
+                }
+                string curTemplateSavePath = templateSavePath + templateFileName;
+                if ( !File.Exists ( curTemplateSavePath ) )
+                {
+                    xmlDoc.Save ( curTemplateSavePath );
+                }
             }
         }
 
@@ -2011,9 +2086,8 @@ namespace WPF_XML_Tutorial
 
             // Accesses the UnitOperationTemplate.xml file
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
-            // PathIDComboBox = null;
             ResetAllTabs ();
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\UnitOperationTemplate.xml", templateXmlNodes );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\UnitOperationTemplate.xml", templateXmlNodes );
             mainWindow.Show ();
             this.Close ();
         }
@@ -2156,9 +2230,11 @@ namespace WPF_XML_Tutorial
                     break;
 
                 case UndoableType.createUOP:
+                    // TODO
                     break;
 
                 case UndoableType.createTab:
+                    // TODO
                     break;
 
                 case UndoableType.createAttrib:

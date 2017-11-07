@@ -63,7 +63,7 @@ namespace WPF_XML_Tutorial.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&apos;1.0&apos;?&gt;
         ///
-        ///&lt;ActionPaths&gt;
+        ///&lt;root&gt;
         ///
         ///	&lt;Tabs_XEDITOR&gt;
         ///		&lt;Show_Tabs&gt; UnitOperation, ActionPath, ValveState, PumpState, RockerState, MagnetState &lt;/Show_Tabs&gt;
@@ -86,7 +86,7 @@ namespace WPF_XML_Tutorial.Properties {
         ///			&lt;Valve2&gt;&lt;/Valve2&gt;
         ///			&lt;Valve3&gt;&lt;/Valve3&gt;
         ///			&lt;Valve4&gt;&lt;/Valve4&gt;
-        ///			&lt;Bina [rest of string was truncated]&quot;;.
+        ///			&lt;BinaryState [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string UnitOperationTemplate {
             get {
