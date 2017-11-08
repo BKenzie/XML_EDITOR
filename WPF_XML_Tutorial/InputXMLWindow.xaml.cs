@@ -98,10 +98,10 @@ namespace WPF_XML_Tutorial
 
         public void NewXML_Click( object sender, RoutedEventArgs e )
         {
-            // Accesses the UnitOperationTemplate.xml file
+            // Accesses the DefaultcSepTemplate.xml file
             // There is likely a more direct way to do this
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\UnitOperationTemplate.xml" );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\DefaultcSepTemplate.xml" );
             mainWindow.Show ();
             mainWindow.HighlightPathIDSection ();
             this.Close ();

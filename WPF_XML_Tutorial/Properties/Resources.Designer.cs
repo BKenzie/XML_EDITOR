@@ -61,32 +61,32 @@ namespace WPF_XML_Tutorial.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&apos;1.0&apos;?&gt;
-        ///
-        ///&lt;root&gt;
-        ///
-        ///	&lt;Tabs_XEDITOR&gt;
-        ///		&lt;Show_Tabs&gt; UnitOperation, ActionPath, ValveState, PumpState, RockerState, MagnetState &lt;/Show_Tabs&gt;
-        ///	&lt;/Tabs_XEDITOR&gt;
-        ///
-        ///	&lt;UnitOperation&gt;
-        ///    
-        ///    &lt;PathID&gt;&lt;/PathID&gt;
-        ///
+        ///   Looks up a localized string similar to &lt;root&gt;
+        ///  &lt;Tabs_XEDITOR&gt;UnitOperation,ActionPath,ValveState,PumpState,RockerState,MagnetState&lt;/Tabs_XEDITOR&gt;
+        ///  &lt;UnitOperation&gt;
+        ///    &lt;PathID&gt;
+        ///    &lt;/PathID&gt;
         ///    &lt;ActionPath&gt;
-        ///      &lt;help&gt;&lt;/help&gt;
-        ///      &lt;Source&gt;&lt;/Source&gt;
-        ///      &lt;Destination&gt;&lt;/Destination&gt;
-        ///      &lt;Via_Path&gt;&lt;/Via_Path&gt;
+        ///      &lt;help&gt;
+        ///      &lt;/help&gt;
+        ///      &lt;Source&gt;
+        ///      &lt;/Source&gt;
+        ///      &lt;Destination&gt;
+        ///      &lt;/Destination&gt;
+        ///      &lt;Via_Path&gt;
+        ///      &lt;/Via_Path&gt;
         ///    &lt;/ActionPath&gt;
-        ///
         ///    &lt;ValveState&gt;
-        ///			&lt;help&gt;&lt;/help&gt;
-        ///			&lt;Valve1&gt;&lt;/Valve1&gt;
-        ///			&lt;Valve2&gt;&lt;/Valve2&gt;
-        ///			&lt;Valve3&gt;&lt;/Valve3&gt;
-        ///			&lt;Valve4&gt;&lt;/Valve4&gt;
-        ///			&lt;BinaryState [rest of string was truncated]&quot;;.
+        ///      &lt;help&gt;
+        ///      &lt;/help&gt;
+        ///      &lt;Valve1&gt;
+        ///      &lt;/Valve1&gt;
+        ///      &lt;Valve2&gt;
+        ///      &lt;/Valve2&gt;
+        ///      &lt;Valve3&gt;
+        ///      &lt;/Valve3&gt;
+        ///      &lt;Valve4&gt;
+        ///      &lt;/Valve [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string UnitOperationTemplate {
             get {

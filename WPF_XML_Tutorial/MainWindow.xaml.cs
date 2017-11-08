@@ -100,7 +100,7 @@ namespace WPF_XML_Tutorial
             {
                 // If existingTemplates is null, add the starting templates
                 XmlDocument helperXmlDoc = new XmlDocument ();
-                // string defaultUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates\UnitOperationTemplate.xml";
+                // string defaultUOPTemplateFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates\DefaultcSepTemplate.xml";
                 string[] templateFilePaths = Directory.GetFiles ( Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName + @"\Resources\Templates" );
                 foreach ( string templateFilePath in templateFilePaths )
                 {
@@ -445,178 +445,25 @@ namespace WPF_XML_Tutorial
             // Every time a new UnitOperation is sent to this method, it resets all of the current tabs
             if ( xmlNode.Name == activeMainNodeName && ( xmlNode.NodeType == XmlNodeType.Element ) )
             {
-                // Increment number of UOPs parsed
-                UOPsParsed++;
-                parsedPathIDForCurrentUOP = false;
-                // Add UOPXmlNode to UOPXmlNodes, this makes it possible to switch between different UnitOperations
-                int pathId = GetPathID ( xmlNode );
-
-                List<string> curTabHeaders = new List<string> ();
-                foreach ( TabItem curTabItem in MainTabControl.Items.OfType<TabItem> () )
-                {
-                    if ( curTabItem.Visibility == Visibility.Visible )
-                    {
-                        curTabHeaders.Add ( curTabItem.Header as String );
-                    }
-                }
-                UOPXmlNode newUOPXmlNode = new UOPXmlNode ( xmlNode, pathId, curTabHeaders, activeMainNodeName );
-                if ( !UOPXmlNodes.Contains ( newUOPXmlNode ) )
-                {
-                    UOPXmlNodes.Add ( newUOPXmlNode );
-                }
-
-                if ( UOPsParsed > 1 )
-                {
-                    // If given new UnitOperation to parse, window should only display information for new UOP
-                    ResetAllTabs ();
-                }
-                
-                // Do not display activeMainNodeTab
-                tabItem.Visibility = Visibility.Collapsed;
+                HandleParsingUOP ( xmlNode, tabItem );
             }
 
-            // Display attribute header
-            TextBlock attribTitleTextBlock = new TextBlock ();
-            attribTitleTextBlock.Text = "Attributes:";
-            attribTitleTextBlock.FontSize = 16;
-            attribTitleTextBlock.TextDecorations = TextDecorations.Underline;
-            attribTitleTextBlock.FontWeight = FontWeights.Bold;
-            listView.Items.Add ( attribTitleTextBlock );
-
-            #region New attribute button
-
-            Button newAttributeButton = new Button ();
-            newAttributeButton.Content = "Add new";
-            newAttributeButton.IsTabStop = false;
-            newAttributeButton.Click += new RoutedEventHandler ( newAttributeButton_Click );
-            newAttributeButton.Background = new SolidColorBrush ( Colors.LightGray );
-            newAttributeButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
-            newAttributeButton.FontSize = 10;
-            newAttributeButton.Height = 20;
-            newAttributeButton.Width = 50;
-
-            Style customButtonStyleAttrib = new Style ();
-            customButtonStyleAttrib.TargetType = typeof ( Button );
-            MultiDataTrigger triggerAttrib = new MultiDataTrigger ();
-            Condition conditionAttrib = new Condition ();
-            conditionAttrib.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
-            conditionAttrib.Value = true;
-            Setter foregroundSetterAttrib = new Setter ();
-            foregroundSetterAttrib.Property = Button.ForegroundProperty;
-            foregroundSetterAttrib.Value = Brushes.DarkOrange;
-            Setter cursorSetterAttrib = new Setter ();
-            cursorSetterAttrib.Property = Button.CursorProperty;
-            cursorSetterAttrib.Value = Cursors.Hand;
-            Setter textSetterAttrib = new Setter ();
-            textSetterAttrib.Property = Button.FontWeightProperty;
-            textSetterAttrib.Value = FontWeights.ExtraBold;
-
-            triggerAttrib.Conditions.Add ( conditionAttrib );
-            triggerAttrib.Setters.Add ( foregroundSetterAttrib );
-            triggerAttrib.Setters.Add ( cursorSetterAttrib );
-            triggerAttrib.Setters.Add ( textSetterAttrib );
-
-            customButtonStyleAttrib.Triggers.Clear ();
-            customButtonStyleAttrib.Triggers.Add ( triggerAttrib );
-            newAttributeButton.Style = customButtonStyleAttrib;
-            #endregion
-
-            listView.Items.Add ( newAttributeButton );
-
-            // Display all node attributes 
-            if ( xmlNode.Attributes.Count > 0 )
-            {
-                foreach ( XmlAttribute attribute in xmlNode.Attributes )
-                {
-                    Grid newGrid = new Grid ()
-                    {
-                        Width = GRID_WIDTH,
-                    };
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock textBlock = new TextBlock ();
-                    textBlock.Text = attribute.Name + ":";
-                    textBlock.ToolTip = xmlNode.Name + "'s attribute";
-                    try
-                    {
-                        textBlock.Name = attribute.Name;
-                    }
-                    catch(Exception e)
-                    {
-                        continue;
-                    }
-                    
-                    Grid.SetRow ( textBlock, 0 );
-                    Grid.SetColumn ( textBlock, 0 );
-                    newGrid.Children.Add ( textBlock );
-
-                    TextBox textBoxAttrib = new TextBox ();
-                    textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxAttrib.AcceptsReturn = true;
-                    textBoxAttrib.Text = ( attribute.Value );
-                    textBoxAttrib.ToolTip = attribute.Name + " attribute";
-                    Grid.SetRow ( textBoxAttrib, 0 );
-                    Grid.SetColumn ( textBoxAttrib, 1 );
-                    newGrid.Children.Add ( textBoxAttrib );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete attribute";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
-                    newGrid.ContextMenu = rightClickMenu;
-
-                    listView.Items.Add ( newGrid );
-                }
-            }
-
+            // Handle attributes (header, new attibute button, display all xmlNode attributes)
+            HandleAttributes ( xmlNode, listView);
             listView.Items.Add ( new Separator () );
 
-            // If xmlNode contains only text, then display
-            if ( xmlNode.HasChildNodes )
-            {
-                if ( xmlNode.FirstChild.NodeType == XmlNodeType.Text )
-                {
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+            // Handle text field
+            HandleTextField ( xmlNode, listView );
 
-                    TextBlock textBlock = new TextBlock ();
-                    textBlock.Text = xmlNode.Name + ":";
-                    textBlock.Name = xmlNode.Name;
-                    textBlock.ToolTip = "Text field";
-                    Grid.SetRow ( textBlock, 0 );
-                    Grid.SetColumn ( textBlock, 0 );
-                    newGrid.Children.Add ( textBlock );
+            // Handle elements (header, new element button, display all xmlNode elements)
+            HandleElements ( xmlNode, listView );
+            
+            // ListView construction is over, now set as the tabItem content
+            tabItem.Content = listView;
+        }
 
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
-                    textBoxNodeText.ToolTip = "Text field";
-                    textBoxNodeText.AcceptsReturn = true;
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete text element";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
-                    newGrid.ContextMenu = rightClickMenu;
-
-                    listView.Items.Add ( newGrid );
-                }
-            }
-
+        private void HandleElements( XmlNode xmlNode, ListView listView )
+        {
             // Display element header 
             TextBlock elementTitleTextBlock = new TextBlock ();
             elementTitleTextBlock.Text = "Elements:";
@@ -710,7 +557,7 @@ namespace WPF_XML_Tutorial
                     Setter textSetter = new Setter ();
                     textSetter.Property = Button.FontWeightProperty;
                     textSetter.Value = FontWeights.ExtraBold;
-                    
+
                     trigger.Conditions.Add ( condition );
                     trigger.Setters.Add ( foregroundSetter );
                     trigger.Setters.Add ( cursorSetter );
@@ -719,9 +566,9 @@ namespace WPF_XML_Tutorial
                     customButtonStyle.Triggers.Clear ();
                     customButtonStyle.Triggers.Add ( trigger );
                     gotoTab_Button.Style = customButtonStyle;
-                    
+
                     gotoTab_Button.Click += gotoTabButton_Click;
-                    
+
                     Rectangle gotoTabRect = new Rectangle ();
                     gotoTabRect.Fill = new SolidColorBrush ( Colors.Transparent );
                     gotoTabRect.Width = 120;
@@ -742,7 +589,7 @@ namespace WPF_XML_Tutorial
                     TabItem tabItem2 = new TabItem ();
                     foreach ( TabItem curTabItem in tabItems )
                     {
-                        if ( (curTabItem.Header as string) == xmlChildNode.Name )
+                        if ( ( curTabItem.Header as string ) == xmlChildNode.Name )
                         {
                             tabItem2 = curTabItem;
                         }
@@ -754,12 +601,186 @@ namespace WPF_XML_Tutorial
                     // This is where we need to display child node info that doesn't have its own tab
                     // ie ValveState has a <help> child node which should be visible 
                     ParseChildElementWithoutOwnTab ( ref listView, xmlChildNode, false );
-                    
                 }
             }
+        }
 
-            // ListView construction is over, now set as the tabItem content
-            tabItem.Content = listView;
+        private void HandleTextField( XmlNode xmlNode, ListView listView )
+        {
+            // If xmlNode contains only text, then display
+            if ( xmlNode.HasChildNodes )
+            {
+                if ( xmlNode.FirstChild.NodeType == XmlNodeType.Text )
+                {
+                    Grid newGrid = new Grid
+                    {
+                        Width = GRID_WIDTH,
+                    };
+                    newGrid.ShowGridLines = false;
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                    TextBlock textBlock = new TextBlock ();
+                    textBlock.Text = xmlNode.Name + ":";
+                    textBlock.Name = xmlNode.Name;
+                    textBlock.ToolTip = "Text field";
+                    Grid.SetRow ( textBlock, 0 );
+                    Grid.SetColumn ( textBlock, 0 );
+                    newGrid.Children.Add ( textBlock );
+
+                    TextBox textBoxNodeText = new TextBox ();
+                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
+                    textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
+                    textBoxNodeText.ToolTip = "Text field";
+                    textBoxNodeText.AcceptsReturn = true;
+                    Grid.SetRow ( textBoxNodeText, 0 );
+                    Grid.SetColumn ( textBoxNodeText, 1 );
+                    newGrid.Children.Add ( textBoxNodeText );
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete text element";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
+                    listView.Items.Add ( newGrid );
+                }
+            }
+        }
+
+        private void HandleAttributes( XmlNode xmlNode, ListView listView)
+        {
+            // Display attribute header
+            TextBlock attribTitleTextBlock = new TextBlock ();
+            attribTitleTextBlock.Text = "Attributes:";
+            attribTitleTextBlock.FontSize = 16;
+            attribTitleTextBlock.TextDecorations = TextDecorations.Underline;
+            attribTitleTextBlock.FontWeight = FontWeights.Bold;
+            listView.Items.Add ( attribTitleTextBlock );
+
+            #region New attribute button
+
+            Button newAttributeButton = new Button ();
+            newAttributeButton.Content = "Add new";
+            newAttributeButton.IsTabStop = false;
+            newAttributeButton.Click += new RoutedEventHandler ( newAttributeButton_Click );
+            newAttributeButton.Background = new SolidColorBrush ( Colors.LightGray );
+            newAttributeButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
+            newAttributeButton.FontSize = 10;
+            newAttributeButton.Height = 20;
+            newAttributeButton.Width = 50;
+
+            Style customButtonStyleAttrib = new Style ();
+            customButtonStyleAttrib.TargetType = typeof ( Button );
+            MultiDataTrigger triggerAttrib = new MultiDataTrigger ();
+            Condition conditionAttrib = new Condition ();
+            conditionAttrib.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
+            conditionAttrib.Value = true;
+            Setter foregroundSetterAttrib = new Setter ();
+            foregroundSetterAttrib.Property = Button.ForegroundProperty;
+            foregroundSetterAttrib.Value = Brushes.DarkOrange;
+            Setter cursorSetterAttrib = new Setter ();
+            cursorSetterAttrib.Property = Button.CursorProperty;
+            cursorSetterAttrib.Value = Cursors.Hand;
+            Setter textSetterAttrib = new Setter ();
+            textSetterAttrib.Property = Button.FontWeightProperty;
+            textSetterAttrib.Value = FontWeights.ExtraBold;
+
+            triggerAttrib.Conditions.Add ( conditionAttrib );
+            triggerAttrib.Setters.Add ( foregroundSetterAttrib );
+            triggerAttrib.Setters.Add ( cursorSetterAttrib );
+            triggerAttrib.Setters.Add ( textSetterAttrib );
+
+            customButtonStyleAttrib.Triggers.Clear ();
+            customButtonStyleAttrib.Triggers.Add ( triggerAttrib );
+            newAttributeButton.Style = customButtonStyleAttrib;
+            #endregion
+
+            listView.Items.Add ( newAttributeButton );
+
+            // Display all node attributes 
+            if ( xmlNode.Attributes.Count > 0 )
+            {
+                foreach ( XmlAttribute attribute in xmlNode.Attributes )
+                {
+                    Grid newGrid = new Grid ()
+                    {
+                        Width = GRID_WIDTH,
+                    };
+                    newGrid.ShowGridLines = false;
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                    TextBlock textBlock = new TextBlock ();
+                    textBlock.Text = attribute.Name + ":";
+                    textBlock.ToolTip = xmlNode.Name + "'s attribute";
+                    try
+                    {
+                        textBlock.Name = attribute.Name;
+                    }
+                    catch ( Exception e )
+                    {
+                        continue;
+                    }
+
+                    Grid.SetRow ( textBlock, 0 );
+                    Grid.SetColumn ( textBlock, 0 );
+                    newGrid.Children.Add ( textBlock );
+
+                    TextBox textBoxAttrib = new TextBox ();
+                    textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
+                    textBoxAttrib.AcceptsReturn = true;
+                    textBoxAttrib.Text = ( attribute.Value );
+                    textBoxAttrib.ToolTip = attribute.Name + " attribute";
+                    Grid.SetRow ( textBoxAttrib, 0 );
+                    Grid.SetColumn ( textBoxAttrib, 1 );
+                    newGrid.Children.Add ( textBoxAttrib );
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete attribute";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
+                    listView.Items.Add ( newGrid );
+                }
+            }
+        }
+
+        private void HandleParsingUOP( XmlNode xmlNode, TabItem tabItem)
+        {
+            // Increment number of UOPs parsed
+            UOPsParsed++;
+            parsedPathIDForCurrentUOP = false;
+            // Add UOPXmlNode to UOPXmlNodes, this makes it possible to switch between different UnitOperations
+            int pathId = GetPathID ( xmlNode );
+
+            List<string> curTabHeaders = new List<string> ();
+            foreach ( TabItem curTabItem in MainTabControl.Items.OfType<TabItem> () )
+            {
+                if ( curTabItem.Visibility == Visibility.Visible )
+                {
+                    curTabHeaders.Add ( curTabItem.Header as String );
+                }
+            }
+            UOPXmlNode newUOPXmlNode = new UOPXmlNode ( xmlNode, pathId, curTabHeaders, activeMainNodeName );
+            if ( !UOPXmlNodes.Contains ( newUOPXmlNode ) )
+            {
+                UOPXmlNodes.Add ( newUOPXmlNode );
+            }
+
+            if ( UOPsParsed > 1 )
+            {
+                // If given new UnitOperation to parse, window should only display information for new UOP
+                ResetAllTabs ();
+            }
+
+            // Do not display activeMainNodeTab
+            tabItem.Visibility = Visibility.Collapsed;
         }
 
         // Switches keyboard focus to the next textbox. Called for all appropriate textboxes
@@ -862,9 +883,9 @@ namespace WPF_XML_Tutorial
             {
                 if ( xmlChildNode.HasChildNodes )
                 {
-                    // Case that xmlChildNode is not EMPTY
+                    // Case that xmlChildNode is not EMPTY and contains ONLY text
                     // Parse text elements such as <help>, <source>, <destination> etc..
-                    if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text )
+                    if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text && xmlChildNode.ChildNodes.Count == 1 )
                     {
                         Grid newGrid = new Grid { Width = GRID_WIDTH, };
 
@@ -912,7 +933,18 @@ namespace WPF_XML_Tutorial
 
                     // Let's say there is a non-text child element in <UnitOperation> that isn't given its own tab in <Tabs_XEDITOR>
                     // This is where it is handled, because we still want to print its info
-                    if ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
+                    if ( xmlChildNode.NodeType == XmlNodeType.Element && xmlChildNode.ChildNodes.Count > 1 )
+                    {
+                        foreach ( XmlNode subNode in xmlChildNode.ChildNodes )
+                        {
+                            if ( subNode.NodeType == XmlNodeType.Text )
+                            {
+                                // Not supported in current version
+                            }
+                        }
+                    }
+                    if ( ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
+                      || ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text ) && ( xmlChildNode.ChildNodes.Count > 1 ) ) )
                     {
                         Grid newGrid = new Grid
                         {
@@ -940,14 +972,12 @@ namespace WPF_XML_Tutorial
                         deleteItem.Click += DeleteItemWithSubElems_Click;
                         rightClickMenu.Items.Add ( deleteItem );
                         newGrid.ContextMenu = rightClickMenu;
-
                     }
                 }
                 else
                 {
                     // Child node containing no children
-                    // For now, displaying "EMPTY" 
-
+                    // For now, displaying "EMPTY" if it's an empty element
                     if ( xmlChildNode.NodeType != XmlNodeType.Text && xmlChildNode.NodeType != XmlNodeType.Comment ) // Errors otherwise
                     {
                         Grid newGrid = new Grid
@@ -963,7 +993,7 @@ namespace WPF_XML_Tutorial
                         TextBlock nameTextBlock = new TextBlock ();
                         nameTextBlock.Text = xmlChildNode.Name + ":";
                         nameTextBlock.Name = xmlChildNode.Name;
-                        
+
                         Grid.SetRow ( nameTextBlock, 0 );
                         Grid.SetColumn ( nameTextBlock, 0 );
                         newGrid.Children.Add ( nameTextBlock );
@@ -997,7 +1027,6 @@ namespace WPF_XML_Tutorial
                             textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
                         }
                     }
-                    
                 }
             }
 
@@ -2114,10 +2143,10 @@ namespace WPF_XML_Tutorial
                 return;
             }
 
-            // Accesses the UnitOperationTemplate.xml file
+            // Accesses the DefaultcSepTemplate.xml file
             string projectFilePath = Directory.GetParent ( Directory.GetCurrentDirectory () ).Parent.FullName;
             ResetAllTabs ();
-            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\UnitOperationTemplate.xml", templateXmlNodes );
+            MainWindow mainWindow = new MainWindow ( projectFilePath + @"\Resources\Templates\DefaultcSepTemplate.xml", templateXmlNodes );
             mainWindow.Show ();
             this.Close ();
         }

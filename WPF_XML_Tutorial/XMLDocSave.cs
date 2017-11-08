@@ -69,6 +69,10 @@ namespace WPF_XML_Tutorial
                         // Will trigger MainWindow.PathIDChange from the OnSelectedItemChanged event
                         pathIDComboBox.SelectedItem = item;
                     }
+                    else
+                    {
+                        continue;
+                    }
                     curElement = null;
                     mainAttributesPassed = false;
                     xmlTabNodes.Clear ();
@@ -76,8 +80,6 @@ namespace WPF_XML_Tutorial
                     WriteCurrentOpenTabs ( tabItems, -1 );
                     NullifyEmptyNodes ( xmlDoc.LastChild );
                 }
-                // Gets rid of duplicate final ActionPath. Not the cleanest fix
-                xmlDoc.LastChild.RemoveChild ( xmlDoc.LastChild.LastChild );
                 Save ();
             }
         }
@@ -86,7 +88,7 @@ namespace WPF_XML_Tutorial
         {
             foreach ( XmlNode xmlNode in root.ChildNodes )
             {
-                if ( xmlNode.InnerText == "EMPTY" )
+                if ( xmlNode.InnerXml == "EMPTY" )
                 {
                     xmlNode.InnerText = null;
                 }
@@ -126,7 +128,6 @@ namespace WPF_XML_Tutorial
                     WriteTabInfoToXmlNode ( tabItem, xmlTabNode, pathID );
                     xmlTabNodes.Add ( xmlTabNode );
                 }
-                
             }
 
             // Now for each tab, go through and add any sub nodes 
