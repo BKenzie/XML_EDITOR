@@ -527,8 +527,6 @@ namespace WPF_XML_Tutorial
                     newGrid.ShowGridLines = false;
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
                     newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
                     newGrid.RowDefinitions.Add ( new RowDefinition () );
 
                     #region TabLinkButton code
@@ -537,8 +535,6 @@ namespace WPF_XML_Tutorial
                     Button gotoTab_Button = new Button ();
                     gotoTab_Button.Content = xmlChildNode.Name;
                     gotoTab_Button.Tag = xmlChildNode.Name;
-                    gotoTab_Button.Height = 37;
-                    gotoTab_Button.Width = 160;
                     gotoTab_Button.Background = new SolidColorBrush ( Colors.LightGray );
                     gotoTab_Button.BorderBrush = new SolidColorBrush ( Colors.Transparent );
 
@@ -569,16 +565,8 @@ namespace WPF_XML_Tutorial
 
                     gotoTab_Button.Click += gotoTabButton_Click;
 
-                    Rectangle gotoTabRect = new Rectangle ();
-                    gotoTabRect.Fill = new SolidColorBrush ( Colors.Transparent );
-                    gotoTabRect.Width = 120;
-                    gotoTabRect.Height = 14;
-                    Grid.SetRow ( gotoTabRect, 0 );
-                    Grid.SetColumn ( gotoTabRect, 1 );
-                    newGrid.Children.Add ( gotoTabRect );
-
-                    Grid.SetRow ( gotoTab_Button, 1 );
-                    Grid.SetColumn ( gotoTab_Button, 2 );
+                    Grid.SetRow ( gotoTab_Button, 0 );
+                    Grid.SetColumn ( gotoTab_Button, 1 );
                     newGrid.Children.Add ( gotoTab_Button );
                     #endregion
 
@@ -827,209 +815,33 @@ namespace WPF_XML_Tutorial
         // Method for parsing xml info into listVew for a sub-element without it's own tab
         private void ParseChildElementWithoutOwnTab( ref ListView listView, XmlNode xmlChildNode, bool isSubElement )
         {
-            #region PathID code
             // Special behaviour if currently parsing a PathID
             if ( xmlChildNode.Name == "PathID" )
             {
-                if ( this.isTemplateWindow )
-                {
-                    // Do nothing
-                }
-                else
-                {
-                    if ( xmlChildNode.FirstChild == null )
-                    {
-                        // Case that it's parsing an empty PathID xml node
-                        if ( PathIDComboBox.Items.Count == 0 
-                            || Convert.ToString ( ( (ComboBoxItem) PathIDComboBox.Items[PathIDComboBox.Items.Count - 1] ).Content ) != "New UnitOperation" )
-                        {
-                            ComboBoxItem addNewUnitOperationItem = new ComboBoxItem ();
-                            addNewUnitOperationItem.Content = "New UnitOperation";
-                            PathIDComboBox.Items.Add ( addNewUnitOperationItem );
-                            PathIDTextBlock.ToolTip = "Current PathID - Change to switch active UnitOperation";
-                            setUpPathIDComboBox = true;
-                        }
-                    }
-                    else if ( !parsedPathIDForCurrentUOP )
-                    {
-                        parsedPathIDForCurrentUOP = true;
-                        // Add PathID to PathIDComboBox
-                        if ( setUpPathIDComboBox == false )
-                        {
-                            setUpPathIDComboBox = true;
-                            // Initialize PathIDComboBox with event handling for switching paths
-                            ComboBoxItem addNewUnitOperationItem = new ComboBoxItem ();
-                            addNewUnitOperationItem.Content = "New UnitOperation";
-                            PathIDComboBox.Items.Add ( addNewUnitOperationItem );
-                            ComboBoxItem newPathID = new ComboBoxItem ();
-                            newPathID.Content = xmlChildNode.FirstChild.Value;
-                            AddNewPathID ( newPathID );
-                        }
-                        else
-                        {
-                            // Add new PathID to the PathIDComboBox
-                            ComboBoxItem newPathID = new ComboBoxItem ();
-                            newPathID.Content = xmlChildNode.FirstChild.Value;
-                            if ( !ContainsPathID ( PathIDComboBox, xmlChildNode.FirstChild.Value ) )
-                            {
-                                AddNewPathID ( newPathID );
-                            }
-                        }
-                    }
-                }
+                HandleParsingPathID ( xmlChildNode, listView );
             }
             else
-            #endregion
             {
-                if ( xmlChildNode.HasChildNodes )
-                {
-                    // Case that xmlChildNode is not EMPTY and contains ONLY text
-                    // Parse text elements such as <help>, <source>, <destination> etc..
-                    if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text && xmlChildNode.ChildNodes.Count == 1 )
-                    {
-                        Grid newGrid = new Grid { Width = GRID_WIDTH, };
-
-                        newGrid.ShowGridLines = false;
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                        TextBlock nameTextBlock = new TextBlock ();
-                        nameTextBlock.Text = xmlChildNode.Name + ":";
-                        
-                        nameTextBlock.Name = xmlChildNode.Name;
-                        Grid.SetRow ( nameTextBlock, 0 );
-                        Grid.SetColumn ( nameTextBlock, 0 );
-                        newGrid.Children.Add ( nameTextBlock );
-
-                        TextBox textBoxNodeText = new TextBox ();
-                        textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                        textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
-                        textBoxNodeText.AcceptsReturn = true;
-                        Grid.SetRow ( textBoxNodeText, 0 );
-                        Grid.SetColumn ( textBoxNodeText, 1 );
-                        newGrid.Children.Add ( textBoxNodeText );
-
-                        if ( isSubElement )
-                        {
-                            nameTextBlock.ToolTip = "Element (sub)";
-                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
-                        }
-                        else
-                        {
-                            nameTextBlock.ToolTip = "Element";
-                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
-                        }
-
-                        ContextMenu rightClickMenu = new ContextMenu ();
-                        MenuItem deleteItem = new MenuItem ();
-                        deleteItem.Header = "Delete element";
-                        deleteItem.Click += DeleteItem_Click;
-                        rightClickMenu.Items.Add ( deleteItem );
-                        newGrid.ContextMenu = rightClickMenu;
-
-                        listView.Items.Add ( newGrid );
-                    }
-
-                    // Let's say there is a non-text child element in <UnitOperation> that isn't given its own tab in <Tabs_XEDITOR>
-                    // This is where it is handled, because we still want to print its info
-                    if ( xmlChildNode.NodeType == XmlNodeType.Element && xmlChildNode.ChildNodes.Count > 1 )
-                    {
-                        foreach ( XmlNode subNode in xmlChildNode.ChildNodes )
-                        {
-                            if ( subNode.NodeType == XmlNodeType.Text )
-                            {
-                                // Not supported in current version
-                            }
-                        }
-                    }
-                    if ( ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
-                      || ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text ) && ( xmlChildNode.ChildNodes.Count > 1 ) ) )
-                    {
-                        Grid newGrid = new Grid
-                        {
-                            Width = GRID_WIDTH,
-                        };
-
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                        TextBlock subNodeNameTextBlock = new TextBlock ();
-                        subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
-                        subNodeNameTextBlock.FontSize = 16;
-                        subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
-                        subNodeNameTextBlock.FontWeight = FontWeights.Bold;
-
-                        Grid.SetColumn ( subNodeNameTextBlock, 0 );
-                        Grid.SetRow ( subNodeNameTextBlock, 0 );
-                        newGrid.Children.Add ( subNodeNameTextBlock );
-
-                        listView.Items.Add ( newGrid );
-
-                        ContextMenu rightClickMenu = new ContextMenu ();
-                        MenuItem deleteItem = new MenuItem ();
-                        deleteItem.Header = "Delete element";
-                        deleteItem.Click += DeleteItemWithSubElems_Click;
-                        rightClickMenu.Items.Add ( deleteItem );
-                        newGrid.ContextMenu = rightClickMenu;
-                    }
-                }
-                else
-                {
-                    // Child node containing no children
-                    // For now, displaying "EMPTY" if it's an empty element
-                    if ( xmlChildNode.NodeType != XmlNodeType.Text && xmlChildNode.NodeType != XmlNodeType.Comment ) // Errors otherwise
-                    {
-                        Grid newGrid = new Grid
-                        {
-                            Width = GRID_WIDTH,
-                        };
-
-                        newGrid.ShowGridLines = false;
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                        TextBlock nameTextBlock = new TextBlock ();
-                        nameTextBlock.Text = xmlChildNode.Name + ":";
-                        nameTextBlock.Name = xmlChildNode.Name;
-
-                        Grid.SetRow ( nameTextBlock, 0 );
-                        Grid.SetColumn ( nameTextBlock, 0 );
-                        newGrid.Children.Add ( nameTextBlock );
-
-                        TextBox textBoxNodeText = new TextBox ();
-                        textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                        textBoxNodeText.AppendText ( "EMPTY" );
-                        textBoxNodeText.AcceptsReturn = true;
-                        textBoxNodeText.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
-                        Grid.SetRow ( textBoxNodeText, 0 );
-                        Grid.SetColumn ( textBoxNodeText, 1 );
-                        newGrid.Children.Add ( textBoxNodeText );
-
-                        ContextMenu rightClickMenu = new ContextMenu ();
-                        MenuItem deleteItem = new MenuItem ();
-                        deleteItem.Header = "Delete element";
-                        deleteItem.Click += DeleteItem_Click;
-                        rightClickMenu.Items.Add ( deleteItem );
-                        newGrid.ContextMenu = rightClickMenu;
-
-                        listView.Items.Add ( newGrid );
-
-                        if ( isSubElement )
-                        {
-                            nameTextBlock.ToolTip = "Empty element (sub)";
-                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
-                        }
-                        else
-                        {
-                            nameTextBlock.ToolTip = "Empty element";
-                            textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
-                        }
-                    }
-                }
+                HandleParsingElements ( xmlChildNode, listView, isSubElement );
             }
 
+            HandleParsingSubAttributes ( xmlChildNode, listView );
+
+            foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
+            {
+                ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true );
+            }
+
+            // Insert separator at the end of a non-text child node 
+            if ( isSubElement && isLastSubElement ( xmlChildNode ) &&
+                ( xmlChildNode.NodeType != XmlNodeType.Text ) )
+            {
+                listView.Items.Add ( new Separator () );
+            }
+        }
+
+        private void HandleParsingSubAttributes( XmlNode xmlChildNode, ListView listView )
+        {
             // Display attributes, since in this case the node will not have it's own tab to show them in
             if ( xmlChildNode.Attributes != null )
             {
@@ -1075,17 +887,206 @@ namespace WPF_XML_Tutorial
                     }
                 }
             }
+        }
 
-            foreach ( XmlNode xmlGrandChildNode in xmlChildNode.ChildNodes )
+        private void HandleParsingElements( XmlNode xmlChildNode, ListView listView, bool isSubElement )
+        {
+            if ( xmlChildNode.HasChildNodes )
             {
-                ParseChildElementWithoutOwnTab ( ref listView, xmlGrandChildNode, true );
+                // Case that xmlChildNode is not EMPTY and contains ONLY text
+                // Parse text elements such as <help>, <source>, <destination> etc..
+                if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text && xmlChildNode.ChildNodes.Count == 1 )
+                {
+                    Grid newGrid = new Grid { Width = GRID_WIDTH, };
+
+                    newGrid.ShowGridLines = false;
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                    TextBlock nameTextBlock = new TextBlock ();
+                    nameTextBlock.Text = xmlChildNode.Name + ":";
+
+                    nameTextBlock.Name = xmlChildNode.Name;
+                    Grid.SetRow ( nameTextBlock, 0 );
+                    Grid.SetColumn ( nameTextBlock, 0 );
+                    newGrid.Children.Add ( nameTextBlock );
+
+                    TextBox textBoxNodeText = new TextBox ();
+                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
+                    textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
+                    textBoxNodeText.AcceptsReturn = true;
+                    Grid.SetRow ( textBoxNodeText, 0 );
+                    Grid.SetColumn ( textBoxNodeText, 1 );
+                    newGrid.Children.Add ( textBoxNodeText );
+
+                    if ( isSubElement )
+                    {
+                        nameTextBlock.ToolTip = "Element (sub)";
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
+                    }
+                    else
+                    {
+                        nameTextBlock.ToolTip = "Element";
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
+                    }
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete element";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
+                    listView.Items.Add ( newGrid );
+                }
+
+                // Let's say there is a non-text child element in <UnitOperation> that isn't given its own tab in <Tabs_XEDITOR>
+                // This is where it is handled, because we still want to print its info
+                if ( xmlChildNode.NodeType == XmlNodeType.Element && xmlChildNode.ChildNodes.Count > 1 )
+                {
+                    foreach ( XmlNode subNode in xmlChildNode.ChildNodes )
+                    {
+                        if ( subNode.NodeType == XmlNodeType.Text )
+                        {
+                            // Not supported in current version
+                        }
+                    }
+                }
+                if ( ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
+                  || ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text ) && ( xmlChildNode.ChildNodes.Count > 1 ) ) )
+                {
+                    Grid newGrid = new Grid
+                    {
+                        Width = GRID_WIDTH,
+                    };
+
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                    TextBlock subNodeNameTextBlock = new TextBlock ();
+                    subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
+                    subNodeNameTextBlock.FontSize = 16;
+                    subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
+                    subNodeNameTextBlock.FontWeight = FontWeights.Bold;
+
+                    Grid.SetColumn ( subNodeNameTextBlock, 0 );
+                    Grid.SetRow ( subNodeNameTextBlock, 0 );
+                    newGrid.Children.Add ( subNodeNameTextBlock );
+
+                    listView.Items.Add ( newGrid );
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete element";
+                    deleteItem.Click += DeleteItemWithSubElems_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+                }
             }
-
-            // Insert separator at the end of a non-text child node 
-            if ( isSubElement && isLastSubElement ( xmlChildNode ) &&
-                ( xmlChildNode.NodeType != XmlNodeType.Text ) )
+            else
             {
-                listView.Items.Add ( new Separator () );
+                // Child node containing no children
+                // For now, displaying "EMPTY" if it's an empty element
+                if ( xmlChildNode.NodeType != XmlNodeType.Text && xmlChildNode.NodeType != XmlNodeType.Comment ) // Errors otherwise
+                {
+                    Grid newGrid = new Grid
+                    {
+                        Width = GRID_WIDTH,
+                    };
+
+                    newGrid.ShowGridLines = false;
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
+                    newGrid.RowDefinitions.Add ( new RowDefinition () );
+
+                    TextBlock nameTextBlock = new TextBlock ();
+                    nameTextBlock.Text = xmlChildNode.Name + ":";
+                    nameTextBlock.Name = xmlChildNode.Name;
+
+                    Grid.SetRow ( nameTextBlock, 0 );
+                    Grid.SetColumn ( nameTextBlock, 0 );
+                    newGrid.Children.Add ( nameTextBlock );
+
+                    TextBox textBoxNodeText = new TextBox ();
+                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
+                    textBoxNodeText.AppendText ( "EMPTY" );
+                    textBoxNodeText.AcceptsReturn = true;
+                    textBoxNodeText.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
+                    Grid.SetRow ( textBoxNodeText, 0 );
+                    Grid.SetColumn ( textBoxNodeText, 1 );
+                    newGrid.Children.Add ( textBoxNodeText );
+
+                    ContextMenu rightClickMenu = new ContextMenu ();
+                    MenuItem deleteItem = new MenuItem ();
+                    deleteItem.Header = "Delete element";
+                    deleteItem.Click += DeleteItem_Click;
+                    rightClickMenu.Items.Add ( deleteItem );
+                    newGrid.ContextMenu = rightClickMenu;
+
+                    listView.Items.Add ( newGrid );
+
+                    if ( isSubElement )
+                    {
+                        nameTextBlock.ToolTip = "Empty element (sub)";
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
+                    }
+                    else
+                    {
+                        nameTextBlock.ToolTip = "Empty element";
+                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
+                    }
+                }
+            }
+        }
+
+        private void HandleParsingPathID( XmlNode xmlChildNode, ListView listView )
+        {
+            if ( this.isTemplateWindow )
+            {
+                // Do nothing
+            }
+            else
+            {
+                if ( xmlChildNode.FirstChild == null )
+                {
+                    // Case that it's parsing an empty PathID xml node
+                    if ( PathIDComboBox.Items.Count == 0
+                        || Convert.ToString ( ( (ComboBoxItem) PathIDComboBox.Items[PathIDComboBox.Items.Count - 1] ).Content ) != "New UnitOperation" )
+                    {
+                        ComboBoxItem addNewUnitOperationItem = new ComboBoxItem ();
+                        addNewUnitOperationItem.Content = "New UnitOperation";
+                        PathIDComboBox.Items.Add ( addNewUnitOperationItem );
+                        PathIDTextBlock.ToolTip = "Current PathID - Change to switch active UnitOperation";
+                        setUpPathIDComboBox = true;
+                    }
+                }
+                else if ( !parsedPathIDForCurrentUOP )
+                {
+                    parsedPathIDForCurrentUOP = true;
+                    // Add PathID to PathIDComboBox
+                    if ( setUpPathIDComboBox == false )
+                    {
+                        setUpPathIDComboBox = true;
+                        // Initialize PathIDComboBox with event handling for switching paths
+                        ComboBoxItem addNewUnitOperationItem = new ComboBoxItem ();
+                        addNewUnitOperationItem.Content = "New UnitOperation";
+                        PathIDComboBox.Items.Add ( addNewUnitOperationItem );
+                        ComboBoxItem newPathID = new ComboBoxItem ();
+                        newPathID.Content = xmlChildNode.FirstChild.Value;
+                        AddNewPathID ( newPathID );
+                    }
+                    else
+                    {
+                        // Add new PathID to the PathIDComboBox
+                        ComboBoxItem newPathID = new ComboBoxItem ();
+                        newPathID.Content = xmlChildNode.FirstChild.Value;
+                        if ( !ContainsPathID ( PathIDComboBox, xmlChildNode.FirstChild.Value ) )
+                        {
+                            AddNewPathID ( newPathID );
+                        }
+                    }
+                }
             }
         }
 
@@ -2455,6 +2456,20 @@ namespace WPF_XML_Tutorial
             RecursiveParseTabInfo ( newTabItem1, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
             RecursiveParseTabInfo ( newTabItem2, new XmlDocument ().CreateNode ( XmlNodeType.Element, strNodeName, "" ) );
             MainTabControl.SelectedItem = newTabItem1;
+        }
+
+        private void MainWindow_SizeChanged( object sender, SizeChangedEventArgs e )
+        {
+            if ( this.ActualWidth <= 747 )
+            {
+                StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Left;
+                StemCellLogoBorder.Margin = new Thickness ( 207, 0, 0, 0 );
+            }
+            else
+            {
+                StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Center;
+                StemCellLogoBorder.Margin = new Thickness ( 158, 0, 133, 0 );
+            }
         }
     }
 }
