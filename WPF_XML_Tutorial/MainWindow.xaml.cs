@@ -936,6 +936,11 @@ namespace WPF_XML_Tutorial
                     deleteItem.Header = "Delete element";
                     deleteItem.Click += DeleteItem_Click;
                     rightClickMenu.Items.Add ( deleteItem );
+                    MenuItem sendMenuItem = new MenuItem ();
+                    sendMenuItem.Header = "Send to own tab";
+                    sendMenuItem.Click += SendToOwnTabItem_Click;
+                    rightClickMenu.Items.Add ( sendMenuItem );
+
                     newGrid.ContextMenu = rightClickMenu;
 
                     listView.Items.Add ( newGrid );
@@ -979,6 +984,7 @@ namespace WPF_XML_Tutorial
                     ContextMenu rightClickMenu = new ContextMenu ();
                     MenuItem deleteItem = new MenuItem ();
                     deleteItem.Header = "Delete element";
+
                     deleteItem.Click += DeleteItemWithSubElems_Click;
                     rightClickMenu.Items.Add ( deleteItem );
                     newGrid.ContextMenu = rightClickMenu;
@@ -1022,6 +1028,10 @@ namespace WPF_XML_Tutorial
                     deleteItem.Header = "Delete element";
                     deleteItem.Click += DeleteItem_Click;
                     rightClickMenu.Items.Add ( deleteItem );
+                    MenuItem sendMenuItem = new MenuItem ();
+                    sendMenuItem.Header = "Send to own tab";
+                    sendMenuItem.Click += SendToOwnTabItem_Click;
+                    rightClickMenu.Items.Add ( sendMenuItem );
                     newGrid.ContextMenu = rightClickMenu;
 
                     listView.Items.Add ( newGrid );
@@ -1785,6 +1795,10 @@ namespace WPF_XML_Tutorial
             deleteItem.Header = "Delete element";
             deleteItem.Click += DeleteItem_Click;
             rightClickMenu.Items.Add ( deleteItem );
+            MenuItem sendItem = new MenuItem ();
+            sendItem.Header = "Send to own tab";
+            sendItem.Click += SendToOwnTabItem_Click;
+            rightClickMenu.Items.Add ( sendItem );
             newGrid.ContextMenu = rightClickMenu;
 
             if ( isSubElem )
@@ -1805,6 +1819,16 @@ namespace WPF_XML_Tutorial
                 createdXmlElements.Push ( newGrid );
                 undoableCommands.Push ( UndoableType.createElem );
             }
+        }
+
+        private void SendToOwnTabItem_Click( object sender, RoutedEventArgs e )
+        {
+            MenuItem sendItem = (MenuItem) sender;
+            Grid grid = ( sendItem.Parent as ContextMenu ).PlacementTarget as Grid;
+            string newTabName = grid.Children.OfType<TextBlock> ().First ().Text.Replace ( ":", "" );
+            NewTabEntered ( newTabName );
+            RemoveGridFromListViewParent ( grid );
+            grid = null;
         }
 
         // Helper function
@@ -2335,6 +2359,11 @@ namespace WPF_XML_Tutorial
 
         private void SaveTemplate_Click( object sender, RoutedEventArgs e )
         {
+            if ( MainTabControl.Items.Count == 1 )
+            {
+                MessageBox.Show ( "Not able to save a template with no elements.", "Error" );
+                return;
+            }
             XmlDocSave helperDocSave = new XmlDocSave ( new XmlDocument (), "", this );
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
@@ -2370,7 +2399,10 @@ namespace WPF_XML_Tutorial
 
         public void NewTabEntered( string tabName )
         {
-            templateTabsMenuItem.FontWeight = FontWeights.Normal;
+            if ( isTemplateWindow )
+            {
+                templateTabsMenuItem.FontWeight = FontWeights.Normal;
+            }
 
             TabItem newTabItem1 = new TabItem ();
             newTabItem1.Header = tabName;
@@ -2469,6 +2501,23 @@ namespace WPF_XML_Tutorial
             {
                 StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Center;
                 StemCellLogoBorder.Margin = new Thickness ( 158, 0, 133, 0 );
+            }
+
+            // Change grid sizes
+            foreach ( TabItem tabItem in MainTabControl.Items )
+            {
+                foreach ( Grid grid in (tabItem.Content as ListView).Items.OfType<Grid>() )
+                {
+                    grid.Width = this.ActualWidth - 33;
+                    if ( this.ActualWidth > ( GRID_WIDTH / 2 ) + 100 )
+                    {
+                        grid.ColumnDefinitions[0].Width = new GridLength ( GRID_WIDTH / 2 );
+                    }
+                    else
+                    {
+                        grid.ColumnDefinitions[0].Width = new GridLength ();
+                    }
+                }
             }
         }
     }
