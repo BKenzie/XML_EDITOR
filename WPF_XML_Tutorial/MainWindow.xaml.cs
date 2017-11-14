@@ -33,8 +33,8 @@ namespace WPF_XML_Tutorial
         private List<UOPXmlNode> UOPXmlNodes = new List<UOPXmlNode> ();
         private List<TemplateXmlNode> templateXmlNodes = new List<TemplateXmlNode> ();
 
-        private Stack<UndoableType> undoableCommands = new Stack<UndoableType> ();
-        private enum UndoableType { delUOP, delTab, delElem, createElem, createAttrib, delAttrib, delSubAttrib, delElemHeader };
+        private UndoableType undoableCommand = UndoableType.none;
+        private enum UndoableType { none, delUOP, delTab, delElem, createElem, createAttrib, delAttrib, delSubAttrib, delElemHeader };
         private Stack<TabItem> deletedTabs = new Stack<TabItem> ();
         private Stack<UOPXmlNode> deletedUOPs = new Stack<UOPXmlNode> ();
         private Stack<XmlAttribute> deletedXmlAttributes = new Stack<XmlAttribute> ();
@@ -122,10 +122,11 @@ namespace WPF_XML_Tutorial
             {
                 MainWindowMenuBar.Height = 28;
                 TemplateWindowHeader.Visibility = Visibility.Visible;
+                ActiveUOPNameTextBox.Visibility = Visibility.Hidden;
                 StemCell_Logo.Visibility = Visibility.Hidden;
                 PathIDComboBox.Visibility = Visibility.Hidden;
                 PathIDTextBlock.Visibility = Visibility.Hidden;
-                ActiveUOPTextBlock.Visibility = Visibility.Hidden;
+                MainTabControl.Margin = new Thickness ( 0, 78, 0, 0 );
                 mainEditorWindow = caller;
                 this.isTemplateWindow = true;
                 this.templateXmlNode = templateXmlNodeParam;
@@ -135,7 +136,7 @@ namespace WPF_XML_Tutorial
                 XmlNode importNode = xml.OwnerDocument.ImportNode ( node, true );
                 xml.AppendChild( importNode );
                 xmlDoc.AppendChild ( xml );
-                tabHeaders = templateXmlNodeParam.TabHeaders;
+                tabHeaders = CopyRefStringList ( templateXmlNodeParam.TabHeaders );
                 foreach ( string header in tabHeaders )
                 {
                     TabItem newTabItem = new TabItem ();
@@ -154,6 +155,7 @@ namespace WPF_XML_Tutorial
                 RemoveUOP.Visibility = Visibility.Collapsed;
                 DeleteMenu.Visibility = Visibility.Collapsed;
                 Save_Button.Visibility = Visibility.Collapsed;
+                New_Button.Visibility = Visibility.Collapsed;
 
                 MenuItem TabMenuOptions = new MenuItem ();
                 templateTabsMenuItem = TabMenuOptions;
@@ -251,6 +253,17 @@ namespace WPF_XML_Tutorial
                 }
                 FinalLogic ();
             }
+        }
+
+        private List<string> CopyRefStringList( List<string> originalList )
+        {
+            List<string> copyList = new List<string> ();
+            foreach ( string str in originalList )
+            {
+                string copyStr = String.Copy ( str );
+                copyList.Add ( copyStr );
+            }
+            return copyList;
         }
 
         // Helper function
@@ -936,10 +949,10 @@ namespace WPF_XML_Tutorial
                     deleteItem.Header = "Delete element";
                     deleteItem.Click += DeleteItem_Click;
                     rightClickMenu.Items.Add ( deleteItem );
-                    MenuItem sendMenuItem = new MenuItem ();
-                    sendMenuItem.Header = "Send to own tab";
-                    sendMenuItem.Click += SendToOwnTabItem_Click;
-                    rightClickMenu.Items.Add ( sendMenuItem );
+                    // MenuItem sendMenuItem = new MenuItem ();
+                    // sendMenuItem.Header = "Send to own tab";
+                    // sendMenuItem.Click += SendToOwnTabItem_Click;
+                    // rightClickMenu.Items.Add ( sendMenuItem );
 
                     newGrid.ContextMenu = rightClickMenu;
 
@@ -1028,10 +1041,10 @@ namespace WPF_XML_Tutorial
                     deleteItem.Header = "Delete element";
                     deleteItem.Click += DeleteItem_Click;
                     rightClickMenu.Items.Add ( deleteItem );
-                    MenuItem sendMenuItem = new MenuItem ();
-                    sendMenuItem.Header = "Send to own tab";
-                    sendMenuItem.Click += SendToOwnTabItem_Click;
-                    rightClickMenu.Items.Add ( sendMenuItem );
+                    // MenuItem sendMenuItem = new MenuItem ();
+                    // sendMenuItem.Header = "Send to own tab";
+                    // sendMenuItem.Click += SendToOwnTabItem_Click;
+                    // rightClickMenu.Items.Add ( sendMenuItem );
                     newGrid.ContextMenu = rightClickMenu;
 
                     listView.Items.Add ( newGrid );
@@ -1138,9 +1151,8 @@ namespace WPF_XML_Tutorial
             listView.Items.Remove ( grid );
             string elemHeader = grid.Children.OfType<TextBlock> ().First ().Text.Replace ( ":", "" );
             deletedElementHeaders.Push ( elemHeader );
-            undoableCommands.Push ( UndoableType.delElemHeader );
-
-
+            undoableCommand = UndoableType.delElemHeader;
+            
         }
 
         // Only called for an attribute or an element -- not for elements with sub-items
@@ -1148,6 +1160,7 @@ namespace WPF_XML_Tutorial
         {
             MenuItem deleteItem = (MenuItem) sender;
             Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
+            // Get rid of undoable creation of this grid
             ListView listView = grid.Parent as ListView;
             int index = listView.Items.IndexOf ( grid );
             TextBlock senderTextBlock = grid.Children[0] as TextBlock;
@@ -1174,14 +1187,14 @@ namespace WPF_XML_Tutorial
                     deletedXmlSubAttribute.Value = subAttribValue;
                     SubAttribute subAttribute = new SubAttribute ( deletedXmlSubAttribute, elementName );
                     deletedXmlSubAttributes.Push ( subAttribute );
-                    undoableCommands.Push ( UndoableType.delSubAttrib );
+                    undoableCommand = UndoableType.delSubAttrib;
                 }
                 else
                 {
                     XmlAttribute deletedXmlAttribute = new XmlDocument ().CreateAttribute ( subAttribName );
                     deletedXmlAttribute.Value = subAttribValue;
                     deletedXmlAttributes.Push ( deletedXmlAttribute );
-                    undoableCommands.Push ( UndoableType.delAttrib );
+                    undoableCommand = UndoableType.delAttrib;
                 }
                 
                 return;
@@ -1190,7 +1203,7 @@ namespace WPF_XML_Tutorial
             {
                 // If an element, delete all element attributes
                 // Also add a new XmlElement to deletedXmlElements
-                undoableCommands.Push ( UndoableType.delElem );
+                undoableCommand = UndoableType.delElem;
                 XmlDocument helperXmlDoc = new XmlDocument ();
                 TextBlock elemNameTextBlock = grid.Children.OfType<TextBlock> ().First ();
                 TextBox elemValueTextBox = grid.Children.OfType<TextBox> ().First ();
@@ -1352,6 +1365,7 @@ namespace WPF_XML_Tutorial
         {
             if ( PathIDComboBox.SelectedIndex != -1 )
             {
+                ActiveUOPNameTextBox.IsEnabled = true;
                 // Change PathID overlay
                 NumPathIDOverlay.Text = Convert.ToString ( ( (ComboBoxItem) PathIDComboBox.SelectedItem ).Content );
                 // Save any changes to the currently active tabs before switching to a new active UOP
@@ -1385,7 +1399,8 @@ namespace WPF_XML_Tutorial
             }
             else
             {
-                ActiveUOPNameTextBlock.Text = "";
+                ActiveUOPNameTextBox.Text = "";
+                ActiveUOPNameTextBox.IsEnabled = false;
             }
             RepopulateTextBoxes ();      
         }
@@ -1400,7 +1415,7 @@ namespace WPF_XML_Tutorial
 
         public void UserSelectedTemplate(TemplateXmlNode templateXmlNode, int pathID)
         {
-            this.tabHeaders = templateXmlNode.TabHeaders;
+            this.tabHeaders = CopyRefStringList ( templateXmlNode.TabHeaders );
             XmlNode newXmlNode = templateXmlNode.XmlNode.CloneNode ( true );
             TabItem newMainNodeTabItem = new TabItem ();
             newMainNodeTabItem.FontSize = 18;
@@ -1480,11 +1495,20 @@ namespace WPF_XML_Tutorial
             UOPXmlNode UOPXmlNode = GetUOPXmlNodeWithPathID ( pathID );
             unitOperation = UOPXmlNode.XmlNode;
             this.activeMainNodeName = UOPXmlNode.MainNodeName;
-            this.tabHeaders = UOPXmlNode.TabHeaders;
-            ActiveUOPNameTextBlock.Text = activeMainNodeName;
+            this.tabHeaders = CopyRefStringList ( UOPXmlNode.TabHeaders );
+            ActiveUOPNameTextBox.Text = activeMainNodeName;
             
             // Now get corresponding tabItem..
             TabItem UOPTabItem = GetTabItemWithHeader ( activeMainNodeName );
+            if ( UOPTabItem == null )
+            {
+                // new main tabitem
+                UOPTabItem = new TabItem ();
+                UOPTabItem.Header = activeMainNodeName;
+                UOPTabItem.FontSize = 18;
+                MainTabControl.Items.Add ( UOPTabItem );
+                tabItems.Add ( UOPTabItem );
+            }
             if ( unitOperation == null )
             {
                 throw new Exception ( "Error: var unitOperation should not be null." );
@@ -1748,7 +1772,7 @@ namespace WPF_XML_Tutorial
             if ( undoable )
             {
                 createdXmlAttributes.Push ( newGrid );
-                undoableCommands.Push ( UndoableType.createAttrib );
+                undoableCommand = UndoableType.createAttrib;
             }
         }
 
@@ -1795,10 +1819,10 @@ namespace WPF_XML_Tutorial
             deleteItem.Header = "Delete element";
             deleteItem.Click += DeleteItem_Click;
             rightClickMenu.Items.Add ( deleteItem );
-            MenuItem sendItem = new MenuItem ();
-            sendItem.Header = "Send to own tab";
-            sendItem.Click += SendToOwnTabItem_Click;
-            rightClickMenu.Items.Add ( sendItem );
+            // MenuItem sendItem = new MenuItem ();
+            // sendItem.Header = "Send to own tab";
+            // sendItem.Click += SendToOwnTabItem_Click;
+            // rightClickMenu.Items.Add ( sendItem );
             newGrid.ContextMenu = rightClickMenu;
 
             if ( isSubElem )
@@ -1817,18 +1841,23 @@ namespace WPF_XML_Tutorial
             if ( undoable )
             {
                 createdXmlElements.Push ( newGrid );
-                undoableCommands.Push ( UndoableType.createElem );
+                undoableCommand = UndoableType.createElem;
             }
         }
 
+        // Too many errors -- unused for now
         private void SendToOwnTabItem_Click( object sender, RoutedEventArgs e )
         {
-            MenuItem sendItem = (MenuItem) sender;
-            Grid grid = ( sendItem.Parent as ContextMenu ).PlacementTarget as Grid;
-            string newTabName = grid.Children.OfType<TextBlock> ().First ().Text.Replace ( ":", "" );
-            NewTabEntered ( newTabName );
-            RemoveGridFromListViewParent ( grid );
-            grid = null;
+            throw new NotImplementedException ();
+            //MenuItem sendItem = (MenuItem) sender;
+            //Grid grid = ( sendItem.Parent as ContextMenu ).PlacementTarget as Grid;
+            //string newTabName = grid.Children.OfType<TextBlock> ().First ().Text.Replace ( ":", "" );
+            //NewTabEntered ( newTabName );
+            //RemoveGridFromListViewParent ( grid );
+            //grid = null;
+            //tabHeaders = CopyRefStringList ( tabHeaders );
+            //tabHeaders.Add ( newTabName );
+            //GetUOPXmlNodeWithPathID ( currentPathID ).TabHeaders.Add ( newTabName );
         }
 
         // Helper function
@@ -1950,7 +1979,7 @@ namespace WPF_XML_Tutorial
 
         private void DeleteActiveUOP()
         {
-            undoableCommands.Push ( UndoableType.delUOP );
+            undoableCommand = UndoableType.delUOP;
 
             ComboBoxItem removeItem = null;
             foreach ( ComboBoxItem item in PathIDComboBox.Items )
@@ -2024,24 +2053,53 @@ namespace WPF_XML_Tutorial
 
         private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
         {
-            if ( MainTabControl.SelectedIndex == 0 )
+            if ( ( MainTabControl.SelectedItem as TabItem ).Visibility == Visibility.Visible )
             {
-                MessageBox.Show ( "Cannot delete the main tab.\nIf you are trying to delete a UOP, select that option in the \"Delete\" drop down menu.", "Error" );
-                return;
+                if ( MainTabControl.SelectedIndex == 0 )
+                {
+                    MessageBox.Show ( "Cannot delete the main tab.\nIf you are trying to delete a UOP, select that option in the \"Delete\" drop down menu.", "Error" );
+                    return;
+                }
+
+                string message = String.Format ( "Are you sure you want to remove tab with header \"{0}\"?", ( (TabItem) MainTabControl.SelectedItem ).Header );
+                string header = "Delete active Tab";
+                MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
+                MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+                if ( msgBoxResult == MessageBoxResult.Yes )
+                {
+                    DeleteActiveTab ();
+                }
+                else if ( msgBoxResult == MessageBoxResult.No )
+                {
+                    // User cancelled, do nothing
+                }
+
+                if ( NoVisibleTabs () )
+                {
+                    ( MainTabControl.SelectedItem as TabItem ).Content = new ListView ();
+                }
+            }
+            else
+            {
+                string message = String.Format ( "No tab selected.", ( (TabItem) MainTabControl.SelectedItem ).Header );
+                string header = "Error";
+                MessageBoxResult msgBoxResult = MessageBox.Show ( message, header );
             }
 
-            string message = String.Format("Are you sure you want to remove tab with header \"{0}\"?", ((TabItem)MainTabControl.SelectedItem).Header);
-            string header = "Delete active Tab";
-            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
-            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
-            if ( msgBoxResult == MessageBoxResult.Yes )
+            
+        }
+
+        // Returns true if there are no visible tabs in MainTabControl
+        private bool NoVisibleTabs()
+        {
+            foreach ( TabItem tabItem in MainTabControl.Items )
             {
-                DeleteActiveTab ();
+                if ( tabItem.Visibility == Visibility.Visible )
+                {
+                    return false;
+                }
             }
-            else if ( msgBoxResult == MessageBoxResult.No )
-            {
-                // User cancelled, do nothing
-            }
+            return true;
         }
 
         private void DeleteActiveTab()
@@ -2051,7 +2109,7 @@ namespace WPF_XML_Tutorial
                 PopulateTabLinkButtons ();
             }
 
-            undoableCommands.Push ( UndoableType.delTab );
+            undoableCommand = UndoableType.delTab;
             // Make tab visibility collapsed -- this makes it easier to undo
             // When saving, only include tabs which have Visibility.Visible
             TabItem activeTab = MainTabControl.SelectedItem as TabItem;
@@ -2085,25 +2143,28 @@ namespace WPF_XML_Tutorial
 
         private void OpenCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
-            string message = "Save changes to xml document?\nOpening a new xml file will close this one.\nUnsaved changes will be lost.";
-            string header = "Caution - save changes?";
-            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
-            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
-            if ( msgBoxResult == MessageBoxResult.Yes )
+            if ( PathIDComboBox.Items.Count > 1 )
             {
-                // Save the document first then continue with open command
-                Save_Button.Command.Execute ( null );
+                string message = "Save changes to xml document?\nOpening a new xml file will close this one.\nUnsaved changes will be lost.";
+                string header = "Caution - save changes?";
+                MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+                MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+                if ( msgBoxResult == MessageBoxResult.Yes )
+                {
+                    // Save the document first then continue with open command
+                    Save_Button.Command.Execute ( null );
+                }
+                else if ( msgBoxResult == MessageBoxResult.No )
+                {
+                    // Continue open command without saving
+                }
+                else if ( msgBoxResult == MessageBoxResult.Cancel )
+                {
+                    // Cancel open command, no need to save
+                    return;
+                }
             }
-            else if ( msgBoxResult == MessageBoxResult.No )
-            {
-                // Continue open command without saving
-            }
-            else if ( msgBoxResult == MessageBoxResult.Cancel )
-            {
-                // Cancel open command, no need to save
-                return;
-            }
-
+            
             // Get the user chosen XML file
             OpenFileDialog openFileDialog = new OpenFileDialog ();
             openFileDialog.Filter = "XML files (*.XML)|*.XML|All files (*.*)|*.*";
@@ -2120,7 +2181,6 @@ namespace WPF_XML_Tutorial
             {
                 // TODO: Check if XML file is in the proper format 
                 // If it is, pass the XML fileName to MainWindow and initialize it
-                // PathIDComboBox = null; /////////////////////////////////// TODO: check what this was doing, might conflict with new PathIDComboBox configuration
                 MainWindow mainWindow = new MainWindow ( filePath, templateXmlNodes );
                 mainWindow.Show ();
                 this.Close ();
@@ -2178,13 +2238,14 @@ namespace WPF_XML_Tutorial
 
         private void UndoCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
-            if ( undoableCommands.Count == 0 )
+            if ( undoableCommand == UndoableType.none )
             {
-                MessageBox.Show ( "There are currently no commands to undo.\nUndoable commands include creation and deletion of elements & attributes, as well as deletion of tabs & Unit Operations.", "Error" );
+                MessageBox.Show ( "Currently no command to undo.\nUndoable commands include creation and deletion of elements & attributes, as well as deletion of tabs & Unit Operations.", "Error" );
                 return;
             }
 
-            UndoableType undoType = undoableCommands.Pop ();
+            UndoableType undoType = undoableCommand;
+            undoableCommand = UndoableType.none;
             string message = "";
             switch ( undoType )
             {
@@ -2230,7 +2291,7 @@ namespace WPF_XML_Tutorial
             else if ( msgBoxResult == MessageBoxResult.No )
             {
                 // Cancel undo action
-                undoableCommands.Push ( undoType );
+                undoableCommand = undoType;
                 return;
             }
 
@@ -2480,7 +2541,7 @@ namespace WPF_XML_Tutorial
             newGrid.Children.Add ( newTabLinkButton );
             #endregion
 
-            TabItem mainTab = MainTabControl.Items[0] as TabItem;
+            TabItem mainTab = GetTabItemWithHeader ( activeMainNodeName );
             ListView mainTabListView = ( (ListView) mainTab.Content );
             mainTabListView.Items.Add ( newGrid );
 
@@ -2495,12 +2556,12 @@ namespace WPF_XML_Tutorial
             if ( this.ActualWidth <= 747 )
             {
                 StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Left;
-                StemCellLogoBorder.Margin = new Thickness ( 207, 0, 0, 0 );
+                StemCellLogoBorder.Margin = new Thickness ( 252, 4, 0, 0 );
             }
             else
             {
                 StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Center;
-                StemCellLogoBorder.Margin = new Thickness ( 158, 0, 133, 0 );
+                StemCellLogoBorder.Margin = new Thickness ( 252, 4, 213, 0 );
             }
 
             // Change grid sizes
@@ -2518,6 +2579,82 @@ namespace WPF_XML_Tutorial
                         grid.ColumnDefinitions[0].Width = new GridLength ();
                     }
                 }
+            }
+        }
+
+        private void ActiveUOPNameTextBox_KeyUp( object sender, KeyEventArgs e )
+        {
+            string newUOPName = ActiveUOPNameTextBox.Text;
+            if ( PathIDComboBox.SelectedIndex != -1 )
+            {
+                TabItem mainTabItem = GetTabItemWithHeader ( activeMainNodeName );
+                if ( mainTabItem != null )
+                {
+                    if ( MainTabControlContainsHeader ( newUOPName ) )
+                    {
+                        MainTabControl.Items.Remove ( mainTabItem );
+                        mainTabItem = GetTabItemWithHeader ( newUOPName );
+                    }
+                    else
+                    {
+                        mainTabItem.Header = newUOPName;
+                    }
+                    DeleteDuplicateTabs ();
+                    mainTabItem = GetTabItemWithHeader ( newUOPName );
+                }
+                UOPXmlNode curUOPXmlNode = GetUOPXmlNodeWithPathID ( currentPathID );
+                curUOPXmlNode.MainNodeName = newUOPName;
+                XmlNode newXmlNode = ChangeXMLNodeRootName ( curUOPXmlNode.XmlNode, newUOPName );
+                curUOPXmlNode.XmlNode = newXmlNode;
+
+                tabHeaders.Remove ( activeMainNodeName );
+                if ( !tabHeaders.Contains ( newUOPName ) )
+                {
+                    tabHeaders.Add ( newUOPName );
+                }
+                this.activeMainNodeName = newUOPName;
+            }
+        }
+
+        private void DeleteDuplicateTabs()
+        {
+            List<TabItem> toRemove = new List<TabItem> ();
+            TabItem[] tempArray = new TabItem[tabItems.Count];
+            tabItems.CopyTo ( tempArray );
+            for ( int i = 0; i < tabItems.Count; i++ )
+            {
+                for ( int j = i + 1; j < tabItems.Count; j++ )
+                {
+                    if ( (string)tempArray[i].Header == (string)tempArray[j].Header )
+                    {
+                        if ( !toRemove.Contains ( tempArray[j] ) )
+                        {
+                            toRemove.Add ( tempArray[j] );
+                        }
+                    }
+                }
+            }
+            foreach ( TabItem tabItem in toRemove )
+            {
+                tabItems.Remove ( tabItem );
+                MainTabControl.Items.Remove ( tabItem );
+            }
+        }
+
+        private XmlNode ChangeXMLNodeRootName( XmlNode xmlNode, string newName )
+        {
+            string innerXml = xmlNode.InnerXml;
+            XmlDocument helperXmlDoc = new XmlDocument ();
+            XmlElement newXmlElement = helperXmlDoc.CreateElement ( newName );
+            newXmlElement.InnerXml = innerXml;
+            return newXmlElement;
+        }
+
+        private void ActiveUOPNameTextBox_PreviewKeyDown( object sender, KeyEventArgs e)
+        {
+            if ( e.Key == Key.Space )
+            {
+                e.Handled = true;
             }
         }
     }

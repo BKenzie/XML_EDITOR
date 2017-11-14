@@ -22,7 +22,8 @@ namespace WPF_XML_Tutorial
         private XmlElement curElement = null;
         private XmlElement curSubElement = null;
         private MainWindow mainWindowCaller;
-        private XmlNode activeMainXmlNode = null;
+        private List<TabItem> visibleTabItems = new List<TabItem> ();
+        //private XmlNode activeMainXmlNode = null;
 
         // Creates instance of XmlDocSave with proper Tabs_XEDITOR element 
         public XmlDocSave( XmlDocument document, string path, MainWindow caller )
@@ -105,6 +106,10 @@ namespace WPF_XML_Tutorial
             {
                 if ( tabItem.Visibility == Visibility.Visible || (string) tabItem.Header == mainWindowCaller.activeMainNodeName )
                 {
+                    if ( (string) tabItem.Header != mainWindowCaller.activeMainNodeName )
+                    {
+                        visibleTabItems.Add ( tabItem );
+                    }
                     string strNodeName =  new String(( (string) tabItem.Header ).Where ( c => !Char.IsWhiteSpace ( c ) ).ToArray());
                     XmlNode xmlTabNode = xmlDoc.CreateNode ( "element", strNodeName, "" );
                     if ( strNodeName == mainWindowCaller.activeMainNodeName )
@@ -169,6 +174,21 @@ namespace WPF_XML_Tutorial
         // Goes through all tabLinkButtons in any tab and then appends that xmlTabNode to proper parent node
         private void InsertSubNodes( TabItem tabItem, XmlNode xmlTabNode )
         {
+            // Append children to the main node
+            if ( (string) tabItem.Header == mainWindowCaller.activeMainNodeName )
+            {
+                foreach ( TabItem t in visibleTabItems )
+                {
+                    XmlNode subNodeToAppend = GetXmlTabNode ( t.Header as string );
+                    if ( subNodeToAppend != null )
+                    {
+                        xmlTabNode.AppendChild ( subNodeToAppend );
+                        xmlSubNodes.Add ( subNodeToAppend );
+                    }
+                }
+                return;
+            }
+            // any other references to sub nodes in tabs
             if ( tabItem.Content != null )
             {
                 ListView listView = (ListView) tabItem.Content;

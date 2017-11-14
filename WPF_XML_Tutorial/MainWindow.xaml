@@ -22,12 +22,12 @@
     </Window.InputBindings>
 
     <Grid>
-        <TabControl Name="MainTabControl" Margin="0,81,0,0" Panel.ZIndex="1">
+        <TabControl Name="MainTabControl" Margin="0,58,0,0" Panel.ZIndex="1">
         </TabControl>
         <Rectangle Name="DragRectangle" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Left" Height="70" Margin="0,-1,-9482,0" VerticalAlignment="Top" Width="9999" />
 
-        <Border Name="StemCellLogoBorder" HorizontalAlignment="Center" Height="81" VerticalAlignment="Top" Width="346" Margin="158,0,133,0" Panel.ZIndex="1">
-            <Image Name="StemCell_Logo" Visibility="Visible" MouseDown="DragRectangle_MouseLeftButtonDown" Source="Images/STEMCELL_Color_JPG.jpg" HorizontalAlignment="Center" Width="331" />
+        <Border Name="StemCellLogoBorder" HorizontalAlignment="Center" Height="52" VerticalAlignment="Top" Width="276" Margin="253,6,213,0" Panel.ZIndex="1">
+            <Image Name="StemCell_Logo" Visibility="Visible" MouseDown="DragRectangle_MouseLeftButtonDown" Source="Images/STEMCELL_Color_JPG.jpg" HorizontalAlignment="Center" Width="264" />
 
         </Border>
         <Rectangle Name="Close_Button" MouseLeftButtonUp="Close_Button_MouseLeftButtonUp" Fill="LightGray" HorizontalAlignment="Right" Height="26" Margin="0,10,10,0" VerticalAlignment="Top" Width="26"/>
@@ -36,14 +36,14 @@
         <TextBlock x:Name="NumPathIDOverlay" HorizontalAlignment="Left" Margin="96,0,0,5" TextWrapping="Wrap" VerticalAlignment="Bottom" />
 
 
-        <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="102" Margin="0,-1,0,0" VerticalAlignment="Top" Width="206" RenderTransformOrigin="0.5,0.5">
+        <Menu Name="MainWindowMenuBar" HorizontalAlignment="Left" Height="102" Margin="0,-1,0,0" VerticalAlignment="Top" Width="254" RenderTransformOrigin="0.5,0.5">
             <MenuItem Name="FileMenu" Header="File" VerticalAlignment="Center" FontSize="16">
                 <MenuItem Header="Modify templates" Click="Modify_Template_Click" Margin="0,0,-46,0">
                     <MenuItem.Icon>
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--pencil.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_New XML file" Name="New_Button" Command="New">
+                <MenuItem Header="_New XML file" Command="New">
                     <MenuItem.Icon>
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--plus.png"/>
                     </MenuItem.Icon>
@@ -66,6 +66,7 @@
             </MenuItem>
             <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
             <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>
+            <MenuItem Name="New_Button" Header="_New" FontSize="16" Command="New"/>
             <MenuItem Name="DeleteMenu" Header="_Delete" FontSize="16">
                 <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0">
                     <MenuItem.Icon>
@@ -80,11 +81,10 @@
             </MenuItem>
         </Menu>
         <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
-        <TextBlock Name="PathIDTextBlock" HorizontalAlignment="Left" Margin="7,29,0,0" TextWrapping="Wrap" Text="UOP PathID:" VerticalAlignment="Top" FontSize="16"/>
-        <ComboBox Name="PathIDComboBox" x:FieldModifier="public" HorizontalAlignment="Left" Margin="99,30,0,0" VerticalAlignment="Top" Width="100"/>
-        <TextBlock x:Name="ActiveUOPTextBlock" HorizontalAlignment="Left" Margin="7,55,0,0" TextWrapping="Wrap" Text="Active UOP:" VerticalAlignment="Top" FontSize="16"/>
-        <TextBlock x:Name="ActiveUOPNameTextBlock" HorizontalAlignment="Left" Margin="99,55,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="16"/>
+        <ComboBox Name="PathIDComboBox" x:FieldModifier="public" HorizontalAlignment="Left" Margin="66,28,0,0" VerticalAlignment="Top" Width="46"/>
+        <TextBox x:Name="ActiveUOPNameTextBox" IsTabStop="False" Background="LightGray" IsEnabled="False" Width="134" HorizontalAlignment="Left" Margin="116,25,0,0" VerticalAlignment="Top" FontSize="16" KeyUp="ActiveUOPNameTextBox_KeyUp" PreviewKeyDown="ActiveUOPNameTextBox_PreviewKeyDown"/>
         <Rectangle Panel.ZIndex="1" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Right" Margin="0,0,10,0" Height="10" VerticalAlignment="Top" Width="26" />
+        <TextBlock x:Name="PathIDTextBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="UOP ID:" VerticalAlignment="Top" FontSize="16" Margin="7,27,0,0"/>
 
 
     </Grid>

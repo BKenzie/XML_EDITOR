@@ -29,7 +29,7 @@ namespace WPF_XML_Tutorial
             mainWindowCaller = caller;
             this.Topmost = true;
             this.mainEditorWindow = mainWindow;
-            this.newTemplate = new TemplateXmlNode ( template.XmlNode, "", template.TabHeaders, template.XmlNode.Name );
+            this.newTemplate = new TemplateXmlNode ( template.XmlNode, "", new List<string> ( template.TabHeaders ), template.XmlNode.Name );
         }
 
         private void Drag_MouseLeftButtonDown( object sender, MouseButtonEventArgs e )
