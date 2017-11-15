@@ -57,6 +57,8 @@
     <Compile Include="BlankTemplateUOPName.xaml.cs">
       <DependentUpon>BlankTemplateUOPName.xaml</DependentUpon>
     </Compile>
+    <Compile Include="INIFile.cs" />
+    <Compile Include="ItemGrid.cs" />
     <Compile Include="NewUnitOperation.xaml.cs">
       <DependentUpon>NewUnitOperation.xaml</DependentUpon>
     </Compile>

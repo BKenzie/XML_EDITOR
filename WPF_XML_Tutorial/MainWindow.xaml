@@ -63,6 +63,11 @@
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\arrow-circle-135-left.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Settings" Name="Settings_Button" Click="Settings_Button_Click">
+                    <MenuItem.Icon>
+                        <Image />
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
             <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>

@@ -303,7 +303,7 @@ namespace WPF_XML_Tutorial
                     {
                         // Need to add this attribute to previous element, which should be curElement
                         TextBlock textBlock = (TextBlock) grid.Children[0];
-                        string attribName = (string) textBlock.Name;
+                        string attribName = ( (string) textBlock.Text ).Replace ( ":", "" );
 
                         XmlAttribute newAttrib = xmlDoc.CreateAttribute ( attribName );
                         newAttrib.Value = gridChild.Text;

@@ -23,6 +23,11 @@ namespace WPF_XML_Tutorial
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const string INI_FILEPATH = @"Config\Settings.ini";
+        private INIFile iniFile;
+        private Mode editorMode;
+        private enum Mode { general, cSep }
+
         private string xmlFilePath;
         private string rootName;
         private XmlDocument xmlDoc;
@@ -83,6 +88,20 @@ namespace WPF_XML_Tutorial
                 bool isTemplateWindow = false, TemplateXmlNode templateXmlNodeParam = null, MainWindow caller = null )
         {
             InitializeComponent ();
+            HandleINI ();
+
+            switch ( editorMode )
+            {
+                case Mode.general:
+                    PathIDTextBlock.Text = "ID:";
+                    PathIDComboBox.Margin = new Thickness ( 28, 28, 0, 0 );
+                    ActiveUOPNameTextBox.Margin = new Thickness ( 76, 25, 0, 0 );
+                    ActiveUOPNameTextBox.Width = 172;
+                    break;
+                case Mode.cSep:
+                    break;
+            }
+
             KeyboardNavigation.SetTabNavigation ( MainTabControl, KeyboardNavigationMode.None );
             KeyboardNavigation.SetTabNavigation ( MainWindowMenuBar, KeyboardNavigationMode.None );
             MainTabControl.SelectionChanged += new SelectionChangedEventHandler ( TabChanged );
@@ -255,6 +274,36 @@ namespace WPF_XML_Tutorial
             }
         }
 
+        private void HandleINI()
+        {
+            if ( File.Exists ( INI_FILEPATH ) )
+            {
+                iniFile = new INIFile ( INI_FILEPATH );
+                string currentMode = iniFile.Read ( "mode", "user_settings" );
+                SetMode ( currentMode );
+            }
+            else
+            {
+                iniFile = new INIFile ( INI_FILEPATH );
+                iniFile.Write ( "mode", "cSep", "user_settings" );
+            }
+        }
+
+        private void SetMode( string currentMode )
+        {
+            switch ( currentMode.ToLower () )
+            {
+                case "general":
+                    editorMode = Mode.general;
+                    break;
+
+                case "csep":
+                    editorMode = Mode.cSep;
+                    break;
+            }
+
+        }
+
         private List<string> CopyRefStringList( List<string> originalList )
         {
             List<string> copyList = new List<string> ();
@@ -317,7 +366,16 @@ namespace WPF_XML_Tutorial
                     }
                     else
                     {
-                        tabItem.Visibility = Visibility.Collapsed;
+                        // tabItem is the active main node
+                        switch ( editorMode )
+                        {
+                            case Mode.general:
+                                tabItem.Visibility = Visibility.Visible;
+                                break;
+                            case Mode.cSep:
+                                tabItem.Visibility = Visibility.Collapsed;
+                                break;
+                        }
                     }
                 }
             }
@@ -532,57 +590,9 @@ namespace WPF_XML_Tutorial
                 if ( tabHeaders.Contains ( xmlChildNode.Name ) )
                 {
                     // Set up button grid
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
-
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    #region TabLinkButton code
-
-                    // Code for buttons linking to other tabs
-                    Button gotoTab_Button = new Button ();
-                    gotoTab_Button.Content = xmlChildNode.Name;
-                    gotoTab_Button.Tag = xmlChildNode.Name;
-                    gotoTab_Button.Background = new SolidColorBrush ( Colors.LightGray );
-                    gotoTab_Button.BorderBrush = new SolidColorBrush ( Colors.Transparent );
-
-                    Style customButtonStyle = new Style ();
-                    customButtonStyle.TargetType = typeof ( Button );
-                    MultiDataTrigger trigger = new MultiDataTrigger ();
-                    Condition condition = new Condition ();
-                    condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
-                    condition.Value = true;
-                    Setter foregroundSetter = new Setter ();
-                    foregroundSetter.Property = Button.ForegroundProperty;
-                    foregroundSetter.Value = Brushes.DarkOrange;
-                    Setter cursorSetter = new Setter ();
-                    cursorSetter.Property = Button.CursorProperty;
-                    cursorSetter.Value = Cursors.Hand;
-                    Setter textSetter = new Setter ();
-                    textSetter.Property = Button.FontWeightProperty;
-                    textSetter.Value = FontWeights.ExtraBold;
-
-                    trigger.Conditions.Add ( condition );
-                    trigger.Setters.Add ( foregroundSetter );
-                    trigger.Setters.Add ( cursorSetter );
-                    trigger.Setters.Add ( textSetter );
-
-                    customButtonStyle.Triggers.Clear ();
-                    customButtonStyle.Triggers.Add ( trigger );
-                    gotoTab_Button.Style = customButtonStyle;
-
-                    gotoTab_Button.Click += gotoTabButton_Click;
-
-                    Grid.SetRow ( gotoTab_Button, 0 );
-                    Grid.SetColumn ( gotoTab_Button, 1 );
-                    newGrid.Children.Add ( gotoTab_Button );
-                    #endregion
-
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    newGrid.AddTabButton ( xmlChildNode.Name );
+                    
                     listView.Items.Add ( newGrid );
 
                     // Get matching tabItem for xmlNode
@@ -613,39 +623,10 @@ namespace WPF_XML_Tutorial
             {
                 if ( xmlNode.FirstChild.NodeType == XmlNodeType.Text )
                 {
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock textBlock = new TextBlock ();
-                    textBlock.Text = xmlNode.Name + ":";
-                    textBlock.Name = xmlNode.Name;
-                    textBlock.ToolTip = "Text field";
-                    Grid.SetRow ( textBlock, 0 );
-                    Grid.SetColumn ( textBlock, 0 );
-                    newGrid.Children.Add ( textBlock );
-
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxNodeText.AppendText ( xmlNode.FirstChild.Value );
-                    textBoxNodeText.ToolTip = "Text field";
-                    textBoxNodeText.AcceptsReturn = true;
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete text element";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
-                    newGrid.ContextMenu = rightClickMenu;
-
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    newGrid.AddTextBlock ( xmlNode.Name, toolTip: "Text field" );
+                    newGrid.AddTextBox ( xmlNode.FirstChild.Value, toolTip: "Text field" );
+                    newGrid.AddContextMenu ();
                     listView.Items.Add ( newGrid );
                 }
             }
@@ -706,46 +687,10 @@ namespace WPF_XML_Tutorial
             {
                 foreach ( XmlAttribute attribute in xmlNode.Attributes )
                 {
-                    Grid newGrid = new Grid ()
-                    {
-                        Width = GRID_WIDTH,
-                    };
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock textBlock = new TextBlock ();
-                    textBlock.Text = attribute.Name + ":";
-                    textBlock.ToolTip = xmlNode.Name + "'s attribute";
-                    try
-                    {
-                        textBlock.Name = attribute.Name;
-                    }
-                    catch ( Exception e )
-                    {
-                        continue;
-                    }
-
-                    Grid.SetRow ( textBlock, 0 );
-                    Grid.SetColumn ( textBlock, 0 );
-                    newGrid.Children.Add ( textBlock );
-
-                    TextBox textBoxAttrib = new TextBox ();
-                    textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxAttrib.AcceptsReturn = true;
-                    textBoxAttrib.Text = ( attribute.Value );
-                    textBoxAttrib.ToolTip = attribute.Name + " attribute";
-                    Grid.SetRow ( textBoxAttrib, 0 );
-                    Grid.SetColumn ( textBoxAttrib, 1 );
-                    newGrid.Children.Add ( textBoxAttrib );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete attribute";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
-                    newGrid.ContextMenu = rightClickMenu;
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    newGrid.AddTextBlock ( attribute.Name, toolTip: xmlNode.Name + "'s attribute" );
+                    newGrid.AddTextBox ( attribute.Value, toolTip: attribute.Name + " attribute" );
+                    newGrid.AddContextMenu ();
 
                     listView.Items.Add ( newGrid );
                 }
@@ -785,7 +730,7 @@ namespace WPF_XML_Tutorial
         }
 
         // Switches keyboard focus to the next textbox. Called for all appropriate textboxes
-        private void OnTabPressed( object sender, KeyEventArgs e )
+        public void OnTabPressed( object sender, KeyEventArgs e )
         {
             if ( e.Key == Key.Tab )
             {
@@ -862,39 +807,10 @@ namespace WPF_XML_Tutorial
                 {
                     foreach ( XmlAttribute attribute in xmlChildNode.Attributes )
                     {
-                        Grid newGrid = new Grid
-                        {
-                            Width = GRID_WIDTH,
-                        };
-
-                        newGrid.ShowGridLines = false;
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                        newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                        TextBlock textBlockSubAttrib = new TextBlock ();
-                        textBlockSubAttrib.Text = "[" + xmlChildNode.Name + " attribute] " + attribute.Name + ":";
-                        textBlockSubAttrib.ToolTip = "Attribute";
-                        textBlockSubAttrib.Name = attribute.Name;
-                        Grid.SetRow ( textBlockSubAttrib, 0 );
-                        Grid.SetColumn ( textBlockSubAttrib, 0 );
-                        newGrid.Children.Add ( textBlockSubAttrib );
-
-                        TextBox attributeTextBox = new TextBox ();
-                        attributeTextBox.KeyDown += new KeyEventHandler ( OnTabPressed );
-                        attributeTextBox.Text = attribute.Value;
-                        attributeTextBox.ToolTip = xmlChildNode.Name + "'s attribute";
-                        attributeTextBox.AcceptsReturn = true;
-                        Grid.SetRow ( attributeTextBox, 0 );
-                        Grid.SetColumn ( attributeTextBox, 1 );
-                        newGrid.Children.Add ( attributeTextBox );
-
-                        ContextMenu rightClickMenu = new ContextMenu ();
-                        MenuItem deleteItem = new MenuItem ();
-                        deleteItem.Header = "Delete attribute";
-                        deleteItem.Click += DeleteItem_Click;
-                        rightClickMenu.Items.Add ( deleteItem );
-                        newGrid.ContextMenu = rightClickMenu;
+                        ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                        newGrid.AddTextBlock ( ( "[" + xmlChildNode.Name + " attribute] " + attribute.Name ), toolTip: "Attribute" );
+                        newGrid.AddTextBox ( attribute.Value, toolTip: xmlChildNode.Name + "'s attribute" );
+                        newGrid.AddContextMenu ();
 
                         listView.Items.Add ( newGrid );
                     }
@@ -910,51 +826,23 @@ namespace WPF_XML_Tutorial
                 // Parse text elements such as <help>, <source>, <destination> etc..
                 if ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text && xmlChildNode.ChildNodes.Count == 1 )
                 {
-                    Grid newGrid = new Grid { Width = GRID_WIDTH, };
-
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock nameTextBlock = new TextBlock ();
-                    nameTextBlock.Text = xmlChildNode.Name + ":";
-
-                    nameTextBlock.Name = xmlChildNode.Name;
-                    Grid.SetRow ( nameTextBlock, 0 );
-                    Grid.SetColumn ( nameTextBlock, 0 );
-                    newGrid.Children.Add ( nameTextBlock );
-
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxNodeText.AppendText ( xmlChildNode.FirstChild.Value );
-                    textBoxNodeText.AcceptsReturn = true;
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    if ( isSubElement )
-                    {
-                        nameTextBlock.ToolTip = "Element (sub)";
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
-                    }
-                    else
-                    {
-                        nameTextBlock.ToolTip = "Element";
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
-                    }
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete element";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    newGrid.AddContextMenu ();
                     // MenuItem sendMenuItem = new MenuItem ();
                     // sendMenuItem.Header = "Send to own tab";
                     // sendMenuItem.Click += SendToOwnTabItem_Click;
                     // rightClickMenu.Items.Add ( sendMenuItem );
 
-                    newGrid.ContextMenu = rightClickMenu;
+                    if ( isSubElement )
+                    {
+                        newGrid.AddTextBlock ( xmlChildNode.Name, toolTip: "Element (sub)" );
+                        newGrid.AddTextBox ( xmlChildNode.FirstChild.Value, toolTip: xmlChildNode.Name + " element (sub)" );
+                    }
+                    else
+                    {
+                        newGrid.AddTextBlock ( xmlChildNode.Name, toolTip: "Element" );
+                        newGrid.AddTextBox ( xmlChildNode.FirstChild.Value, toolTip: xmlChildNode.Name + " element" );
+                    }
 
                     listView.Items.Add ( newGrid );
                 }
@@ -974,33 +862,11 @@ namespace WPF_XML_Tutorial
                 if ( ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType != XmlNodeType.Text ) )
                   || ( ( xmlChildNode.NodeType == XmlNodeType.Element ) && ( xmlChildNode.FirstChild.NodeType == XmlNodeType.Text ) && ( xmlChildNode.ChildNodes.Count > 1 ) ) )
                 {
-                    Grid newGrid = new Grid
-                    {
-                        Width = GRID_WIDTH,
-                    };
-
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock subNodeNameTextBlock = new TextBlock ();
-                    subNodeNameTextBlock.Text = xmlChildNode.Name + ":";
-                    subNodeNameTextBlock.FontSize = 16;
-                    subNodeNameTextBlock.TextDecorations = TextDecorations.Underline;
-                    subNodeNameTextBlock.FontWeight = FontWeights.Bold;
-
-                    Grid.SetColumn ( subNodeNameTextBlock, 0 );
-                    Grid.SetRow ( subNodeNameTextBlock, 0 );
-                    newGrid.Children.Add ( subNodeNameTextBlock );
-
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    newGrid.AddTextBlock ( xmlChildNode.Name, "", header: true );
+                    newGrid.AddContextMenu ();
+                    
                     listView.Items.Add ( newGrid );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete element";
-
-                    deleteItem.Click += DeleteItemWithSubElems_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
-                    newGrid.ContextMenu = rightClickMenu;
                 }
             }
             else
@@ -1009,56 +875,25 @@ namespace WPF_XML_Tutorial
                 // For now, displaying "EMPTY" if it's an empty element
                 if ( xmlChildNode.NodeType != XmlNodeType.Text && xmlChildNode.NodeType != XmlNodeType.Comment ) // Errors otherwise
                 {
-                    Grid newGrid = new Grid
+                    ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+                    if ( isSubElement )
                     {
-                        Width = GRID_WIDTH,
-                    };
-
-                    newGrid.ShowGridLines = false;
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-                    newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-                    TextBlock nameTextBlock = new TextBlock ();
-                    nameTextBlock.Text = xmlChildNode.Name + ":";
-                    nameTextBlock.Name = xmlChildNode.Name;
-
-                    Grid.SetRow ( nameTextBlock, 0 );
-                    Grid.SetColumn ( nameTextBlock, 0 );
-                    newGrid.Children.Add ( nameTextBlock );
-
-                    TextBox textBoxNodeText = new TextBox ();
-                    textBoxNodeText.KeyDown += new KeyEventHandler ( OnTabPressed );
-                    textBoxNodeText.AppendText ( "EMPTY" );
-                    textBoxNodeText.AcceptsReturn = true;
-                    textBoxNodeText.GotKeyboardFocus += EMPTYTextBox_GotKeyboardFocus;
-                    Grid.SetRow ( textBoxNodeText, 0 );
-                    Grid.SetColumn ( textBoxNodeText, 1 );
-                    newGrid.Children.Add ( textBoxNodeText );
-
-                    ContextMenu rightClickMenu = new ContextMenu ();
-                    MenuItem deleteItem = new MenuItem ();
-                    deleteItem.Header = "Delete element";
-                    deleteItem.Click += DeleteItem_Click;
-                    rightClickMenu.Items.Add ( deleteItem );
+                        newGrid.AddTextBlock ( xmlChildNode.Name, toolTip: "Empty element (sub)" );
+                        newGrid.AddTextBox ( "", toolTip: xmlChildNode.Name + " element (sub)", empty: true );
+                    }
+                    else
+                    {
+                        newGrid.AddTextBlock ( xmlChildNode.Name, toolTip: "Empty element" );
+                        newGrid.AddTextBox ( "", toolTip: xmlChildNode.Name + " element", empty: true );
+                    }
+                    
+                    newGrid.AddContextMenu ();
                     // MenuItem sendMenuItem = new MenuItem ();
                     // sendMenuItem.Header = "Send to own tab";
                     // sendMenuItem.Click += SendToOwnTabItem_Click;
                     // rightClickMenu.Items.Add ( sendMenuItem );
-                    newGrid.ContextMenu = rightClickMenu;
-
+                    
                     listView.Items.Add ( newGrid );
-
-                    if ( isSubElement )
-                    {
-                        nameTextBlock.ToolTip = "Empty element (sub)";
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element (sub)";
-                    }
-                    else
-                    {
-                        nameTextBlock.ToolTip = "Empty element";
-                        textBoxNodeText.ToolTip = xmlChildNode.Name + " element";
-                    }
                 }
             }
         }
@@ -1156,7 +991,7 @@ namespace WPF_XML_Tutorial
         }
 
         // Only called for an attribute or an element -- not for elements with sub-items
-        private void DeleteItem_Click( object sender, RoutedEventArgs e )
+        public void DeleteItem_Click( object sender, RoutedEventArgs e )
         {
             MenuItem deleteItem = (MenuItem) sender;
             Grid grid = ( (ContextMenu) deleteItem.Parent ).PlacementTarget as Grid;
@@ -1301,7 +1136,7 @@ namespace WPF_XML_Tutorial
 
         }
 
-        private void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
+        public void EMPTYTextBox_GotKeyboardFocus( object sender, KeyboardFocusChangedEventArgs e )
         {
             TextBox emptyTextBox = sender as TextBox;
             if ( emptyTextBox.Text == "EMPTY" )
@@ -1691,14 +1526,14 @@ namespace WPF_XML_Tutorial
             }
         }
 
-        private void gotoTabButton_Click( object sender, RoutedEventArgs e )
+        public void gotoTabButton_Click( object sender, RoutedEventArgs e )
         {
             // Get matching tabItem for button click
             // NOTE: tabItem.Header is same as matching button.Tag
             TabItem tabItem = new TabItem ();
             foreach ( TabItem curTabItem in tabItems )
             {
-                if ( ((string) curTabItem.Header) == (string) ( (Button) sender ).Tag )
+                if ( ( (string) curTabItem.Header ) == (string) ( (Button) sender ).Tag )
                 {
                     tabItem = curTabItem;
                 }
@@ -1725,47 +1560,20 @@ namespace WPF_XML_Tutorial
             TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
             ListView currentListView = currentTabItem.Content as ListView;
             // Need to create the grid with appropriate TextBlock and TextBox, then insert at proper spot in currentListView
-            Grid newGrid = new Grid
-            {
-                Width = GRID_WIDTH,
-            };
-
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-            TextBlock textBlock = new TextBlock ();
-            textBlock.Text = name + ":";
-            textBlock.ToolTip = "Attribute";
-            textBlock.Name = name;
-            Grid.SetRow ( textBlock, 0 );
-            Grid.SetColumn ( textBlock, 0 );
-            newGrid.Children.Add ( textBlock );
-
-            TextBox textBoxAttrib = new TextBox ();
-            textBoxAttrib.KeyDown += new KeyEventHandler ( OnTabPressed );
-            textBoxAttrib.AcceptsReturn = true;
-            textBoxAttrib.Text = ( value );
-            textBoxAttrib.ToolTip = "Attribute";
-            Grid.SetRow ( textBoxAttrib, 0 );
-            Grid.SetColumn ( textBoxAttrib, 1 );
-            newGrid.Children.Add ( textBoxAttrib );
-
-            ContextMenu rightClickMenu = new ContextMenu ();
-            MenuItem deleteItem = new MenuItem ();
-            deleteItem.Header = "Delete attribute";
-            deleteItem.Click += DeleteItem_Click;
-            rightClickMenu.Items.Add ( deleteItem );
-            newGrid.ContextMenu = rightClickMenu;
+            ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+            newGrid.AddContextMenu ();
 
             if ( elementName == null )
             {
+                newGrid.AddTextBlock ( name, toolTip: "Attribute" );
+                newGrid.AddTextBox ( value, toolTip: "Attribute" );
                 currentListView.Items.Insert ( 2, newGrid );
             }
             else
             {
                 int elementIndex = GetElementIndex ( currentListView, elementName );
-                textBlock.Text = ( "[" + elementName + " attribute] " + textBlock.Text );
+                newGrid.AddTextBlock ( "[" + elementName + " attribute] " + name, toolTip: "Attribute" );
+                newGrid.AddTextBox ( value, toolTip: "Attribute" );
                 currentListView.Items.Insert ( elementIndex + 1, newGrid );
             }
 
@@ -1781,49 +1589,22 @@ namespace WPF_XML_Tutorial
             TabItem currentTabItem = MainTabControl.SelectedItem as TabItem;
             ListView currentListView = currentTabItem.Content as ListView;
             // Need to create the grid with appropriate TextBlock and TextBox, then insert at proper spot in currentListView
-            Grid newGrid = new Grid
-            {
-                Width = GRID_WIDTH,
-            };
-
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-            TextBlock textBlock = new TextBlock ();
-            textBlock.Text = name + ":";
+            ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
             if ( isSubElem )
             {
-                textBlock.ToolTip = "Element (sub)";
+                newGrid.AddTextBlock ( name, toolTip: "Element (sub)" );
+                newGrid.AddTextBox ( value, toolTip: "Element" );
             }
             else
             {
-                textBlock.ToolTip = "Element";
+                newGrid.AddTextBlock ( name, toolTip: "Element" );
             }
-            textBlock.Name = name;
-            Grid.SetRow ( textBlock, 0 );
-            Grid.SetColumn ( textBlock, 0 );
-            newGrid.Children.Add ( textBlock );
 
-            TextBox textBoxElem = new TextBox ();
-            textBoxElem.KeyDown += new KeyEventHandler ( OnTabPressed );
-            textBoxElem.AcceptsReturn = true;
-            textBoxElem.Text = ( value );
-            textBoxElem.ToolTip = "Element";
-            Grid.SetRow ( textBoxElem, 0 );
-            Grid.SetColumn ( textBoxElem, 1 );
-            newGrid.Children.Add ( textBoxElem );
-
-            ContextMenu rightClickMenu = new ContextMenu ();
-            MenuItem deleteItem = new MenuItem ();
-            deleteItem.Header = "Delete element";
-            deleteItem.Click += DeleteItem_Click;
-            rightClickMenu.Items.Add ( deleteItem );
+            newGrid.AddContextMenu ();
             // MenuItem sendItem = new MenuItem ();
             // sendItem.Header = "Send to own tab";
             // sendItem.Click += SendToOwnTabItem_Click;
             // rightClickMenu.Items.Add ( sendItem );
-            newGrid.ContextMenu = rightClickMenu;
 
             if ( isSubElem )
             {
@@ -2028,12 +1809,26 @@ namespace WPF_XML_Tutorial
         {
             if ( pathIDSectionHighlighted == false )
             {
-                PathIDTextBlock.FontWeight = FontWeights.Bold;
-                Thickness pathIDComboBoxMargins = PathIDComboBox.Margin;
-                PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMargins.Left + 5, pathIDComboBoxMargins.Top,
-                    pathIDComboBoxMargins.Right, pathIDComboBoxMargins.Bottom );
-                PathIDComboBox.Width -= 5;
-                pathIDSectionHighlighted = true;
+                switch ( editorMode )
+                {
+                    case Mode.general:
+                        PathIDTextBlock.FontWeight = FontWeights.Bold;
+                        Thickness pathIDComboBoxMarginsGeneral = PathIDComboBox.Margin;
+                        PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMarginsGeneral.Left + 3, pathIDComboBoxMarginsGeneral.Top,
+                            pathIDComboBoxMarginsGeneral.Right, pathIDComboBoxMarginsGeneral.Bottom );
+                        PathIDComboBox.Width -= 3;
+                        pathIDSectionHighlighted = true;
+                        break;
+
+                    case Mode.cSep:
+                        PathIDTextBlock.FontWeight = FontWeights.Bold;
+                        Thickness pathIDComboBoxMarginscSep = PathIDComboBox.Margin;
+                        PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMarginscSep.Left + 5, pathIDComboBoxMarginscSep.Top,
+                            pathIDComboBoxMarginscSep.Right, pathIDComboBoxMarginscSep.Bottom );
+                        PathIDComboBox.Width -= 5;
+                        pathIDSectionHighlighted = true;
+                        break;
+                }
             }
         }
 
@@ -2042,12 +1837,26 @@ namespace WPF_XML_Tutorial
         {
             if ( pathIDSectionHighlighted )
             {
-                PathIDTextBlock.FontWeight = FontWeights.Normal;
-                Thickness pathIDComboBoxMargins = PathIDComboBox.Margin;
-                PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMargins.Left - 5, pathIDComboBoxMargins.Top,
-                    pathIDComboBoxMargins.Right, pathIDComboBoxMargins.Bottom );
-                PathIDComboBox.Width += 5;
-                pathIDSectionHighlighted = false;
+                switch ( editorMode )
+                {
+                    case Mode.general:
+                        PathIDTextBlock.FontWeight = FontWeights.Normal;
+                        Thickness pathIDComboBoxMarginsGeneral = PathIDComboBox.Margin;
+                        PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMarginsGeneral.Left - 3, pathIDComboBoxMarginsGeneral.Top,
+                            pathIDComboBoxMarginsGeneral.Right, pathIDComboBoxMarginsGeneral.Bottom );
+                        PathIDComboBox.Width += 3;
+                        pathIDSectionHighlighted = false;
+                        break;
+
+                    case Mode.cSep:
+                        PathIDTextBlock.FontWeight = FontWeights.Normal;
+                        Thickness pathIDComboBoxMarginscSep = PathIDComboBox.Margin;
+                        PathIDComboBox.Margin = new Thickness ( pathIDComboBoxMarginscSep.Left - 5, pathIDComboBoxMarginscSep.Top,
+                            pathIDComboBoxMarginscSep.Right, pathIDComboBoxMarginscSep.Bottom );
+                        PathIDComboBox.Width += 5;
+                        pathIDSectionHighlighted = false;
+                        break;
+                }
             }
         }
 
@@ -2380,17 +2189,10 @@ namespace WPF_XML_Tutorial
 
         private void AddElementHeader( string elemHeader )
         {
-            Grid newGrid = new Grid (){ Width = GRID_WIDTH };
-            TextBlock textBlock = new TextBlock ()
-            {
-                Text = elemHeader + ":",
-                FontWeight = FontWeights.Bold,
-            };
-            newGrid.Children.Add ( textBlock );
+            ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+            newGrid.AddTextBlock ( elemHeader, "", header: true );
             ListView listView = ( MainTabControl.SelectedItem as TabItem ).Content as ListView;
             listView.Items.Add ( newGrid );
-
-
         }
 
         public List<TemplateXmlNode> GetAvailableTemplates()
@@ -2480,66 +2282,17 @@ namespace WPF_XML_Tutorial
                 mainEditorWindow.tabItems.Add ( newTabItem2 );
                 mainEditorWindow.MainTabControl.Items.Add ( newTabItem2 );
             }
-            
+
             // create new tabLinkButton
             // add to tabLinkButtons
             // create new grid and add to grid
             // add grid to the end of the listView in the main tab 
 
             // Set up button grid
-            Grid newGrid = new Grid { Width = GRID_WIDTH };
-            newGrid.ShowGridLines = false;
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.ColumnDefinitions.Add ( new ColumnDefinition () );
-            newGrid.RowDefinitions.Add ( new RowDefinition () );
-            newGrid.RowDefinitions.Add ( new RowDefinition () );
-
-            #region TabLinkButton code
-            Button newTabLinkButton = new Button ();
-            newTabLinkButton.Content = tabName;
-            newTabLinkButton.Tag = tabName;
-            newTabLinkButton.Height = 37;
-            newTabLinkButton.Width = 160;
-            newTabLinkButton.Background = new SolidColorBrush ( Colors.LightGray );
-            newTabLinkButton.BorderBrush = new SolidColorBrush ( Colors.Transparent );
-
-            Style customButtonStyle = new Style ();
-            customButtonStyle.TargetType = typeof ( Button );
-            MultiDataTrigger trigger = new MultiDataTrigger ();
-            Condition condition = new Condition ();
-            condition.Binding = new Binding () { Path = new PropertyPath ( "IsMouseOver" ), RelativeSource = RelativeSource.Self };
-            condition.Value = true;
-            Setter foregroundSetter = new Setter ();
-            foregroundSetter.Property = Button.ForegroundProperty;
-            foregroundSetter.Value = Brushes.DarkOrange;
-            Setter cursorSetter = new Setter ();
-            cursorSetter.Property = Button.CursorProperty;
-            cursorSetter.Value = Cursors.Hand;
-            Setter textSetter = new Setter ();
-            textSetter.Property = Button.FontWeightProperty;
-            textSetter.Value = FontWeights.ExtraBold;
-            trigger.Conditions.Add ( condition );
-            trigger.Setters.Add ( foregroundSetter );
-            trigger.Setters.Add ( cursorSetter );
-            trigger.Setters.Add ( textSetter );
-            customButtonStyle.Triggers.Clear ();
-            customButtonStyle.Triggers.Add ( trigger );
-            newTabLinkButton.Style = customButtonStyle;
-            newTabLinkButton.Click += gotoTabButton_Click;
-
-            Rectangle gotoTabRect = new Rectangle ();
-            gotoTabRect.Fill = new SolidColorBrush ( Colors.Transparent );
-            gotoTabRect.Width = 120;
-            gotoTabRect.Height = 14;
-            Grid.SetRow ( gotoTabRect, 0 );
-            Grid.SetColumn ( gotoTabRect, 1 );
-            newGrid.Children.Add ( gotoTabRect );
-
-            Grid.SetRow ( newTabLinkButton, 1 );
-            Grid.SetColumn ( newTabLinkButton, 2 );
-            newGrid.Children.Add ( newTabLinkButton );
-            #endregion
+            ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
+            newGrid.AddNewColumn ();
+            newGrid.AddNewRow ();
+            newGrid.AddTabButton ( tabName );
 
             TabItem mainTab = GetTabItemWithHeader ( activeMainNodeName );
             ListView mainTabListView = ( (ListView) mainTab.Content );
@@ -2553,6 +2306,7 @@ namespace WPF_XML_Tutorial
 
         private void MainWindow_SizeChanged( object sender, SizeChangedEventArgs e )
         {
+            // Adjust StemCell logo
             if ( this.ActualWidth <= 747 )
             {
                 StemCellLogoBorder.HorizontalAlignment = HorizontalAlignment.Left;
@@ -2656,6 +2410,12 @@ namespace WPF_XML_Tutorial
             {
                 e.Handled = true;
             }
+        }
+
+        private void Settings_Button_Click( object sender, RoutedEventArgs e )
+        {
+            // TODO: implement settings menu
+            throw new NotImplementedException ();
         }
     }
 }
