@@ -21,6 +21,13 @@
         <Label Content="X" Foreground="DarkOrange" MouseLeftButtonUp="Close_Button_InputPathIDWindow_Click" Canvas.Left="567" Width="20" FontFamily="Browallia New" FontSize="24" Canvas.Top="3"/>
         <Label Content="Value:" Canvas.Left="224" Canvas.Top="139" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="85"/>
         <TextBox x:Name="NewValueTextBox" KeyUp="TextBox_KeyUp" Height="46" Canvas.Left="309" Canvas.Top="139" Width="182" FontSize="24"/>
+        <Label Name="ElementTypeTextBlock" Content="Type:" Canvas.Left="10" Canvas.Top="93" FontSize="24" FontWeight="Bold" Foreground="DarkOrange" Height="46" Width="85"/>
+        <ComboBox Name="ElementTypeComboBox" FontSize="16" Canvas.Left="93" Canvas.Top="99" Height="31" Width="126" SelectedIndex="0" SelectionChanged="ElementTypeComboBox_SelectionChanged">
+            <ComboBoxItem Name="TextType" Content="Text" FontSize="16"/>
+            <ComboBoxItem Name="BooleanType" Content="Boolean" FontSize="16"/>
+            <ComboBoxItem Name="IntegerType" Content="Integer" FontSize="16"/>
+            <ComboBoxItem Name="BitArrayType" Content="Bit array" FontSize="16"/>
+        </ComboBox>
 
     </Canvas>
 </Window>

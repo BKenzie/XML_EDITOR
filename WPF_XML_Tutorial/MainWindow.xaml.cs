@@ -192,7 +192,7 @@ namespace WPF_XML_Tutorial
                 MenuItem TabMenuOptions = new MenuItem ();
                 templateTabsMenuItem = TabMenuOptions;
                 TabMenuOptions.Header = "Tabs";
-                TabMenuOptions.FontSize = FONT_SIZE - 2;
+                TabMenuOptions.FontSize = 16;
                 MenuItem deleteTabMenuItem = new MenuItem ();
                 deleteTabMenuItem.Header = "Remove current tab";
                 deleteTabMenuItem.Icon = new Image
@@ -213,7 +213,7 @@ namespace WPF_XML_Tutorial
 
                 MenuItem SaveTemplate = new MenuItem ();
                 SaveTemplate.Header = "Save Template";
-                SaveTemplate.FontSize = FONT_SIZE - 2;
+                SaveTemplate.FontSize = 16;
                 SaveTemplate.Click += new RoutedEventHandler ( SaveTemplate_Click );
                 MainWindowMenuBar.Items.Add ( SaveTemplate );
 
@@ -365,6 +365,13 @@ namespace WPF_XML_Tutorial
                             if ( (string) tabItem.Header != activeMainNodeName )
                             {
                                 tabItem.Visibility = Visibility.Visible;
+                            }
+                            else
+                            {
+                                if ( NoVisibleTabs () )
+                                {
+                                    tabItem.Content = new ListView ();
+                                }
                             }
                             break;
 
@@ -1667,7 +1674,18 @@ namespace WPF_XML_Tutorial
 
         private void newElementButton_Click( object sender, RoutedEventArgs e )
         {
-            NewElemOrAttrib newElementWindow = new NewElemOrAttrib ( this, "element" );
+            NewElemOrAttrib newElementWindow = null;
+            switch ( editorMode )
+            {
+                case Mode.general:
+                    newElementWindow = new NewElemOrAttrib ( this, "element" );
+                    break;
+
+                case Mode.cSep:
+                    newElementWindow = new NewElemOrAttrib ( this, "element", cSepMode: true );
+                    break;
+            }
+
             newElementWindow.Owner = this;
             newElementWindow.Show ();
             this.IsEnabled = false;
@@ -2387,7 +2405,7 @@ namespace WPF_XML_Tutorial
             XmlNode savedActiveTabsState = helperDocSave.WriteCurrentOpenTabs ( tabItems, currentPathID );
             XmlDocSave.NullifyEmptyNodes ( savedActiveTabsState );
             XmlDocument xmlDoc = new XmlDocument ();
-            string xmlString = "<" + activeMainNodeName + ">" + savedActiveTabsState.FirstChild.LastChild.InnerXml + "</" + activeMainNodeName + ">";
+            string xmlString = savedActiveTabsState.FirstChild.LastChild.OuterXml;
             xmlDoc.LoadXml ( xmlString );
             List<String> curTabHeaders = new List<string> ();
             curTabHeaders.Add ( activeMainNodeName );

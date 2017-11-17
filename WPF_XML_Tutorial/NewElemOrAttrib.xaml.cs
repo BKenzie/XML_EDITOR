@@ -22,11 +22,13 @@ namespace WPF_XML_Tutorial
         private MainWindow mainWindowCaller;
         public enum Type { Attribute, Element };
         private Type type;
+        private bool cSep;
 
-        public NewElemOrAttrib( MainWindow caller, string strType )
+        public NewElemOrAttrib( MainWindow caller, string strType, bool cSepMode = false )
         {
             InitializeComponent ();
             mainWindowCaller = caller;
+            this.cSep = cSepMode; 
             this.Focus ();
             this.Topmost = true;
             if ( strType == "attribute" )
@@ -36,6 +38,17 @@ namespace WPF_XML_Tutorial
             else if ( strType == "element" )
             {
                 this.type = Type.Element;
+            }
+
+            if ( cSepMode )
+            {
+                ElementTypeTextBlock.Visibility = Visibility.Visible;
+                ElementTypeComboBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ElementTypeTextBlock.Visibility = Visibility.Collapsed;
+                ElementTypeComboBox.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -99,6 +112,30 @@ namespace WPF_XML_Tutorial
             {
                 EnterButton.RaiseEvent ( new RoutedEventArgs ( System.Windows.Controls.Primitives.ButtonBase.ClickEvent ) );
             }
+        }
+
+        private void ElementTypeComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        {
+            ComboBoxItem selectedItem = ElementTypeComboBox.SelectedItem as ComboBoxItem;
+            switch ( selectedItem.Name )
+            {
+                case "TextType":
+                    NewValueTextBox.IsEnabled = true;
+                    break;
+
+                case "BooleanType":
+                    NewValueTextBox.IsEnabled = false;
+                    break;
+
+                case "IntegerType":
+                    NewValueTextBox.IsEnabled = false;
+                    break;
+
+                case "BitArrayType":
+                    NewValueTextBox.IsEnabled = false;
+                    break;
+            }
+
         }
     }
 }
