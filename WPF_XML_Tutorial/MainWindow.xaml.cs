@@ -99,13 +99,16 @@ namespace WPF_XML_Tutorial
             {
                 case Mode.general:
                     NEW_UOP_STRING = "New XML node";
+                    RemoveUOP.Header = "Remove current xml node";
                     PathIDTextBlock.Text = "ID:";
                     PathIDComboBox.Margin = new Thickness ( 28, 28, 0, 0 );
                     ActiveUOPNameTextBox.Margin = new Thickness ( 76, 25, 0, 0 );
                     ActiveUOPNameTextBox.Width = 172;
+                    
                     break;
                 case Mode.cSep:
                     NEW_UOP_STRING = "New UnitOperation";
+                    RemoveUOP.Header = "Remove current UOP";
                     break;
             }
 
@@ -182,6 +185,7 @@ namespace WPF_XML_Tutorial
                 Open_Button.Visibility = Visibility.Collapsed;
                 RemoveUOP.Visibility = Visibility.Collapsed;
                 DeleteMenu.Visibility = Visibility.Collapsed;
+                NewMenu.Visibility = Visibility.Collapsed;
                 Save_Button.Visibility = Visibility.Collapsed;
                 New_Button.Visibility = Visibility.Collapsed;
 
@@ -1251,7 +1255,6 @@ namespace WPF_XML_Tutorial
                 NumPathIDOverlay.Text = Convert.ToString ( ( (ComboBoxItem) PathIDComboBox.SelectedItem ).Content );
                 
                 ComboBoxItem item = PathIDComboBox.SelectedItem as ComboBoxItem;
-                ///////////////////////////////////////////////////////////////////////////////////////////////////// TODO: auto gen PathID
                 if ( Convert.ToString ( item.Content ) == NEW_UOP_STRING ) 
                 {
                     if ( (bool) autoGenPathID )
@@ -1372,7 +1375,7 @@ namespace WPF_XML_Tutorial
             }
 
             UOPXmlNode newUnitOperation = new UOPXmlNode ( newXmlNode, pathID, templateXmlNode.TabHeaders, templateXmlNode.MainNodeName );
-            UOPXmlNodes.Remove ( newUnitOperation ); // to get rid of old one if it exists
+            UOPXmlNodes.Remove ( newUnitOperation ); // to get rid of old one if it exists (compares by PathID)
             UOPXmlNodes.Add ( newUnitOperation );
             ComboBoxItem newPathIDItem = new ComboBoxItem ();
             newPathIDItem.Content = pathID;
@@ -1380,6 +1383,13 @@ namespace WPF_XML_Tutorial
             PathIDComboBox.SelectionChanged -= SavePathIDState;
             PathIDComboBox.SelectedIndex = PathIDComboBox.Items.IndexOf ( newPathIDItem ); // Switch to new PathID
             PathIDComboBox.SelectionChanged += SavePathIDState;
+        }
+
+        private void MoveMainTabToFront()
+        {
+            TabItem mainTabItem = GetTabItemWithHeader ( activeMainNodeName );
+            MainTabControl.Items.Remove ( mainTabItem );
+            MainTabControl.Items.Insert ( 0, mainTabItem );
         }
 
         // Helper function
@@ -1422,7 +1432,7 @@ namespace WPF_XML_Tutorial
             this.activeMainNodeName = UOPXmlNode.MainNodeName;
             this.tabHeaders = CopyRefStringList ( UOPXmlNode.TabHeaders );
             ActiveUOPNameTextBox.Text = activeMainNodeName;
-            
+
             // Now get corresponding tabItem..
             TabItem UOPTabItem = GetTabItemWithHeader ( activeMainNodeName );
             if ( UOPTabItem == null )
@@ -1441,6 +1451,7 @@ namespace WPF_XML_Tutorial
             RecursiveParseTabInfo ( UOPTabItem, unitOperation );
             SetTabVisibility ();
             PopulateTabLinkButtons ();
+            MoveMainTabToFront ();
 
             // Set active tab to be the first tabItem in MainTabControl with Visibility.Visible
             foreach ( TabItem tabItem in MainTabControl.Items )
@@ -1473,8 +1484,8 @@ namespace WPF_XML_Tutorial
         // Helper called whenever the active UOP is changed
         private void PopulateTabLinkButtons()
         {
-            TabItem firstTab = GetTabItemWithHeader ( activeMainNodeName );
-            foreach ( Grid grid in ( firstTab.Content as ListView ).Items.OfType<Grid>() )
+            TabItem mainTabItem = GetTabItemWithHeader ( activeMainNodeName );
+            foreach ( Grid grid in ( mainTabItem.Content as ListView ).Items.OfType<Grid>() )
             {
                 List<Button> tempList = grid.Children.OfType<Button> ().ToList ();
                 if ( tempList != null && tempList.Count != 0 )
@@ -1492,6 +1503,8 @@ namespace WPF_XML_Tutorial
         // Helper for retrieving a certain tabItem from list tabItems
         private TabItem GetTabItemWithHeader( string tabItemHeader )
         {
+            AssertTabItems ();
+
             foreach ( TabItem tabItem in tabItems )
             {
                 if ( (string)tabItem.Header == tabItemHeader )
@@ -1500,6 +1513,19 @@ namespace WPF_XML_Tutorial
                 }
             }
             return null;
+        }
+
+        // Assert that the tabItems list contains all the same items as MainTabControl.Items
+        private void AssertTabItems()
+        {
+            if ( !tabItems.TrueForAll ( t => MainTabControl.Items.Contains ( t ) ) )
+            {
+                throw new Exception ( "TabItems conflict with MainTabControl.Items" );
+            }
+            if ( !MainTabControl.Items.OfType<TabItem> ().ToList ().TrueForAll ( t => tabItems.Contains ( t ) ) )
+            {
+                throw new Exception ( "TabItems conflict with MainTabControl.Items" );
+            }
         }
 
         // Resets to zero tabs. Only called when about to reconstruct tabs, due to new active UOP
@@ -1837,8 +1863,21 @@ namespace WPF_XML_Tutorial
                 return;
             }
 
-            string message = String.Format("Are you sure you want to remove UOP with PathID: {0}?", currentPathID);
-            string header = "Delete active UOP";
+            string message = "";
+            string header = "";
+            switch ( editorMode )
+            {
+                case Mode.general:
+                    header = "Delete active xml node";
+                    message = String.Format ( "Are you sure you want to remove xml node with PathID: {0}?", currentPathID );
+                    break;
+
+                case Mode.cSep:
+                    header = "Delete active UOP";
+                    message = String.Format ( "Are you sure you want to remove UOP with PathID: {0}?", currentPathID );
+                    break;
+
+            }
             MessageBoxButton msgBoxButtons = MessageBoxButton.YesNo;
             MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
             if ( msgBoxResult == MessageBoxResult.Yes )
@@ -1955,6 +1994,12 @@ namespace WPF_XML_Tutorial
 
         private void Delete_Tab_Button_Click( object sender, RoutedEventArgs e )
         {
+            if ( PathIDComboBox.SelectedIndex == -1 )
+            {
+                MessageBox.Show ( "No active tab to delete.", "Error" );
+                return;
+            }
+
             if ( ( MainTabControl.SelectedItem as TabItem ).Visibility == Visibility.Visible )
             {
                 if ( MainTabControl.SelectedIndex == 0 )
@@ -2117,23 +2162,26 @@ namespace WPF_XML_Tutorial
 
         private void NewDocumentCommandBinding( object sender, ExecutedRoutedEventArgs e )
         {
-            string message = "Save changes to xml document?\nCreating a new xml file will close this one.\nUnsaved changes will be lost.";
-            string header = "Caution - save changes?";
-            MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
-            MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
-            if ( msgBoxResult == MessageBoxResult.Yes )
+            if ( PathIDComboBox.Items.Count > 1 )
             {
-                // Save the document first then continue with open command
-                Save_Button.Command.Execute(null);
-            }
-            else if ( msgBoxResult == MessageBoxResult.No )
-            {
-                // Continue with new xml file command without saving
-            }
-            else if ( msgBoxResult == MessageBoxResult.Cancel )
-            {
-                // Cancel command, no need to save
-                return;
+                string message = "Save changes to xml document?\nCreating a new xml file will close this one.\nUnsaved changes will be lost.";
+                string header = "Caution - save changes?";
+                MessageBoxButton msgBoxButtons = MessageBoxButton.YesNoCancel;
+                MessageBoxResult msgBoxResult = MessageBox.Show ( message, header, msgBoxButtons );
+                if ( msgBoxResult == MessageBoxResult.Yes )
+                {
+                    // Save the document first then continue with open command
+                    Save_Button.Command.Execute ( null );
+                }
+                else if ( msgBoxResult == MessageBoxResult.No )
+                {
+                    // Continue with new xml file command without saving
+                }
+                else if ( msgBoxResult == MessageBoxResult.Cancel )
+                {
+                    // Cancel command, no need to save
+                    return;
+                }
             }
 
             // Accesses the DefaultcSepTemplate.xml file
@@ -2158,7 +2206,15 @@ namespace WPF_XML_Tutorial
             switch ( undoType )
             {
                 case UndoableType.delUOP:
-                    message = "Undo previous UOP deletion?";
+                    switch ( editorMode )
+                    {
+                        case Mode.general:
+                            message = "Undo previous xml node deletion?";
+                            break;
+                        case Mode.cSep:
+                            message = "Undo previous UOP deletion?";
+                            break;
+                    }
                     break;
 
                 case UndoableType.delTab:
@@ -2322,7 +2378,7 @@ namespace WPF_XML_Tutorial
 
         private void SaveTemplate_Click( object sender, RoutedEventArgs e )
         {
-            if ( MainTabControl.Items.Count == 1 )
+            if ( editorMode == Mode.cSep && MainTabControl.Items.Count == 1 )
             {
                 MessageBox.Show ( "Not able to save a template with no elements.", "Error" );
                 return;
@@ -2337,7 +2393,7 @@ namespace WPF_XML_Tutorial
             curTabHeaders.Add ( activeMainNodeName );
             foreach ( TabItem tabItem in MainTabControl.Items.OfType<TabItem> () )
             {
-                if ( tabItem.Visibility == Visibility.Visible )
+                if ( tabItem.Visibility == Visibility.Visible && ( tabItem.Header as string ) != activeMainNodeName ) 
                 {
                     curTabHeaders.Add ( tabItem.Header as string ); 
                 }
@@ -2351,6 +2407,12 @@ namespace WPF_XML_Tutorial
 
         private void AddTab_Click( object sender, RoutedEventArgs e )
         {
+            if ( !isTemplateWindow && PathIDComboBox.SelectedIndex == -1 )
+            {
+                MessageBox.Show ( "Cannot add a tab when no xml is selected.", "Error" );
+                return;
+            }
+
             // Open a new window to give the user the options for the following:
             // New tab's name 
             // Whether or not there should be a tab link button? NOT SURE, the editor might not even save tabs that don't have tab link buttons iirc
@@ -2392,8 +2454,6 @@ namespace WPF_XML_Tutorial
 
             // Set up button grid
             ItemGrid newGrid = new ItemGrid ( this, GRID_WIDTH );
-            newGrid.AddNewColumn ();
-            newGrid.AddNewRow ();
             newGrid.AddTabButton ( tabName );
 
             TabItem mainTab = GetTabItemWithHeader ( activeMainNodeName );

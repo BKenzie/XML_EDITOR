@@ -43,12 +43,12 @@
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--pencil.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_New XML file" Command="New">
+                <MenuItem Header="New document" Command="New">
                     <MenuItem.Icon>
-                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\address-book--plus.png"/>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\blue-folder--plus.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Open new document" Command="Open" FontSize="16">
+                <MenuItem Header="Open xml file" Command="Open" FontSize="16">
                     <MenuItem.Icon>
                         <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\book-open.png"/>
                     </MenuItem.Icon>
