@@ -141,7 +141,6 @@ namespace WPF_XML_Tutorial
             blankTabHeaders.Add ( mainNodeName );
             XmlDocument helperXmlDoc = new XmlDocument ();
             XmlNode blankXmlNode = helperXmlDoc.CreateNode ( "element", mainNodeName, "" );
-            // TODO: figure out if a <PathID> node needs to be appended to the blankXmlNode here
             TemplateXmlNode blankTemplateXmlNode = new TemplateXmlNode ( blankXmlNode, "Blank Template", blankTabHeaders, mainNodeName );
             MainWindow modifyBlankTemplateWindow = new MainWindow ( "", mainWindowCaller.GetAvailableTemplates (),
                         isTemplateWindow: true, templateXmlNodeParam: blankTemplateXmlNode, caller: mainWindowCaller );

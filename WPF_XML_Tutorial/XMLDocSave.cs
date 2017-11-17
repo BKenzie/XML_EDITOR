@@ -23,7 +23,6 @@ namespace WPF_XML_Tutorial
         private XmlElement curSubElement = null;
         private MainWindow mainWindowCaller;
         private List<TabItem> visibleTabItems = new List<TabItem> ();
-        //private XmlNode activeMainXmlNode = null;
 
         // Creates instance of XmlDocSave with proper Tabs_XEDITOR element 
         public XmlDocSave( XmlDocument document, string path, MainWindow caller )
@@ -47,7 +46,6 @@ namespace WPF_XML_Tutorial
         private void AddTabHeadersToTabs_XEDITOR()
         {
             XmlNode tabs_XEDITOR = xmlDoc.CreateNode ( "element", "Tabs_XEDITOR", "" );
-            // TODO: make tabHeaders list out of all headers in tabItems
             string innerText = String.Join ( ",", tabHeaders );
             tabs_XEDITOR.InnerText = innerText;
             xmlDoc.FirstChild.AppendChild ( tabs_XEDITOR );
@@ -65,7 +63,7 @@ namespace WPF_XML_Tutorial
             {
                 foreach ( ComboBoxItem item in pathIDComboBox.Items )
                 {
-                    if ( Convert.ToString ( item.Content ) != "New UnitOperation" )
+                    if ( Convert.ToString ( item.Content ) != MainWindow.NEW_UOP_STRING )
                     {
                         // Will trigger MainWindow.PathIDChange from the OnSelectedItemChanged event
                         pathIDComboBox.SelectedItem = item;
@@ -102,6 +100,7 @@ namespace WPF_XML_Tutorial
         public XmlNode WriteCurrentOpenTabs( List<TabItem> tabItems, int pathID )
         {
             mainAttributesPassed = false;
+            tabItems = mainWindowCaller.MainTabControl.Items.OfType<TabItem> ().ToList();
             foreach ( TabItem tabItem in tabItems )
             {
                 if ( tabItem.Visibility == Visibility.Visible || (string) tabItem.Header == mainWindowCaller.activeMainNodeName )
@@ -270,7 +269,6 @@ namespace WPF_XML_Tutorial
                         XmlAttribute newAttrib = xmlDoc.CreateAttribute ( attribName );
                         newAttrib.Value = gridChild.Text;
                         xmlTabNode.Attributes.Append ( newAttrib );
-                        
 
                     }
                     if ( IsElement ( gridChild ) )

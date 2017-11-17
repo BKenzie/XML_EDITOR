@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_XML_Tutorial" 
-        mc:Ignorable="d" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
         Title="NewActionPath" Height="195" Width="465">
     <Canvas FocusManager.FocusedElement="{Binding ElementName=PathIDTextBox}">
         <Border HorizontalAlignment="Center" Height="74" VerticalAlignment="Top" Width="465" Canvas.Top="10">

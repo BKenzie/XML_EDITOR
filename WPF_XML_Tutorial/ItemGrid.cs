@@ -113,6 +113,7 @@ namespace WPF_XML_Tutorial
                 TextBox textBoxNodeText = new TextBox ();
                 textBoxNodeText.KeyDown += new KeyEventHandler ( mainWindowCaller.OnTabPressed );
                 textBoxNodeText.AppendText ( "EMPTY" );
+                textBoxNodeText.ToolTip = toolTip;
                 textBoxNodeText.AcceptsReturn = true;
                 textBoxNodeText.GotKeyboardFocus += mainWindowCaller.EMPTYTextBox_GotKeyboardFocus;
                 Grid.SetRow ( textBoxNodeText, 0 );

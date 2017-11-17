@@ -57,6 +57,9 @@
     <Compile Include="BlankTemplateUOPName.xaml.cs">
       <DependentUpon>BlankTemplateUOPName.xaml</DependentUpon>
     </Compile>
+    <Compile Include="EditSettingsWindow.xaml.cs">
+      <DependentUpon>EditSettingsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="INIFile.cs" />
     <Compile Include="ItemGrid.cs" />
     <Compile Include="NewUnitOperation.xaml.cs">
@@ -77,6 +80,10 @@
     <Compile Include="TemplateXmlNode.cs" />
     <Compile Include="XMLDocSave.cs" />
     <Page Include="BlankTemplateUOPName.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditSettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

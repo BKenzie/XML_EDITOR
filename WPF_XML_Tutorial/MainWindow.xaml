@@ -65,13 +65,24 @@
                 </MenuItem>
                 <MenuItem Header="Settings" Name="Settings_Button" Click="Settings_Button_Click">
                     <MenuItem.Icon>
-                        <Image />
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\script-code.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Name="Open_Button" Header="_Open" FontSize="16" Command="Open"/>
             <MenuItem Name="Save_Button" Header="_Save" FontSize="16" Command="Save"/>
-            <MenuItem Name="New_Button" Header="_New" FontSize="16" Command="New"/>
+            <MenuItem Name="NewMenu" Header="_New" FontSize="16">
+                <MenuItem Header="Add new tab" Click="AddTab_Click">
+                    <MenuItem.Icon>
+                        <Image Source=" C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\ui-tab--plus.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Name="New_Button" Header="New document" Command="New">
+                    <MenuItem.Icon>
+                        <Image Source="C:\projects\WPF_XML_Tutorial\WPF_XML_Tutorial\Images\blue-folder--plus.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
             <MenuItem Name="DeleteMenu" Header="_Delete" FontSize="16">
                 <MenuItem Header="Remove current tab" Click="Delete_Tab_Button_Click" Margin="0,0,-39,0">
                     <MenuItem.Icon>
@@ -87,7 +98,7 @@
         </Menu>
         <Label Name="TemplateWindowHeader" Visibility="Hidden" MouseDown="DragRectangle_MouseLeftButtonDown" Content="Template Editor Window" Foreground="DarkOrange" HorizontalAlignment="Left" Margin="7,22,0,0" VerticalAlignment="Top" Height="59" FontSize="36"/>
         <ComboBox Name="PathIDComboBox" x:FieldModifier="public" HorizontalAlignment="Left" Margin="66,28,0,0" VerticalAlignment="Top" Width="46"/>
-        <TextBox x:Name="ActiveUOPNameTextBox" IsTabStop="False" Background="LightGray" IsEnabled="False" Width="134" HorizontalAlignment="Left" Margin="116,25,0,0" VerticalAlignment="Top" FontSize="16" KeyUp="ActiveUOPNameTextBox_KeyUp" PreviewKeyDown="ActiveUOPNameTextBox_PreviewKeyDown"/>
+        <TextBox x:Name="ActiveUOPNameTextBox" IsTabStop="False" Background="LightGray" IsEnabled="False" Width="134" HorizontalAlignment="Left" Margin="116,25,0,0" VerticalAlignment="Top" FontSize="16" KeyUp="ActiveUOPNameTextBox_KeyUp" PreviewKeyUp="ActiveUOPNameTextBox_PreviewKeyUp" PreviewKeyDown="ActiveUOPNameTextBox_PreviewKeyDown"/>
         <Rectangle Panel.ZIndex="1" Fill="Transparent" MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" HorizontalAlignment="Right" Margin="0,0,10,0" Height="10" VerticalAlignment="Top" Width="26" />
         <TextBlock x:Name="PathIDTextBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="UOP ID:" VerticalAlignment="Top" FontSize="16" Margin="7,27,0,0"/>
 

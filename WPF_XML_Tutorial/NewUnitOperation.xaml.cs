@@ -80,7 +80,7 @@ namespace WPF_XML_Tutorial
             ComboBox pathIDCombobox = mainWindowCaller.PathIDComboBox;
             foreach ( ComboBoxItem item in pathIDCombobox.Items )
             {
-                if ( Convert.ToString(item.Content) != "New UnitOperation" )
+                if ( Convert.ToString(item.Content) != MainWindow.NEW_UOP_STRING )
                 {
                     pathIDs.Add ( Convert.ToInt32 ( Convert.ToString ( item.Content ) ) );
                 }
